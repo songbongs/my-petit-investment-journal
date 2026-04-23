@@ -819,7 +819,7 @@ function runWeeklyDraftPrepWorkflow(issueDate) {
   updateReportRunStatus_(promptResult.reportId, finalStatus, summary);
   Logger.log(summary);
 
-  SpreadsheetApp.getUi().alert(
+  notifySsmk_(
     [
       '주간 초안 준비 자동화가 끝났습니다.',
       '',
@@ -830,7 +830,8 @@ function runWeeklyDraftPrepWorkflow(issueDate) {
       blockingChecks.length > 0
         ? '차단 항목이 있으니 agent_review_log를 확인한 뒤 발행 전 문장을 더 점검하세요.'
         : '차단 항목은 없습니다. report_runs의 프롬프트 문서로 리포트 초안을 만들면 됩니다.',
-    ].join('\n')
+    ].join('\n'),
+    'SSMK Weekly Draft'
   );
 
   return {
@@ -844,29 +845,30 @@ function runWeeklyDraftPrepWorkflow(issueDate) {
 }
 
 function setupSsmkWorkbook() {
-  prepareSsmkWorkbook_({
+  const result = prepareSsmkWorkbook_({
     includeDropdowns: false,
     includeFormulas: false,
     logProgress: true,
   });
-  SpreadsheetApp.getUi().alert(`SSMK 시트 구조 점검이 끝났습니다. build=${SSMK_SETUP_BUILD}. 실행 시간을 줄이기 위해 이번 실행에서는 수식/드롭다운 보강을 생략했습니다.`);
+  notifySsmk_(`SSMK 시트 구조 점검이 끝났습니다. build=${SSMK_SETUP_BUILD}. 실행 시간을 줄이기 위해 이번 실행에서는 수식/드롭다운 보강을 생략했습니다.`, 'SSMK Setup');
+  return result;
 }
 
 function showSsmkSetupBuild() {
-  SpreadsheetApp.getUi().alert(`현재 setup build는 ${SSMK_SETUP_BUILD} 입니다.`);
+  notifySsmk_(`현재 setup build는 ${SSMK_SETUP_BUILD} 입니다.`, 'SSMK Setup Build');
   return SSMK_SETUP_BUILD;
 }
 
 function applyWeeklyScoreFormulas() {
   const ss = SpreadsheetApp.getActive();
   applyWeeklyScoreFormulas_(ss);
-  SpreadsheetApp.getUi().alert('weekly_scores 수식 보강이 끝났습니다.');
+  notifySsmk_('weekly_scores 수식 보강이 끝났습니다.', 'SSMK Formulas');
 }
 
 function applySsmkWorkbookDropdowns() {
   const ss = SpreadsheetApp.getActive();
   applyDropdowns_(ss);
-  SpreadsheetApp.getUi().alert('SSMK 입력용 드롭다운 보강이 끝났습니다.');
+  notifySsmk_('SSMK 입력용 드롭다운 보강이 끝났습니다.', 'SSMK Dropdowns');
 }
 
 function prepareSsmkWorkbook_(options) {
@@ -2245,6 +2247,23 @@ function setFormulaIfDifferent_(range, formula) {
 function logSetupProgress_(message, enabled) {
   if (!enabled) return;
   console.log(`[SSMK setup ${SSMK_SETUP_BUILD}] ${message}`);
+}
+
+function notifySsmk_(message, title) {
+  const safeMessage = String(message || '');
+  const safeTitle = String(title || 'SSMK');
+
+  console.log(`[${safeTitle}] ${safeMessage}`);
+  Logger.log(`[${safeTitle}] ${safeMessage}`);
+
+  try {
+    const ss = SpreadsheetApp.getActive();
+    if (ss && typeof ss.toast === 'function') {
+      ss.toast(safeMessage, safeTitle, 5);
+    }
+  } catch (error) {
+    console.log(`[${safeTitle}] toast skipped: ${error.message}`);
+  }
 }
 
 function computeDropdownTargetRowCount_(lastRow, maxRows) {
