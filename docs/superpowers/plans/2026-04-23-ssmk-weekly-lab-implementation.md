@@ -419,7 +419,7 @@ git commit -m "feat: track report revisions"
 - Modify: `automation/Code.gs`
 - Modify: `automation/ai-agent-roles-and-review-board.md`
 
-- [ ] **Step 1: `startAutomationRun_()` 함수를 추가한다**
+- [x] **Step 1: `startAutomationRun_()` 함수를 추가한다**
 
 입력:
 
@@ -433,7 +433,7 @@ Expected:
 automation_run_log에 run_id, started_at, status=running이 기록된다.
 ```
 
-- [ ] **Step 2: `finishAutomationRun_()` 함수를 추가한다**
+- [x] **Step 2: `finishAutomationRun_()` 함수를 추가한다**
 
 입력:
 

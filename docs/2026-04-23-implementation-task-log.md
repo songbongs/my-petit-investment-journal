@@ -117,3 +117,25 @@ Verification:
 Notes:
 
 - These are Apps Script helper functions for later workflow steps. They do not generate a report by themselves.
+
+## Task 5A: Automation run start/finish logging
+
+Status: completed
+
+What changed:
+
+- Added `startAutomationRun_(runType, scheduleKey, triggerSource)`.
+- Added `finishAutomationRun_(runId, status, reportId, finalOutputUrl, errorSummary, notes)`.
+- Added workflow status normalization so Korean workflow labels can map to sheet-safe statuses.
+- Added duration calculation from `started_at` to `ended_at`.
+
+Verification:
+
+- Passed: local run-log helper validation for start normalization, finish normalization, Korean status mapping, bad status blocking, and duration calculation.
+- Passed: `Code.gs` and `SettingsSidebar.html` syntax checks.
+- Passed: safe sensitive-name check with `rg`
+
+Notes:
+
+- This slice only writes the overall run row in `automation_run_log`.
+- Step-level logs, error logs, bottleneck logs, and QA reviews remain deferred to the next Task 5 slice.

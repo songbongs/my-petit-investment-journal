@@ -1015,6 +1015,65 @@ function createReportVersion_(reportId, versionLabel, sourceRequestId, outputUrl
   };
 }
 
+function startAutomationRun_(runType, scheduleKey, triggerSource) {
+  const normalized = normalizeAutomationRunStart_(runType, scheduleKey, triggerSource);
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+
+  const runId = `RUN-${compactDate_(today_())}-${compactTime_()}-${String(new Date().getTime()).slice(-3)}`;
+  appendObject_(SSMK.sheets.automationRunLog, SSMK.headers.automationRunLog, {
+    run_id: runId,
+    run_type: normalized.run_type,
+    started_at: nowText_(),
+    status: 'running',
+    trigger_source: normalized.trigger_source,
+    schedule_key: normalized.schedule_key,
+    notes: '실행 시작',
+  });
+
+  return runId;
+}
+
+function finishAutomationRun_(runId, status, reportId, finalOutputUrl, errorSummary, notes) {
+  const normalized = normalizeAutomationRunFinish_(runId, status, reportId, finalOutputUrl, errorSummary, notes);
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+
+  const sheet = ss.getSheetByName(SSMK.sheets.automationRunLog);
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+  const rows = readIndexedObjects_(SSMK.sheets.automationRunLog);
+  const existing = rows.find((row) => String(row.run_id) === normalized.run_id);
+
+  if (!existing) {
+    throw new Error(`run_id를 찾을 수 없습니다: ${normalized.run_id}`);
+  }
+
+  const endedAt = nowText_();
+  const durationSec = calculateDurationSeconds_(existing.started_at, endedAt);
+  const rowObject = {
+    run_id: normalized.run_id,
+    ended_at: endedAt,
+    status: normalized.status,
+    report_id: normalized.report_id,
+    total_duration_sec: durationSec,
+    final_output_url: normalized.final_output_url,
+    error_summary: normalized.error_summary,
+    notes: normalized.notes,
+  };
+
+  headers.forEach((header, index) => {
+    if (!Object.prototype.hasOwnProperty.call(rowObject, header)) return;
+    sheet.getRange(existing.__rowNumber, index + 1).setValue(rowObject[header]);
+  });
+
+  return {
+    ok: true,
+    run_id: normalized.run_id,
+    status: normalized.status,
+    total_duration_sec: durationSec,
+  };
+}
+
 function collectWeeklyInputs(issueDate) {
   const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
   const weeklyScores = readObjects_(SSMK.sheets.weeklyScores)
@@ -1746,6 +1805,77 @@ function nextSectionOrder_(rows, reportId) {
     .map((row) => Number(row.section_order))
     .filter((value) => !Number.isNaN(value));
   return orders.length === 0 ? 1 : Math.max.apply(null, orders) + 1;
+}
+
+function normalizeAutomationRunStart_(runType, scheduleKey, triggerSource) {
+  const normalizedRunType = String(runType || '').trim();
+  const normalizedScheduleKey = String(scheduleKey || '').trim();
+  const normalizedTriggerSource = String(triggerSource || 'manual').trim();
+
+  if (!normalizedRunType) {
+    throw new Error('run_type이 필요합니다. 예: weekly_lab');
+  }
+
+  return {
+    run_type: normalizedRunType,
+    schedule_key: normalizedScheduleKey,
+    trigger_source: normalizedTriggerSource,
+  };
+}
+
+function normalizeAutomationRunFinish_(runId, status, reportId, finalOutputUrl, errorSummary, notes) {
+  const normalizedRunId = String(runId || '').trim();
+  const normalizedStatus = normalizeWorkflowStatus_(status);
+
+  if (!normalizedRunId) {
+    throw new Error('run_id가 필요합니다.');
+  }
+  if (!normalizedStatus) {
+    throw new Error(`status는 허용된 값만 사용할 수 있습니다: ${SSMK.dropdowns.workflowStatus.join(', ')}`);
+  }
+
+  return {
+    run_id: normalizedRunId,
+    status: normalizedStatus,
+    report_id: String(reportId || '').trim(),
+    final_output_url: String(finalOutputUrl || '').trim(),
+    error_summary: String(errorSummary || '').trim(),
+    notes: String(notes || '').trim(),
+  };
+}
+
+function normalizeWorkflowStatus_(status) {
+  const text = String(status || '').trim();
+  const aliases = {
+    '초안 생성 준비 완료': 'success',
+    '초안 생성': 'success',
+    '발행 가능': 'success',
+    '사용자 확인 필요': 'warning',
+    '발행 보류 권장': 'blocked',
+    '실패': 'failed',
+  };
+  const normalized = aliases[text] || text.toLowerCase();
+  return SSMK.dropdowns.workflowStatus.indexOf(normalized) === -1 ? '' : normalized;
+}
+
+function calculateDurationSeconds_(startedAtText, endedAtText) {
+  const startedAt = parseDateTimeText_(startedAtText);
+  const endedAt = parseDateTimeText_(endedAtText);
+  if (!startedAt || !endedAt) return '';
+  return Math.max(0, Math.round((endedAt.getTime() - startedAt.getTime()) / 1000));
+}
+
+function parseDateTimeText_(text) {
+  const match = String(text || '').match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  return new Date(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+    Number(match[4]),
+    Number(match[5]),
+    Number(match[6])
+  );
 }
 
 function normalizePreferenceUpdate_(existing, key, value) {
