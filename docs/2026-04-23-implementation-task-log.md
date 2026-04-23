@@ -162,7 +162,30 @@ Notes:
 
 - Operator QA review logging remains deferred to Task 5C.
 
-## Handoff after Task 5B
+## Task 5C: Operator QA review logging
+
+Status: completed
+
+What changed:
+
+- Added `createOperatorQaReview_(runId, reportId)` in `automation/Code.gs`.
+- Added validation to block missing `run_id`, missing `report_id`, unfinished runs, mismatched run/report pairs, and duplicate QA reviews for the same run.
+- Added starter QA scoring based on run status, step/error/bottleneck logs, report section status, visualization queue state, and agent review board results.
+- Added beginner-friendly `main_issues` and `recommended_next_action` messages so `qa_review_log` can work like a final inspection row.
+- Updated `automation/ai-agent-roles-and-review-board.md` so `qa_review_log` is documented as the operator's final checkpoint.
+
+Verification:
+
+- Passed: `node -e "const fs=require('fs'); new Function(fs.readFileSync('automation/Code.gs','utf8')); console.log('Code.gs syntax ok')"`
+- Passed: local QA helper validation for missing input blocking, duplicate review blocking, unfinished run blocking, and successful QA row creation with derived status and score fields.
+- Passed: safe sensitive-name check with `rg`
+
+Notes:
+
+- `createOperatorQaReview_()` creates one QA row per `run_id`.
+- The function only records review data. It does not send email, create automation, or apply major operational changes.
+
+## Handoff after Task 5C
 
 Current branch:
 
@@ -179,26 +202,26 @@ Task 3: SSMK Control Center sidebar
 Task 4: Revision request and report revision tracking
 Task 5A: Automation run start/finish logging
 Task 5B: Step, error, and bottleneck logging
+Task 5C: Operator QA review logging
 ```
 
 Next recommended task:
 
 ```text
-Task 5C: Add createOperatorQaReview_(runId, reportId)
+Task 6: Weekly Lab report template redesign and Codex weekly prompt
 ```
 
 Important remaining work:
 
 ```text
-1. Task 5C: Operator QA review logging
-2. Task 6: Weekly Lab report template redesign and Codex weekly prompt
-3. Task 7: runWeeklyLabWorkflow() orchestration draft
-4. Task 8: Codex scheduled automation prompt and approval-gate documentation
-5. Task 9: Final verification, user runbook, and GitHub update
+1. Task 6: Weekly Lab report template redesign and Codex weekly prompt
+2. Task 7: runWeeklyLabWorkflow() orchestration draft
+3. Task 8: Codex scheduled automation prompt and approval-gate documentation
+4. Task 9: Final verification, user runbook, and GitHub update
 ```
 
 Continue prompt:
 
 ```text
-SSMK 투자 관찰노트 작업을 이어서 진행해줘. 작업 폴더는 C:\Users\kblife\Documents\AI-Playground\SSMK-investment-journal 이고, 현재 브랜치는 codex/weekly-lab-control-center 야. 먼저 git status와 docs/2026-04-23-implementation-task-log.md, docs/superpowers/plans/2026-04-23-ssmk-weekly-lab-implementation.md를 확인해서 진행상황을 파악해줘. Task 1~4와 Task 5A~5B는 완료됐고, 다음은 Task 5C인 createOperatorQaReview_(runId, reportId) 추가부터 작게 진행하면 돼. 계속 짧게 끊어서 작업→검증→커밋→승인 요청 방식으로 진행해줘. 이메일 발송, 자동화 생성/수정, 중요한 운영 변경은 사용자 승인 전에는 하지 말고, 투자 추천처럼 읽히는 표현도 피해야 해.
+SSMK 투자 관찰노트 작업을 이어서 진행해줘. 작업 폴더는 C:\Users\kblife\Documents\AI-Playground\SSMK-investment-journal 이고, 현재 브랜치는 codex/weekly-lab-control-center 야. Task 5C는 완료됐고, 다음은 Task 6으로 넘어가면 돼. 계속 짧게 끊어서 작업→검증→커밋→승인 요청 방식으로 진행해줘. 이메일 발송, 자동화 생성/수정, 중요한 운영 변경은 사용자 승인 전에는 하지 말고, 투자 추천처럼 읽히는 표현도 피해야 해.
 ```

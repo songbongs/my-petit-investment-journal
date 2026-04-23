@@ -1154,6 +1154,90 @@ function logBottleneck_(runId, bottleneckType, location, symptom, impact, sugges
   };
 }
 
+function createOperatorQaReview_(runId, reportId) {
+  const normalized = normalizeOperatorQaReview_(runId, reportId);
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+
+  const existingReview = readObjects_(SSMK.sheets.qaReviewLog)
+    .find((row) => String(row.run_id) === normalized.run_id);
+  if (existingReview) {
+    throw new Error(`이미 같은 run_id의 QA 리뷰가 있습니다: ${normalized.run_id}`);
+  }
+
+  const run = readObjects_(SSMK.sheets.automationRunLog)
+    .find((row) => String(row.run_id) === normalized.run_id);
+  if (!run) {
+    throw new Error(`run_id를 찾을 수 없습니다: ${normalized.run_id}`);
+  }
+  if (run.status === 'queued' || run.status === 'running') {
+    throw new Error('아직 실행이 끝나지 않아 QA 리뷰를 만들 수 없습니다. automation_run_log.status를 먼저 확인하세요.');
+  }
+  if (run.report_id && String(run.report_id) !== normalized.report_id) {
+    throw new Error(`run_id와 report_id 연결이 다릅니다. run:${normalized.run_id}, report:${normalized.report_id}`);
+  }
+
+  const report = findReportRun_(normalized.report_id);
+  if (!report) {
+    throw new Error(`report_id를 찾을 수 없습니다: ${normalized.report_id}`);
+  }
+
+  const issueDate = report.issue_date || '';
+  const stepRows = readObjects_(SSMK.sheets.automationStepLog)
+    .filter((row) => String(row.run_id) === normalized.run_id);
+  const errorRows = readObjects_(SSMK.sheets.errorLog)
+    .filter((row) => String(row.run_id) === normalized.run_id);
+  const bottleneckRows = readObjects_(SSMK.sheets.bottleneckLog)
+    .filter((row) => String(row.run_id) === normalized.run_id);
+  const sectionRows = readObjects_(SSMK.sheets.reportSections)
+    .filter((row) => String(row.report_id) === normalized.report_id);
+  const visualizationRows = readObjects_(SSMK.sheets.visualizationQueue)
+    .filter((row) => String(row.report_id) === normalized.report_id);
+  const agentRows = issueDate
+    ? readObjects_(SSMK.sheets.agentReviewLog)
+      .filter((row) => sameDateText_(row.issue_date, issueDate))
+    : [];
+
+  const overallStatus = deriveOperatorQaStatus_(run.status, stepRows, errorRows, bottleneckRows, sectionRows, visualizationRows, agentRows);
+  const contentQualityScore = clampScore_(Math.round((
+    scoreFromWorkflowStatus_(overallStatus) +
+    scoreFromAgentReviewStatus_(findAgentReview_(agentRows, '루미')) +
+    scoreFromAgentReviewStatus_(findAgentReview_(agentRows, '세이지')) +
+    scoreFromSectionRows_(sectionRows)
+  ) / 4));
+  const dataQualityScore = clampScore_(Math.round((
+    80 +
+    scoreFromAgentReviewStatus_(findAgentReview_(agentRows, '벡터')) +
+    scoreFromErrorRows_(errorRows)
+  ) / 3));
+  const visualizationQualityScore = scoreFromVisualizationRows_(visualizationRows);
+  const processEfficiencyScore = scoreFromProcessRows_(run, stepRows, errorRows, bottleneckRows);
+  const automationChangeNeeded = needsAutomationChange_(stepRows, errorRows, bottleneckRows) ? 'TRUE' : 'FALSE';
+  const qaId = `QA-${compactDate_(today_())}-${compactTime_()}-${String(new Date().getTime()).slice(-3)}`;
+
+  appendObject_(SSMK.sheets.qaReviewLog, SSMK.headers.qaReviewLog, {
+    qa_id: qaId,
+    run_id: normalized.run_id,
+    review_date: today_(),
+    overall_status: overallStatus,
+    content_quality_score: contentQualityScore,
+    data_quality_score: dataQualityScore,
+    visualization_quality_score: visualizationQualityScore,
+    process_efficiency_score: processEfficiencyScore,
+    main_issues: summarizeOperatorQaIssues_(normalized.report_id, sectionRows, visualizationRows, errorRows, bottleneckRows, agentRows),
+    recommended_next_action: recommendOperatorQaNextAction_(overallStatus, sectionRows, visualizationRows),
+    automation_change_needed: automationChangeNeeded,
+  });
+
+  return {
+    ok: true,
+    qa_id: qaId,
+    run_id: normalized.run_id,
+    overall_status: overallStatus,
+    automation_change_needed: automationChangeNeeded,
+  };
+}
+
 function collectWeeklyInputs(issueDate) {
   const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
   const weeklyScores = readObjects_(SSMK.sheets.weeklyScores)
@@ -2073,6 +2157,23 @@ function normalizeBottleneckLog_(runId, bottleneckType, location, symptom, impac
   };
 }
 
+function normalizeOperatorQaReview_(runId, reportId) {
+  const normalizedRunId = String(runId || '').trim();
+  const normalizedReportId = String(reportId || '').trim();
+
+  if (!normalizedRunId) {
+    throw new Error('run_id가 필요합니다.');
+  }
+  if (!normalizedReportId) {
+    throw new Error('report_id가 필요합니다.');
+  }
+
+  return {
+    run_id: normalizedRunId,
+    report_id: normalizedReportId,
+  };
+}
+
 function normalizePreferenceUpdate_(existing, key, value) {
   const type = String(existing && existing.setting_type ? existing.setting_type : inferPreferenceType_(key, value)).toLowerCase();
   const allowedValues = existing ? parseAllowedValues_(existing.allowed_values) : [];
@@ -2182,6 +2283,195 @@ function summarizeConfidence_(rows) {
     return acc;
   }, {});
   return Object.keys(counts).map((key) => `${key}:${counts[key]}`).join(', ');
+}
+
+function deriveOperatorQaStatus_(runStatus, stepRows, errorRows, bottleneckRows, sectionRows, visualizationRows, agentRows) {
+  const normalizedRunStatus = normalizeWorkflowStatus_(runStatus) || String(runStatus || '').trim().toLowerCase();
+  const hasFailedStep = stepRows.some((row) => normalizeWorkflowStatus_(row.status) === 'failed');
+  const hasBlockedStep = stepRows.some((row) => normalizeWorkflowStatus_(row.status) === 'blocked');
+  const hasHighSeverityError = errorRows.some((row) => String(row.severity || '').trim().toLowerCase() === 'high');
+  const hasBlockedBottleneck = bottleneckRows.some((row) => normalizeWorkflowStatus_(row.status) === 'blocked');
+  const hasSectionRevision = sectionRows.some((row) => String(row.status || '').trim().toLowerCase() === 'needs_revision');
+  const hasOpenVisualization = visualizationRows.some((row) => {
+    const status = normalizeWorkflowStatus_(row.status) || String(row.status || '').trim().toLowerCase();
+    return status && status !== 'success' && status !== 'skipped';
+  });
+  const hasBlockedAgent = agentRows.some((row) => String(row.status || '').trim().toLowerCase() === 'block');
+  const hasWarningSignals = (
+    stepRows.some((row) => normalizeWorkflowStatus_(row.status) === 'warning') ||
+    errorRows.length > 0 ||
+    bottleneckRows.length > 0 ||
+    hasSectionRevision ||
+    hasOpenVisualization ||
+    agentRows.some((row) => String(row.status || '').trim().toLowerCase() === 'warning')
+  );
+
+  if (normalizedRunStatus === 'failed' || hasFailedStep) return 'failed';
+  if (normalizedRunStatus === 'blocked' || hasBlockedStep || hasHighSeverityError || hasBlockedBottleneck || hasBlockedAgent) return 'blocked';
+  if (normalizedRunStatus === 'warning' || hasWarningSignals) return 'warning';
+  if (normalizedRunStatus === 'success') return 'success';
+  return 'warning';
+}
+
+function findAgentReview_(agentRows, agentName) {
+  return agentRows.find((row) => String(row.agent_name || '').trim() === agentName);
+}
+
+function scoreFromAgentReviewStatus_(reviewRow) {
+  if (!reviewRow) return 75;
+  const status = String(reviewRow.status || '').trim().toLowerCase();
+  const scores = {
+    pass: 90,
+    warning: 70,
+    block: 40,
+    proposal: 75,
+  };
+  return Object.prototype.hasOwnProperty.call(scores, status) ? scores[status] : 75;
+}
+
+function scoreFromWorkflowStatus_(status) {
+  const normalizedStatus = normalizeWorkflowStatus_(status) || String(status || '').trim().toLowerCase();
+  const scores = {
+    success: 90,
+    warning: 75,
+    blocked: 55,
+    failed: 35,
+    running: 60,
+    queued: 60,
+    skipped: 80,
+  };
+  return Object.prototype.hasOwnProperty.call(scores, normalizedStatus) ? scores[normalizedStatus] : 70;
+}
+
+function scoreFromSectionRows_(sectionRows) {
+  if (!sectionRows || sectionRows.length === 0) return 70;
+
+  let score = 80;
+  sectionRows.forEach((row) => {
+    const status = String(row.status || '').trim().toLowerCase();
+    if (status === 'approved') score += 4;
+    if (status === 'draft') score -= 3;
+    if (status === 'needs_revision') score -= 12;
+    if (status === 'archived') score -= 2;
+  });
+  return clampScore_(score);
+}
+
+function scoreFromErrorRows_(errorRows) {
+  if (!errorRows || errorRows.length === 0) return 90;
+
+  let score = 90;
+  errorRows.forEach((row) => {
+    const severity = String(row.severity || '').trim().toLowerCase();
+    if (severity === 'high') score -= 25;
+    else if (severity === 'medium') score -= 15;
+    else score -= 8;
+  });
+  return clampScore_(score);
+}
+
+function scoreFromVisualizationRows_(visualizationRows) {
+  if (!visualizationRows || visualizationRows.length === 0) return 70;
+
+  let score = 90;
+  visualizationRows.forEach((row) => {
+    const status = normalizeWorkflowStatus_(row.status) || String(row.status || '').trim().toLowerCase();
+    if (status === 'success') return;
+    if (status === 'warning') score -= 10;
+    else if (status === 'blocked' || status === 'failed') score -= 20;
+    else score -= 5;
+  });
+  return clampScore_(score);
+}
+
+function scoreFromProcessRows_(run, stepRows, errorRows, bottleneckRows) {
+  let score = scoreFromWorkflowStatus_(run.status);
+  const retryTotal = stepRows.reduce((sum, row) => sum + (Number(row.retry_count) || 0), 0);
+  const failedOrBlockedSteps = stepRows.filter((row) => {
+    const status = normalizeWorkflowStatus_(row.status);
+    return status === 'failed' || status === 'blocked';
+  }).length;
+  const warningSteps = stepRows.filter((row) => normalizeWorkflowStatus_(row.status) === 'warning').length;
+  const durationSec = Number(run.total_duration_sec || 0);
+
+  score -= failedOrBlockedSteps * 12;
+  score -= warningSteps * 5;
+  score -= retryTotal * 3;
+  score -= errorRows.length * 10;
+  score -= bottleneckRows.length * 8;
+  if (durationSec >= 1800) score -= 10;
+  if (durationSec >= 3600) score -= 10;
+
+  return clampScore_(score);
+}
+
+function summarizeOperatorQaIssues_(reportId, sectionRows, visualizationRows, errorRows, bottleneckRows, agentRows) {
+  const issues = [];
+  const needsRevisionCount = sectionRows.filter((row) => String(row.status || '').trim().toLowerCase() === 'needs_revision').length;
+  const highErrorCount = errorRows.filter((row) => String(row.severity || '').trim().toLowerCase() === 'high').length;
+  const blockedBottleneckCount = bottleneckRows.filter((row) => normalizeWorkflowStatus_(row.status) === 'blocked').length;
+  const openVisualizationCount = visualizationRows.filter((row) => {
+    const status = normalizeWorkflowStatus_(row.status) || String(row.status || '').trim().toLowerCase();
+    return status && status !== 'success' && status !== 'skipped';
+  }).length;
+  const blockedAgents = agentRows
+    .filter((row) => String(row.status || '').trim().toLowerCase() === 'block')
+    .map((row) => row.agent_name);
+  const warningAgentCount = agentRows
+    .filter((row) => String(row.status || '').trim().toLowerCase() === 'warning')
+    .length;
+
+  if (sectionRows.length === 0) {
+    issues.push(`report_sections에 ${reportId} 기록이 아직 없습니다`);
+  } else if (needsRevisionCount > 0) {
+    issues.push(`재작업 필요 섹션 ${needsRevisionCount}개`);
+  }
+
+  if (highErrorCount > 0) issues.push(`고심각도 오류 ${highErrorCount}개`);
+  else if (errorRows.length > 0) issues.push(`오류 로그 ${errorRows.length}개`);
+
+  if (blockedBottleneckCount > 0) issues.push(`차단 병목 ${blockedBottleneckCount}개`);
+  else if (bottleneckRows.length > 0) issues.push(`병목 후보 ${bottleneckRows.length}개`);
+
+  if (visualizationRows.length === 0) issues.push('시각화 큐가 아직 비어 있습니다');
+  else if (openVisualizationCount > 0) issues.push(`완료 전 시각화 ${openVisualizationCount}개`);
+
+  if (blockedAgents.length > 0) issues.push(`${blockedAgents.join(', ')} 검토에서 차단 의견`);
+  else if (warningAgentCount > 0) issues.push(`경고 검토 ${warningAgentCount}개`);
+
+  return issues.length > 0 ? issues.join('; ') : '큰 차단 이슈 없음';
+}
+
+function recommendOperatorQaNextAction_(overallStatus, sectionRows, visualizationRows) {
+  if (overallStatus === 'failed' || overallStatus === 'blocked') {
+    return 'error_log와 bottleneck_log를 먼저 확인하고, 막힌 항목을 정리한 뒤 QA 리뷰를 다시 만드세요.';
+  }
+  if (overallStatus === 'warning') {
+    if (sectionRows.some((row) => String(row.status || '').trim().toLowerCase() === 'needs_revision')) {
+      return 'report_sections에서 needs_revision 섹션을 먼저 보완한 뒤, qa_review_log 점수를 다시 확인하세요.';
+    }
+    if (visualizationRows.length === 0) {
+      return '시각화가 필요한 섹션이 있는지 확인하고, visualization_queue 기록 여부를 점검하세요.';
+    }
+    return 'main_issues에 적힌 경고를 먼저 정리하고, 리포트 본문을 한 번 더 읽어 표현을 확인하세요.';
+  }
+  return '큰 차단 이슈가 없으면 최종 문안과 로그를 한 번 더 확인한 뒤 다음 단계로 넘길 수 있습니다.';
+}
+
+function needsAutomationChange_(stepRows, errorRows, bottleneckRows) {
+  const retryTotal = stepRows.reduce((sum, row) => sum + (Number(row.retry_count) || 0), 0);
+  const hasFailedOrBlockedStep = stepRows.some((row) => {
+    const status = normalizeWorkflowStatus_(row.status);
+    return status === 'failed' || status === 'blocked';
+  });
+  const hasHighSeverityError = errorRows.some((row) => String(row.severity || '').trim().toLowerCase() === 'high');
+  return hasFailedOrBlockedStep || hasHighSeverityError || bottleneckRows.length > 0 || retryTotal >= 2;
+}
+
+function clampScore_(value) {
+  const numeric = Number(value);
+  if (Number.isNaN(numeric)) return 0;
+  return Math.max(0, Math.min(100, Math.round(numeric)));
 }
 
 function sameDateText_(value, target) {
