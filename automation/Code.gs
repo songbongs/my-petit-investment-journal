@@ -504,6 +504,12 @@ const WORKBOOK_SCHEMA_SHEET_KEYS = [
   'glossary',
 ];
 
+const WORKBOOK_SETUP_LIMITS = {
+  dropdownBufferRows: 100,
+  minDropdownRows: 200,
+  maxDropdownRows: 300,
+};
+
 const CONTROL_CENTER_DEFAULT_PREFERENCES = [
   {
     setting_key: 'report_depth',
@@ -2147,23 +2153,46 @@ function ensureSheet_(ss, sheetName, minColumns) {
 
 function setHeaders_(ss, sheetName, headers) {
   const sheet = ensureSheet_(ss, sheetName, headers.length);
-  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-  sheet.getRange(1, 1, 1, headers.length)
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  const existingHeaders = headerRange.getDisplayValues()[0];
+  const headerChanged = headers.some((header, index) => String(existingHeaders[index] || '') !== String(header));
+
+  if (headerChanged) {
+    headerRange.setValues([headers]);
+  }
+
+  headerRange
     .setFontWeight('bold')
     .setFontColor('#ffffff')
     .setBackground('#1e446b');
-  sheet.autoResizeColumns(1, headers.length);
+
+  if (headerChanged) {
+    sheet.autoResizeColumns(1, headers.length);
+  }
 }
 
 function setDropdown_(ss, sheetName, columnNumber, values) {
   const sheet = ss.getSheetByName(sheetName);
   if (!sheet) return;
-  const maxRows = Math.max(sheet.getMaxRows() - 1, 1);
+  const maxRows = computeDropdownTargetRowCount_(sheet.getLastRow(), sheet.getMaxRows());
   const rule = SpreadsheetApp.newDataValidation()
     .requireValueInList(values, true)
     .setAllowInvalid(false)
     .build();
   sheet.getRange(2, columnNumber, maxRows, 1).setDataValidation(rule);
+}
+
+function computeDropdownTargetRowCount_(lastRow, maxRows) {
+  const safeLastRow = Math.max(Number(lastRow) || 1, 1);
+  const safeMaxRows = Math.max(Number(maxRows) || 2, 2);
+  const dataRows = Math.max(safeLastRow - 1, 0);
+  const cappedBufferedRows = Math.min(
+    Math.max(dataRows + WORKBOOK_SETUP_LIMITS.dropdownBufferRows, WORKBOOK_SETUP_LIMITS.minDropdownRows),
+    WORKBOOK_SETUP_LIMITS.maxDropdownRows
+  );
+  const sheetCapacityRows = Math.max(safeMaxRows - 1, 1);
+
+  return Math.min(Math.max(cappedBufferedRows, dataRows, 1), sheetCapacityRows);
 }
 
 function readObjects_(sheetName) {
