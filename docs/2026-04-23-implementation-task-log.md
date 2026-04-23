@@ -644,3 +644,68 @@ Important remaining work:
 2. Task 8B: finalize Task 8 documentation details if needed
 3. Task 9: Final verification, user runbook, and GitHub update
 ```
+
+## Task 8A: Scheduled Codex automation approval-gate wording
+
+Status: completed
+
+What changed:
+
+- Updated `automation/codex-weekly-lab-automation-prompt.md` so beginners can clearly tell the difference between:
+  - writing the prompt document
+  - actually creating or changing a scheduled Codex automation
+- Added an explicit approval-gate section with a simple example of what the AI may explain versus what it must not execute yet.
+- Updated `automation/automation-evolution-approval-gate.md` to treat Codex scheduled automation create/update/delete as a major operational change.
+- Added a second beginner-friendly example in the approval-gate doc so the approval rule is easier to follow later.
+
+Verification:
+
+- Passed: approval-gate phrase check with `rg`
+- Passed: `git diff --check`
+
+Notes:
+
+- This slice does not create or modify any real automation.
+- This slice does not create `automation/codex-revision-request-prompt.md` yet.
+- Email sending and other operational changes remain blocked without user approval.
+
+## Handoff after Task 8A
+
+Current branch:
+
+```text
+codex/weekly-lab-control-center
+```
+
+Completed tasks:
+
+```text
+Task 1: Apps Script sheet schema v2
+Task 2: Default preferences and schedule policy
+Task 3: SSMK Control Center sidebar
+Task 4: Revision request and report revision tracking
+Task 5A: Automation run start/finish logging
+Task 5B: Step, error, and bottleneck logging
+Task 5C: Operator QA review logging
+Task 6A: Weekly Lab template outline redesign
+Task 6B: Hypothesis Lab 5-card field structure
+Task 6C: Chart placeholder wording
+Task 6D: Weekly Lab automation prompt file
+Task 7A: Weekly Lab workflow draft and prompt helper
+Task 7B: Weekly Lab menu default switch
+Task 8A: Scheduled Codex automation approval-gate wording
+```
+
+Next recommended task:
+
+```text
+Task 8B: Create automation/codex-revision-request-prompt.md for requested section/full-report revisions only
+```
+
+Important remaining work:
+
+```text
+1. Task 8B: revision request prompt file
+2. Task 9: final verification and beginner runbook update
+3. Optional cleanup: tighten Task 8 wording if later docs diverge
+```
