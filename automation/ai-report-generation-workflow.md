@@ -389,5 +389,6 @@ createWeeklyLabPromptDoc_():
 ```text
 기존 runWeeklyDraftPrepWorkflow()는 당장 지우지 않는다.
 이전 흐름을 참고하거나 비교할 수 있게 하위 호환용으로 남겨 둔다.
-메뉴 기본 실행 항목 교체는 다음 단계에서 따로 정리한다.
+메뉴의 기본 실행 항목은 이제 runWeeklyLabWorkflow()로 바꾼다.
+기존 runWeeklyDraftPrepWorkflow()는 "legacy" 메뉴 항목으로 남겨 둔다.
 ```

@@ -581,3 +581,66 @@ Important remaining work:
 2. Task 8: Codex scheduled automation prompt and approval-gate documentation
 3. Task 9: Final verification, user runbook, and GitHub update
 ```
+
+## Task 7B: Switch the default menu entry to Weekly Lab workflow
+
+Status: completed
+
+What changed:
+
+- Updated the `SSMK 자동화` menu in `automation/Code.gs`.
+- Switched the default `0.` entry from `runWeeklyDraftPrepWorkflow()` to `runWeeklyLabWorkflow()`.
+- Kept the old flow visible as `0-legacy. 이전 주간 초안 준비 실행` so the operator can still compare or fall back without losing the previous button.
+- Updated `automation/ai-report-generation-workflow.md` so the compatibility note now matches the real menu behavior.
+
+Verification:
+
+- Passed: `Code.gs` syntax check
+- Passed: menu/workflow reference check with `rg`
+- Passed: `git diff --check`
+
+Notes:
+
+- This slice only changes which button is shown as the default path.
+- No email sending, automation creation, or 운영 정책 change was added.
+- The legacy workflow still remains callable for comparison and fallback.
+
+## Handoff after Task 7B
+
+Current branch:
+
+```text
+codex/weekly-lab-control-center
+```
+
+Completed tasks:
+
+```text
+Task 1: Apps Script sheet schema v2
+Task 2: Default preferences and schedule policy
+Task 3: SSMK Control Center sidebar
+Task 4: Revision request and report revision tracking
+Task 5A: Automation run start/finish logging
+Task 5B: Step, error, and bottleneck logging
+Task 5C: Operator QA review logging
+Task 6A: Weekly Lab template outline redesign
+Task 6B: Hypothesis Lab 5-card field structure
+Task 6C: Chart placeholder wording
+Task 6D: Weekly Lab automation prompt file
+Task 7A: Weekly Lab workflow draft and prompt helper
+Task 7B: Weekly Lab menu default switch
+```
+
+Next recommended task:
+
+```text
+Task 8A: Add Codex scheduled automation prompt notes and explicit approval gate wording without creating or modifying any real automation
+```
+
+Important remaining work:
+
+```text
+1. Task 8A: approval-gate wording for scheduled Codex automation docs only
+2. Task 8B: finalize Task 8 documentation details if needed
+3. Task 9: Final verification, user runbook, and GitHub update
+```
