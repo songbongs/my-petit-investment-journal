@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f8fa;
+        --surface: #ffffff;
+        --border: #d9dee6;
+        --text: #1f2937;
+        --muted: #5f6b7a;
+        --accent: #1e446b;
+        --accent-soft: #edf4fb;
+        --warning-bg: #fff7e8;
+        --warning-border: #f2c97d;
+        --error-bg: #fff0f0;
+        --error-border: #ef9a9a;
+        --success-bg: #eef8f1;
+        --success-border: #9bd0aa;
+      }
+
+      body {
+        margin: 0;
+        padding: 16px;
+        font-family: Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.4;
+      }
+
+      .page {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .header {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .title {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0;
+        margin: 0;
+      }
+
+      .subtitle,
+      .helper,
+      .microcopy {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .status {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+
+      .status.ok {
+        background: var(--success-bg);
+        border-color: var(--success-border);
+      }
+
+      .status.warning {
+        background: var(--warning-bg);
+        border-color: var(--warning-border);
+      }
+
+      .status.error {
+        background: var(--error-bg);
+        border-color: var(--error-border);
+      }
+
+      .section {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 12px;
+      }
+
+      .section h2 {
+        margin: 0 0 8px;
+        font-size: 14px;
+      }
+
+      .section p {
+        margin: 0 0 10px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .field-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .field-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .label {
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .desc {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .control {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #fff;
+        padding: 8px 9px;
+        font-size: 13px;
+        color: var(--text);
+      }
+
+      .control:disabled {
+        background: #f3f5f8;
+        color: #738091;
+      }
+
+      .switch {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .switch input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+      }
+
+      .locked {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .summary {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .schedule-item {
+        border-top: 1px solid var(--border);
+        padding-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .schedule-item:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 6px;
+        padding: 9px 12px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .secondary {
+        background: #e9edf2;
+        color: var(--text);
+      }
+
+      .ghost {
+        background: transparent;
+        color: var(--accent);
+        padding-left: 0;
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 2px 0;
+      }
+
+      .request-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      textarea {
+        min-height: 84px;
+        resize: vertical;
+      }
+
+      .tag {
+        display: inline-block;
+        margin-left: 6px;
+        font-size: 10px;
+        color: var(--muted);
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <h1 class="title">SSMK Control Center</h1>
+        <p class="subtitle">운영 설정을 한곳에서 확인하고 저장하는 사이드바입니다.</p>
+        <p class="microcopy">투자 권유가 아니라 학습용 관찰 기록을 돕는 도구입니다.</p>
+      </div>
+
+      <div id="status" class="status">설정 불러오는 중...</div>
+
+      <div class="actions">
+        <button class="primary" type="button" id="saveButton">저장</button>
+        <button class="secondary" type="button" id="revisionButton">재작업 요청 저장</button>
+        <button class="secondary" type="button" id="logButton">최신 로그 위치 보기</button>
+      </div>
+
+      <div class="section">
+        <h2>리포트 기본 설정</h2>
+        <p>리포트의 깊이와 기본 행동을 정합니다. 숫자와 상태는 현재 시트 값을 그대로 읽어옵니다.</p>
+        <div id="basicSettings" class="field-list"></div>
+      </div>
+
+      <div class="section">
+        <h2>포함 섹션</h2>
+        <p>이번 주 리포트에 어떤 설명을 넣을지 고릅니다. 끄면 해당 부분은 초안에서 빠집니다.</p>
+        <div id="includedSections" class="field-list"></div>
+      </div>
+
+      <div class="section">
+        <h2>자동화 스케줄</h2>
+        <p>어떤 자동화가 켜져 있는지 확인합니다. 화요일 자동 생성만 기본값으로 켜져 있습니다.</p>
+        <div id="scheduleList" class="field-list"></div>
+      </div>
+
+      <div class="section">
+        <h2>재작업 요청</h2>
+        <p>이 부분은 Task 4에서 저장 기능을 연결합니다. 지금은 요청 내용을 미리 적어보는 자리입니다.</p>
+        <div class="request-grid">
+          <div class="field">
+            <div class="label">어느 리포트를 고칠까요?</div>
+            <input class="control" id="requestReportId" type="text" placeholder="예: RPT-20260428-12345">
+          </div>
+          <div class="field">
+            <div class="label">어느 부분을 고칠까요?</div>
+            <input class="control" id="requestSection" type="text" placeholder="예: 핵심 가설 3번">
+          </div>
+          <div class="field">
+            <div class="label">어떤 방향으로 고칠까요?</div>
+            <select class="control" id="requestType">
+              <option value="make_easier">더 쉽게 설명하기</option>
+              <option value="add_more_data">숫자 더 넣기</option>
+              <option value="add_visuals">시각 자료 추가</option>
+              <option value="make_more_human">더 자연스럽게 쓰기</option>
+              <option value="strengthen_forecast">예측 근거 보강</option>
+              <option value="soften_recommendation_risk">추천처럼 보이는 표현 줄이기</option>
+              <option value="fix_source">출처 정리</option>
+              <option value="rewrite_with_red_team">반대 의견 넣어 다시 쓰기</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="label">추가 요청사항은 무엇인가요?</div>
+            <textarea class="control" id="requestNote" placeholder="예: 근거 지표를 더 구체적인 숫자로 보여주세요."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>로그 확인 안내</h2>
+        <p>문제가 있으면 아래 시트를 먼저 봅니다. 실행 기록은 차례대로 쌓입니다.</p>
+        <div class="summary">
+          <div class="summary-grid" id="logGuide"></div>
+          <div class="divider"></div>
+          <div class="helper">핵심 순서: <span class="tag">agent_review_log</span> → <span class="tag">automation_stage_reviews</span> → <span class="tag">change_approval_log</span> → <span class="tag">report_runs</span></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const state = {
+        preferences: [],
+        basicPreferences: [],
+        includedSections: [],
+        schedules: [],
+        log_locations: [],
+      };
+
+      const statusBox = document.getElementById('status');
+      const basicSettings = document.getElementById('basicSettings');
+      const includedSections = document.getElementById('includedSections');
+      const scheduleList = document.getElementById('scheduleList');
+      const logGuide = document.getElementById('logGuide');
+
+      function setStatus(message, kind) {
+        statusBox.textContent = message;
+        statusBox.className = `status ${kind || ''}`.trim();
+      }
+
+      function runServer(method, payload) {
+        return new Promise((resolve, reject) => {
+          const runner = google.script.run.withSuccessHandler(resolve).withFailureHandler((error) => {
+            reject(error && error.message ? new Error(error.message) : error);
+          });
+          if (payload === undefined) {
+            runner[method]();
+          } else {
+            runner[method](payload);
+          }
+        });
+      }
+
+      function preferenceControl(pref) {
+        const wrap = document.createElement('div');
+        wrap.className = 'field';
+
+        const row = document.createElement('div');
+        row.className = 'field-row';
+
+        const left = document.createElement('div');
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.textContent = pref.description || pref.setting_key;
+        if (!pref.user_editable) {
+          const locked = document.createElement('span');
+          locked.className = 'locked';
+          locked.textContent = '잠금';
+          label.appendChild(locked);
+        }
+        const desc = document.createElement('div');
+        desc.className = 'desc';
+        desc.textContent = helperTextForPreference(pref);
+        left.appendChild(label);
+        left.appendChild(desc);
+
+        const controlWrap = document.createElement('div');
+        controlWrap.style.minWidth = '132px';
+
+        let input;
+        if (pref.setting_type === 'switch') {
+          const switchWrap = document.createElement('label');
+          switchWrap.className = 'switch';
+          input = document.createElement('input');
+          input.type = 'checkbox';
+          input.dataset.key = pref.setting_key;
+          input.checked = String(pref.setting_value).toUpperCase() === 'ON';
+          input.disabled = !pref.user_editable;
+          const text = document.createElement('span');
+          text.textContent = '켜기';
+          switchWrap.appendChild(input);
+          switchWrap.appendChild(text);
+          controlWrap.appendChild(switchWrap);
+        } else if (pref.setting_type === 'number') {
+          input = document.createElement('input');
+          input.className = 'control';
+          input.type = 'number';
+          input.dataset.key = pref.setting_key;
+          input.value = pref.setting_value;
+          input.disabled = !pref.user_editable;
+          controlWrap.appendChild(input);
+        } else if (pref.setting_type === 'select') {
+          input = document.createElement('select');
+          input.className = 'control';
+          input.dataset.key = pref.setting_key;
+          (pref.allowed_values || []).forEach((value) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            if (String(pref.setting_value) === value) {
+              option.selected = true;
+            }
+            input.appendChild(option);
+          });
+          input.disabled = !pref.user_editable;
+          controlWrap.appendChild(input);
+        } else {
+          input = document.createElement('input');
+          input.className = 'control';
+          input.type = 'text';
+          input.dataset.key = pref.setting_key;
+          input.value = pref.setting_value;
+          input.disabled = !pref.user_editable;
+          controlWrap.appendChild(input);
+        }
+
+        row.appendChild(left);
+        row.appendChild(controlWrap);
+        wrap.appendChild(row);
+        return wrap;
+      }
+
+      function helperTextForPreference(pref) {
+        if (pref.setting_key === 'core_hypothesis_count') {
+          return '한 주에 깊게 추적할 핵심 질문의 개수입니다. 처음에는 5개를 권장합니다.';
+        }
+        if (pref.setting_key === 'email_auto_send') {
+          return '사람 승인 전에 자동으로 보내지 않도록 기본값은 OFF입니다.';
+        }
+        if (pref.setting_key === 'require_user_approval_for_major_change') {
+          return '중요한 자동화 변경은 사람 확인이 필요해서 잠금 상태로 둡니다.';
+        }
+        return pref.allowed_values && pref.allowed_values.length
+          ? `선택 가능: ${pref.allowed_values.join(', ')}`
+          : pref.description || '';
+      }
+
+      function renderPreferences(items, container) {
+        container.innerHTML = '';
+        items.forEach((pref) => {
+          container.appendChild(preferenceControl(pref));
+        });
+      }
+
+      function renderSchedules(items) {
+        scheduleList.innerHTML = '';
+        items.forEach((schedule) => {
+          const wrap = document.createElement('div');
+          wrap.className = 'schedule-item';
+
+          const row = document.createElement('div');
+          row.className = 'field-row';
+
+          const left = document.createElement('div');
+          const label = document.createElement('div');
+          label.className = 'label';
+          label.textContent = schedule.description || schedule.schedule_key;
+          const desc = document.createElement('div');
+          desc.className = 'desc';
+          desc.textContent = `주기: ${schedule.cadence || '-'} | 다음 힌트: ${schedule.next_run_hint || '-'} | 마지막 실행: ${schedule.last_run_at || '-'}`;
+          left.appendChild(label);
+          left.appendChild(desc);
+
+          const switchWrap = document.createElement('label');
+          switchWrap.className = 'switch';
+          const input = document.createElement('input');
+          input.type = 'checkbox';
+          input.dataset.scheduleKey = schedule.schedule_key;
+          input.checked = String(schedule.enabled).toUpperCase() === 'ON';
+          switchWrap.appendChild(input);
+          const text = document.createElement('span');
+          text.textContent = '켜기';
+          switchWrap.appendChild(text);
+
+          row.appendChild(left);
+          row.appendChild(switchWrap);
+          wrap.appendChild(row);
+          scheduleList.appendChild(wrap);
+        });
+      }
+
+      function renderLogGuide(items) {
+        logGuide.innerHTML = '';
+        items.forEach((item) => {
+          const row = document.createElement('div');
+          row.className = 'helper';
+          row.textContent = item;
+          logGuide.appendChild(row);
+        });
+      }
+
+      function collectPreferences() {
+        const values = {};
+        document.querySelectorAll('[data-key]').forEach((element) => {
+          if (element.disabled) return;
+          const key = element.dataset.key;
+          if (!key) return;
+          values[key] = element.type === 'checkbox' ? (element.checked ? 'ON' : 'OFF') : element.value;
+        });
+        return values;
+      }
+
+      function collectSchedules() {
+        const values = {};
+        document.querySelectorAll('[data-schedule-key]').forEach((element) => {
+          const key = element.dataset.scheduleKey;
+          if (!key) return;
+          values[key] = element.checked ? 'ON' : 'OFF';
+        });
+        return values;
+      }
+
+      async function saveAllSettings() {
+        try {
+          setStatus('저장 중입니다. 잠시만 기다려 주세요.', '');
+          const preferences = collectPreferences();
+          const schedules = collectSchedules();
+          const prefResult = await runServer('saveUserPreferences', preferences);
+          const scheduleResult = await runServer('saveScheduleSettings', schedules);
+          const messages = [prefResult.message, scheduleResult.message].filter(Boolean).join(' ');
+          const warnings = [].concat(prefResult.warnings || [], scheduleResult.warnings || []);
+          const finalMessage = warnings.length ? `${messages} 경고: ${warnings.join(' ')}` : messages;
+          const finalKind = warnings.length ? 'warning' : 'ok';
+          await refreshState();
+          setStatus(finalMessage, finalKind);
+        } catch (error) {
+          setStatus(error.message || '저장에 실패했습니다.', 'error');
+        }
+      }
+
+      function showRevisionPlaceholder() {
+        setStatus('재작업 요청 저장은 Task 4에서 연결합니다. 지금은 내용을 적어두는 단계입니다.', 'warning');
+        alert('재작업 요청 저장은 Task 4에서 revision_requests 저장과 연결합니다. 현재 버튼은 UI 자리 표시자입니다.');
+      }
+
+      function showLogLocations() {
+        const lines = [
+          '설정 시트: user_preferences, automation_schedules',
+          '검토 로그: agent_review_log, automation_stage_reviews',
+          '변경 기록: change_approval_log',
+          '리포트 상태: report_runs',
+        ];
+        setStatus('로그 위치를 안내했습니다.', 'ok');
+        alert(lines.join('\n'));
+      }
+
+      async function refreshState() {
+        const result = await runServer('getControlCenterState');
+        state.preferences = result.preferences || [];
+        state.basicPreferences = result.basic_preferences || [];
+        state.includedSections = result.included_sections || [];
+        state.schedules = result.schedules || [];
+        state.log_locations = result.log_locations || [];
+        renderPreferences(state.basicPreferences, basicSettings);
+        renderPreferences(state.includedSections, includedSections);
+        renderSchedules(state.schedules);
+        renderLogGuide(state.log_locations);
+        setStatus('현재 설정을 불러왔습니다. 필요한 값만 바꾸고 저장하세요.', 'ok');
+      }
+
+      document.getElementById('saveButton').addEventListener('click', saveAllSettings);
+      document.getElementById('revisionButton').addEventListener('click', showRevisionPlaceholder);
+      document.getElementById('logButton').addEventListener('click', showLogLocations);
+
+      refreshState().catch((error) => {
+        setStatus(error.message || '설정을 불러오지 못했습니다.', 'error');
+      });
+    </script>
+  </body>
+</html>

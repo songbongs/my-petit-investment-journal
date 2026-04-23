@@ -13,6 +13,8 @@ const SSMK = {
   disclaimer: '투자 권유가 아닌 투자 공부용 관찰 기록입니다.',
   sheets: {
     settings: 'settings',
+    userPreferences: 'user_preferences',
+    automationSchedules: 'automation_schedules',
     watchlist: 'watchlist',
     weeklyScores: 'weekly_scores',
     scoreHistory: 'score_history',
@@ -169,9 +171,129 @@ const SSMK = {
   },
 };
 
+const CONTROL_CENTER_DEFAULT_PREFERENCES = [
+  {
+    setting_key: 'report_depth',
+    setting_value: 'dashboard_plus_explainer',
+    setting_type: 'select',
+    description: '리포트 깊이: 대시보드 중심인지, 설명을 더 붙일지 정합니다.',
+    allowed_values: 'dashboard_only,dashboard_plus_explainer,deep_research',
+    user_editable: 'TRUE',
+  },
+  {
+    setting_key: 'core_hypothesis_count',
+    setting_value: '5',
+    setting_type: 'number',
+    description: '핵심 가설 개수: 한 주에 깊게 추적할 핵심 질문의 개수입니다. 처음에는 5개를 권장합니다.',
+    allowed_values: '3,5,7',
+    user_editable: 'TRUE',
+  },
+  {
+    setting_key: 'review_loop_limit',
+    setting_value: '3',
+    setting_type: 'number',
+    description: '리뷰 반복 제한: 같은 섹션을 AI가 몇 번까지 다시 다듬을지 정합니다.',
+    allowed_values: '1,2,3',
+    user_editable: 'TRUE',
+  },
+  {
+    setting_key: 'final_output_type',
+    setting_value: 'google_docs_draft',
+    setting_type: 'select',
+    description: '최종 결과물: 초안 저장 방식을 고릅니다.',
+    allowed_values: 'google_docs_draft,markdown',
+    user_editable: 'TRUE',
+  },
+  {
+    setting_key: 'email_auto_send',
+    setting_value: 'OFF',
+    setting_type: 'switch',
+    description: '이메일 자동 발송: 사람 승인 없이 보내지 않도록 기본값은 OFF입니다.',
+    allowed_values: 'ON,OFF',
+    user_editable: 'TRUE',
+  },
+  {
+    setting_key: 'require_user_approval_for_major_change',
+    setting_value: 'ON',
+    setting_type: 'switch',
+    description: '중요 변경 사용자 승인 필요: 자동화의 큰 변경은 사람 확인을 거치도록 잠금 상태로 둡니다.',
+    allowed_values: 'ON,OFF',
+    user_editable: 'FALSE',
+  },
+  {
+    setting_key: 'include_market_overview',
+    setting_value: 'ON',
+    setting_type: 'switch',
+    description: '포함 섹션: 시장 온도계와 이번 주 분위기를 넣을지 정합니다.',
+    allowed_values: 'ON,OFF',
+    user_editable: 'TRUE',
+  },
+  {
+    setting_key: 'include_hypothesis_lab',
+    setting_value: 'ON',
+    setting_type: 'switch',
+    description: '포함 섹션: 핵심 가설과 근거 지표를 넣을지 정합니다.',
+    allowed_values: 'ON,OFF',
+    user_editable: 'TRUE',
+  },
+  {
+    setting_key: 'include_risk_summary',
+    setting_value: 'ON',
+    setting_type: 'switch',
+    description: '포함 섹션: 리스크와 한계를 먼저 보여줄지 정합니다.',
+    allowed_values: 'ON,OFF',
+    user_editable: 'TRUE',
+  },
+  {
+    setting_key: 'include_beginner_lesson',
+    setting_value: 'ON',
+    setting_type: 'switch',
+    description: '포함 섹션: 초보자 레슨과 용어 설명을 넣을지 정합니다.',
+    allowed_values: 'ON,OFF',
+    user_editable: 'TRUE',
+  },
+];
+
+const CONTROL_CENTER_DEFAULT_SCHEDULES = [
+  {
+    schedule_key: 'monday_data_check',
+    description: '월요일 데이터 상태 점검',
+    enabled: 'OFF',
+    cadence: 'weekly_monday_night',
+    last_run_at: '',
+    next_run_hint: '월요일 밤',
+  },
+  {
+    schedule_key: 'tuesday_weekly_report',
+    description: '화요일 Weekly Lab 자동 생성',
+    enabled: 'ON',
+    cadence: 'weekly_tuesday_morning',
+    last_run_at: '',
+    next_run_hint: '화요일 오전',
+  },
+  {
+    schedule_key: 'wednesday_revision_review',
+    description: '수요일 재작업 요청 반영',
+    enabled: 'OFF',
+    cadence: 'weekly_wednesday_morning',
+    last_run_at: '',
+    next_run_hint: '수요일 오전',
+  },
+  {
+    schedule_key: 'monthly_hypothesis_review',
+    description: '월말 가설 복기',
+    enabled: 'OFF',
+    cadence: 'monthly_end',
+    last_run_at: '',
+    next_run_hint: '월말',
+  },
+];
+
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('SSMK 자동화')
+    .addItem('설정 열기: SSMK Control Center', 'showSettingsSidebar')
+    .addSeparator()
     .addItem('0. 주간 초안 준비 전체 실행', 'runWeeklyDraftPrepWorkflow')
     .addSeparator()
     .addItem('1. 시트 구조 점검/보정', 'setupSsmkWorkbook')
@@ -182,6 +304,13 @@ function onOpen() {
     .addItem('5. 에이전트 리뷰 보드 실행', 'runAgentReviewBoard')
     .addItem('6. 자동화 준비도 기록', 'evaluateAutomationReadiness')
     .addToUi();
+}
+
+function showSettingsSidebar() {
+  const html = HtmlService
+    .createHtmlOutputFromFile('SettingsSidebar')
+    .setTitle('SSMK Control Center');
+  SpreadsheetApp.getUi().showSidebar(html);
 }
 
 function runWeeklyDraftPrepWorkflow(issueDate) {
@@ -236,6 +365,7 @@ function runWeeklyDraftPrepWorkflow(issueDate) {
 function setupSsmkWorkbook() {
   const ss = SpreadsheetApp.getActive();
 
+  ensureControlCenterSheets_(ss);
   ensureSheet_(ss, SSMK.sheets.hypothesisReviews, SSMK.headers.hypothesisReviews.length);
   ensureSheet_(ss, SSMK.sheets.reportRuns, SSMK.headers.reportRuns.length);
   ensureSheet_(ss, SSMK.sheets.automationStageReviews, SSMK.headers.automationStageReviews.length);
@@ -254,6 +384,196 @@ function setupSsmkWorkbook() {
   applyDropdowns_(ss);
 
   SpreadsheetApp.getUi().alert('SSMK 시트 구조 점검이 끝났습니다. 기존 데이터는 지우지 않았습니다.');
+}
+
+function ensureControlCenterSheets_(ss) {
+  ensureSheet_(ss, SSMK.sheets.userPreferences, 6);
+  ensureSheet_(ss, SSMK.sheets.automationSchedules, 6);
+
+  setHeaders_(ss, SSMK.sheets.userPreferences, [
+    'setting_key',
+    'setting_value',
+    'setting_type',
+    'description',
+    'allowed_values',
+    'user_editable',
+  ]);
+  setHeaders_(ss, SSMK.sheets.automationSchedules, [
+    'schedule_key',
+    'description',
+    'enabled',
+    'cadence',
+    'last_run_at',
+    'next_run_hint',
+  ]);
+
+  seedDefaultPreferences_(ss);
+  seedDefaultSchedules_(ss);
+}
+
+function seedDefaultPreferences_(ss) {
+  const existing = new Set(readObjects_(SSMK.sheets.userPreferences).map((row) => row.setting_key));
+  CONTROL_CENTER_DEFAULT_PREFERENCES.forEach((setting) => {
+    if (!existing.has(setting.setting_key)) {
+      appendObject_(SSMK.sheets.userPreferences, [
+        'setting_key',
+        'setting_value',
+        'setting_type',
+        'description',
+        'allowed_values',
+        'user_editable',
+      ], setting);
+    }
+  });
+}
+
+function seedDefaultSchedules_(ss) {
+  const existing = new Set(readObjects_(SSMK.sheets.automationSchedules).map((row) => row.schedule_key));
+  CONTROL_CENTER_DEFAULT_SCHEDULES.forEach((setting) => {
+    if (!existing.has(setting.schedule_key)) {
+      appendObject_(SSMK.sheets.automationSchedules, [
+        'schedule_key',
+        'description',
+        'enabled',
+        'cadence',
+        'last_run_at',
+        'next_run_hint',
+      ], setting);
+    }
+  });
+}
+
+function getControlCenterState() {
+  const ss = SpreadsheetApp.getActive();
+  ensureControlCenterSheets_(ss);
+
+  const preferences = readObjects_(SSMK.sheets.userPreferences).map((row) => ({
+    setting_key: row.setting_key || '',
+    setting_value: row.setting_value || '',
+    setting_type: row.setting_type || '',
+    description: row.description || '',
+    allowed_values: parseAllowedValues_(row.allowed_values),
+    user_editable: String(row.user_editable || '').toUpperCase() !== 'FALSE',
+  }));
+
+  const schedules = readObjects_(SSMK.sheets.automationSchedules).map((row) => ({
+    schedule_key: row.schedule_key || '',
+    description: row.description || '',
+    enabled: normalizeOnOffText_(row.enabled),
+    cadence: row.cadence || '',
+    last_run_at: row.last_run_at || '',
+    next_run_hint: row.next_run_hint || '',
+  }));
+
+  return {
+    project_name: SSMK.projectName,
+    disclaimer: SSMK.disclaimer,
+    preferences: preferences,
+    basic_preferences: preferences.filter((row) => !String(row.setting_key).startsWith('include_')),
+    included_sections: preferences.filter((row) => String(row.setting_key).startsWith('include_')),
+    schedules: schedules,
+    log_locations: [
+      '설정 시트: user_preferences, automation_schedules',
+      '검토 로그: agent_review_log, automation_stage_reviews',
+      '변경 기록: change_approval_log',
+      '리포트 상태: report_runs',
+    ],
+    revision_request_placeholder: '재작업 요청 저장은 Task 4에서 연결합니다.',
+  };
+}
+
+function saveUserPreferences(preferences) {
+  const ss = SpreadsheetApp.getActive();
+  ensureControlCenterSheets_(ss);
+  const sheet = ss.getSheetByName(SSMK.sheets.userPreferences);
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+  const rows = readIndexedObjects_(SSMK.sheets.userPreferences);
+  const existingByKey = new Map(rows.map((row) => [row.setting_key, row]));
+  const incoming = normalizePreferencePayload_(preferences);
+  const warnings = [];
+  const updatedKeys = [];
+
+  Object.keys(incoming).forEach((key) => {
+    if (!Object.prototype.hasOwnProperty.call(incoming, key)) return;
+    const value = incoming[key];
+    if (value === undefined || value === null) return;
+
+    const existing = existingByKey.get(key);
+    if (existing && String(existing.user_editable || '').toUpperCase() === 'FALSE') {
+      warnings.push(`${key}는 잠금 설정이라 여기서 바꿀 수 없습니다.`);
+      return;
+    }
+
+    const normalized = normalizePreferenceUpdate_(existing, key, value);
+    if (normalized.warning) {
+      warnings.push(normalized.warning);
+      return;
+    }
+    if (normalized.value === undefined) return;
+
+    if (key === 'email_auto_send') {
+      const currentValue = normalizeOnOffText_(existing ? existing.setting_value : '');
+      if (currentValue === 'OFF' && normalized.value === 'ON') {
+        warnings.push('email_auto_send는 OFF에서 ON으로 바로 바뀌지 않습니다. 사람 승인 전에는 OFF를 유지합니다.');
+        return;
+      }
+    }
+
+    const rowObject = buildPreferenceRowObject_(existing, key, normalized.value);
+    upsertRowByKey_(sheet, headers, 'setting_key', key, rowObject);
+    updatedKeys.push(key);
+  });
+
+  return {
+    ok: true,
+    status: warnings.length > 0 ? 'warning' : 'ok',
+    message: warnings.length > 0
+      ? '일부 설정은 저장했지만, 몇 가지 항목은 경고 때문에 그대로 두었습니다.'
+      : '리포트 기본 설정과 포함 섹션을 저장했습니다.',
+    warnings: warnings,
+    updated_keys: updatedKeys,
+    state: getControlCenterState(),
+  };
+}
+
+function saveScheduleSettings(schedules) {
+  const ss = SpreadsheetApp.getActive();
+  ensureControlCenterSheets_(ss);
+  const sheet = ss.getSheetByName(SSMK.sheets.automationSchedules);
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+  const rows = readIndexedObjects_(SSMK.sheets.automationSchedules);
+  const existingByKey = new Map(rows.map((row) => [row.schedule_key, row]));
+  const incoming = normalizeSchedulePayload_(schedules);
+  const warnings = [];
+  const updatedKeys = [];
+
+  Object.keys(incoming).forEach((key) => {
+    if (!Object.prototype.hasOwnProperty.call(incoming, key)) return;
+    const value = incoming[key];
+    if (value === undefined || value === null) return;
+
+    const normalized = normalizeOnOffText_(value);
+    if (!normalized) {
+      warnings.push(`${key}는 ON 또는 OFF로만 저장할 수 있습니다.`);
+      return;
+    }
+
+    const existing = existingByKey.get(key);
+    const rowObject = buildScheduleRowObject_(existing, key, normalized);
+    upsertRowByKey_(sheet, headers, 'schedule_key', key, rowObject);
+    updatedKeys.push(key);
+  });
+
+  return {
+    ok: true,
+    status: warnings.length > 0 ? 'warning' : 'ok',
+    message: warnings.length > 0
+      ? '일부 스케줄은 저장했지만, 몇 가지 항목은 형식이 맞지 않아 그대로 두었습니다.'
+      : '자동화 스케줄을 저장했습니다.',
+    warnings: warnings,
+    updated_keys: updatedKeys,
+    state: getControlCenterState(),
+  };
 }
 
 function collectWeeklyInputs(issueDate) {
@@ -767,6 +1087,154 @@ function appendObject_(sheetName, headers, object) {
   if (!sheet) throw new Error(`시트를 찾을 수 없습니다: ${sheetName}`);
   const row = headers.map((header) => Object.prototype.hasOwnProperty.call(object, header) ? object[header] : '');
   sheet.appendRow(row);
+}
+
+function readIndexedObjects_(sheetName) {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  if (!sheet) return [];
+
+  const lastRow = sheet.getLastRow();
+  const lastColumn = sheet.getLastColumn();
+  if (lastRow < 2 || lastColumn < 1) return [];
+
+  const values = sheet.getRange(1, 1, lastRow, lastColumn).getDisplayValues();
+  const headers = values[0];
+  return values.slice(1)
+    .filter((row) => row.some((cell) => cell !== ''))
+    .map((row, index) => {
+      const item = {
+        __rowNumber: index + 2,
+      };
+      headers.forEach((header, headerIndex) => {
+        if (!header) return;
+        item[header] = row[headerIndex] || '';
+      });
+      return item;
+    });
+}
+
+function upsertRowByKey_(sheet, headers, keyHeader, keyValue, object) {
+  const rows = readIndexedObjects_(sheet.getName());
+  const existing = rows.find((row) => String(row[keyHeader]) === String(keyValue));
+  if (existing) {
+    headers.forEach((header, index) => {
+      if (!Object.prototype.hasOwnProperty.call(object, header)) return;
+      sheet.getRange(existing.__rowNumber, index + 1).setValue(object[header]);
+    });
+    return existing.__rowNumber;
+  }
+
+  const row = headers.map((header) => Object.prototype.hasOwnProperty.call(object, header) ? object[header] : '');
+  sheet.appendRow(row);
+  return sheet.getLastRow();
+}
+
+function buildPreferenceRowObject_(existing, key, value) {
+  return {
+    setting_key: key,
+    setting_value: value,
+    setting_type: existing ? existing.setting_type : inferPreferenceType_(key, value),
+    description: existing ? existing.description : '',
+    allowed_values: existing ? existing.allowed_values : '',
+    user_editable: existing ? existing.user_editable : 'TRUE',
+  };
+}
+
+function buildScheduleRowObject_(existing, key, enabled) {
+  return {
+    schedule_key: key,
+    description: existing ? existing.description : '',
+    enabled: enabled,
+    cadence: existing ? existing.cadence : '',
+    last_run_at: existing ? existing.last_run_at : '',
+    next_run_hint: existing ? existing.next_run_hint : '',
+  };
+}
+
+function normalizePreferencePayload_(preferences) {
+  if (!preferences) return {};
+  if (Array.isArray(preferences)) {
+    return preferences.reduce((acc, item) => {
+      if (!item) return acc;
+      if (Array.isArray(item) && item.length >= 2) {
+        acc[String(item[0])] = item[1];
+        return acc;
+      }
+      if (typeof item === 'object' && item.setting_key) {
+        acc[String(item.setting_key)] = Object.prototype.hasOwnProperty.call(item, 'setting_value') ? item.setting_value : item.value;
+      }
+      return acc;
+    }, {});
+  }
+  if (typeof preferences === 'object') return Object.assign({}, preferences);
+  return {};
+}
+
+function normalizeSchedulePayload_(schedules) {
+  if (!schedules) return {};
+  if (Array.isArray(schedules)) {
+    return schedules.reduce((acc, item) => {
+      if (!item) return acc;
+      if (Array.isArray(item) && item.length >= 2) {
+        acc[String(item[0])] = item[1];
+        return acc;
+      }
+      if (typeof item === 'object' && item.schedule_key) {
+        acc[String(item.schedule_key)] = Object.prototype.hasOwnProperty.call(item, 'enabled') ? item.enabled : item.value;
+      }
+      return acc;
+    }, {});
+  }
+  if (typeof schedules === 'object') return Object.assign({}, schedules);
+  return {};
+}
+
+function normalizePreferenceUpdate_(existing, key, value) {
+  const type = String(existing && existing.setting_type ? existing.setting_type : inferPreferenceType_(key, value)).toLowerCase();
+  const allowedValues = existing ? parseAllowedValues_(existing.allowed_values) : [];
+
+  if (type === 'switch') {
+    const normalized = normalizeOnOffText_(value);
+    if (!normalized) {
+      return { warning: `${key}는 ON 또는 OFF로만 저장할 수 있습니다.` };
+    }
+    return { value: normalized };
+  }
+
+  if (type === 'number') {
+    const text = String(value).trim();
+    if (text === '' || !/^[-+]?\d+(\.\d+)?$/.test(text)) {
+      return { warning: `${key}는 숫자만 저장할 수 있습니다.` };
+    }
+    return { value: text };
+  }
+
+  const text = String(value).trim();
+  if (type === 'select' && allowedValues.length > 0 && allowedValues.indexOf(text) === -1) {
+    return { warning: `${key}는 허용된 값만 저장할 수 있습니다: ${allowedValues.join(', ')}` };
+  }
+  return { value: text };
+}
+
+function inferPreferenceType_(key, value) {
+  if (/^include_/.test(key) || /auto_send|approval/.test(key)) return 'switch';
+  if (typeof value === 'number' || /^[-+]?\d+(\.\d+)?$/.test(String(value).trim())) return 'number';
+  return 'text';
+}
+
+function parseAllowedValues_(text) {
+  return String(text || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeOnOffText_(value) {
+  const text = String(value === true ? 'ON' : value === false ? 'OFF' : value || '').trim().toUpperCase();
+  if (text === 'TRUE') return 'ON';
+  if (text === 'FALSE') return 'OFF';
+  if (text === 'ON' || text === 'OFF') return text;
+  return '';
 }
 
 function createReportRunRow_(issueDate, weekStart, weekEnd, status, filePath, notes) {

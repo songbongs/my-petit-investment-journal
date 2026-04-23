@@ -188,6 +188,73 @@ automation_stage_reviews 품질 기록
 승인되지 않은 변경은 절대 적용하지 않습니다.
 ```
 
+### 3-11. `showSettingsSidebar()`
+
+역할:
+
+- `SSMK Control Center` 사이드바를 연다
+- 기본 설정, 포함 섹션, 자동화 스케줄, 로그 안내를 한 화면에서 보여준다
+
+초보자용 설명:
+
+```text
+이 함수는 설정 창을 여는 버튼입니다.
+사용자는 시트 오른쪽에서 바로 현재 상태를 보고 필요한 값만 바꿀 수 있습니다.
+```
+
+### 3-12. `getControlCenterState()`
+
+역할:
+
+- `user_preferences`와 `automation_schedules`의 현재 값을 읽는다
+- 사이드바가 바로 그릴 수 있는 형태로 정리한다
+- 포함 섹션과 잠금 설정을 구분해 보여준다
+
+### 3-13. `saveUserPreferences(preferences)`
+
+역할:
+
+- 사용자가 바꾼 설정만 부분 저장한다
+- 기존 행은 `setting_key`를 유지한 채 필요한 칸만 바꾼다
+- `email_auto_send`가 `OFF`에서 `ON`으로 바뀌는 요청은 경고만 돌려주고 저장하지 않는다
+
+### 3-14. `saveScheduleSettings(schedules)`
+
+역할:
+
+- 자동화 스케줄의 ON/OFF만 부분 저장한다
+- 기존 행은 `schedule_key`를 유지한 채 필요한 칸만 바꾼다
+- 나중에 Task 4 이후 스케줄이 늘어나도 같은 방식으로 처리한다
+
+### 3-15. `SettingsSidebar.html`
+
+화면 섹션:
+
+```text
+리포트 기본 설정
+포함 섹션
+자동화 스케줄
+재작업 요청
+로그 확인 안내
+```
+
+사용자 흐름:
+
+```text
+사이드바를 연다
+현재 설정을 읽는다
+필요한 값만 바꾼다
+저장을 누른다
+경고가 나오면 그 항목만 다시 확인한다
+```
+
+재작업 요청 안내:
+
+```text
+지금은 Task 4가 아니므로 저장하지 않는다.
+버튼은 자리 표시자이며 실제 저장은 revision_requests 연결 때 한다.
+```
+
 ---
 
 ## 4. 권장 실행 요일
