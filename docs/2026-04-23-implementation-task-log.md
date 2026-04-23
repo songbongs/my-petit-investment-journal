@@ -296,3 +296,80 @@ Important remaining work:
 5. Task 8: Codex scheduled automation prompt and approval-gate documentation
 6. Task 9: Final verification, user runbook, and GitHub update
 ```
+
+## Task 6B: Hypothesis Lab 5-card field structure
+
+Status: completed
+
+What changed:
+
+- Expanded the `Hypothesis Lab` section in `templates/weekly-report-template.md` from a simple 5-slot summary table into 5 detailed hypothesis cards.
+- Each card now includes the approved fields:
+  - 가설 ID
+  - 가설 버전
+  - 한 줄 예측
+  - 근거 지표/데이터
+  - 출처
+  - 왜 그렇게 해석했는지
+  - 레드팀 반박
+  - 보완된 최종 가설
+  - 예측 조건
+  - 복기 조건
+  - 초보자 레슨
+  - 용어 주석
+  - 한계와 다음 확인
+- Kept the 5 approved hypothesis roles:
+  - 성장주 / 빅테크
+  - 산업 / 테마
+  - 배당주 / 방어주
+  - ETF / 시장 흐름
+  - 리스크 / 턴어라운드
+- Added a short beginner-friendly writing rule so the template nudges observational wording instead of decision-like language.
+
+Verification:
+
+- Passed: field-structure check with `rg` for the required hypothesis field labels
+- Passed: manual read-through for 5-card order and beginner-friendly wording
+
+Notes:
+
+- This slice covers the 5 detailed hypothesis cards only.
+- Chart placeholder wording and the Codex automation prompt file remain for the next Task 6 slices.
+
+## Handoff after Task 6B
+
+Current branch:
+
+```text
+codex/weekly-lab-control-center
+```
+
+Completed tasks:
+
+```text
+Task 1: Apps Script sheet schema v2
+Task 2: Default preferences and schedule policy
+Task 3: SSMK Control Center sidebar
+Task 4: Revision request and report revision tracking
+Task 5A: Automation run start/finish logging
+Task 5B: Step, error, and bottleneck logging
+Task 5C: Operator QA review logging
+Task 6A: Weekly Lab template outline redesign
+Task 6B: Hypothesis Lab 5-card field structure
+```
+
+Next recommended task:
+
+```text
+Task 6C: Add explicit chart placeholder wording to templates/weekly-report-template.md
+```
+
+Important remaining work:
+
+```text
+1. Task 6C: chart placeholder wording
+2. Task 6D: codex-weekly-lab-automation-prompt.md creation
+3. Task 7: runWeeklyLabWorkflow() orchestration draft
+4. Task 8: Codex scheduled automation prompt and approval-gate documentation
+5. Task 9: Final verification, user runbook, and GitHub update
+```
