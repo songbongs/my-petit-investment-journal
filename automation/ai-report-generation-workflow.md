@@ -346,3 +346,48 @@ automation/Code.gs
 2. Markdown 초안을 생성한다.
 3. 가설을 `hypothesis_reviews`에 저장한다.
 4. 승인 상태일 때만 이메일 발송 함수가 실행되게 한다.
+
+---
+
+## 10. Weekly Lab 워크플로 초안
+
+현재 Weekly Lab 쪽에서는 아래 2개 함수를 새 기본 초안으로 본다.
+
+```text
+runWeeklyLabWorkflow(issueDate)
+createWeeklyLabPromptDoc_(issueDate, runId)
+```
+
+각 함수 역할:
+
+```text
+runWeeklyLabWorkflow():
+- run_id를 만든다
+- 시트 구조를 조용히 점검한다
+- Weekly Lab 입력 프롬프트 문서를 만든다
+- 가설 복기 예약을 만든다
+- 에이전트 리뷰 보드를 실행한다
+- report_runs와 automation_run_log 상태를 남긴다
+- 가능하면 operator QA 리뷰도 남긴다
+
+createWeeklyLabPromptDoc_():
+- 최종 리포트가 아니라 Codex 자동화가 읽을 입력 문서를 만든다
+- Google Docs 문서에 run_id, report_id, issue_date, 기준 파일 경로, 입력 데이터 JSON을 넣는다
+- report_sections와 report_versions에도 최소 기록을 남긴다
+```
+
+초보자용 설명:
+
+```text
+이 문서는 아직 "리포트를 바로 완성하는 버튼"이 아니다.
+먼저 자동화가 읽을 입력 문서를 만들고,
+그다음 로그와 검토 결과를 남기는 "작업 준비 버튼"에 가깝다.
+```
+
+호환성 규칙:
+
+```text
+기존 runWeeklyDraftPrepWorkflow()는 당장 지우지 않는다.
+이전 흐름을 참고하거나 비교할 수 있게 하위 호환용으로 남겨 둔다.
+메뉴 기본 실행 항목 교체는 다음 단계에서 따로 정리한다.
+```

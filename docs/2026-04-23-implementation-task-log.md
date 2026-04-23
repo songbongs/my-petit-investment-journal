@@ -511,3 +511,73 @@ Important remaining work:
 2. Task 8: Codex scheduled automation prompt and approval-gate documentation
 3. Task 9: Final verification, user runbook, and GitHub update
 ```
+
+## Task 7A: Weekly Lab workflow draft and prompt helper
+
+Status: completed
+
+What changed:
+
+- Added `runWeeklyLabWorkflow(issueDate)` in `automation/Code.gs`.
+- Added `prepareSsmkWorkbook_()` so the new workflow can prepare sheets without relying on UI alerts.
+- Added `collectWeeklyLabPromptInputs_()`, `buildWeeklyLabPromptDocBody_()`, and `createWeeklyLabPromptDoc_(issueDate, runId)`.
+- Connected the new workflow draft to:
+  - `startAutomationRun_()`
+  - `logAutomationStep_()`
+  - `scheduleHypothesisReviews()`
+  - `runAgentReviewBoard()`
+  - `evaluateAutomationReadiness()`
+  - `finishAutomationRun_()`
+  - `createOperatorQaReview_()` when possible
+- Connected the prompt-doc helper to `report_sections` and `report_versions` so the prompt document itself leaves a trackable draft record.
+- Updated `automation/ai-report-generation-workflow.md` to explain the new Weekly Lab workflow draft and to note that the old workflow remains for compatibility.
+
+Verification:
+
+- Passed: `Code.gs` syntax check
+- Passed: local workflow draft validation with stubs for `runWeeklyLabWorkflow()` success path, failure path, and `createWeeklyLabPromptDoc_()` output tracking
+- Passed: safe sensitive-name check with `rg`
+
+Notes:
+
+- This slice adds the new workflow draft without switching the menu default entry yet.
+- `runWeeklyDraftPrepWorkflow()` remains available for comparison and fallback.
+
+## Handoff after Task 7A
+
+Current branch:
+
+```text
+codex/weekly-lab-control-center
+```
+
+Completed tasks:
+
+```text
+Task 1: Apps Script sheet schema v2
+Task 2: Default preferences and schedule policy
+Task 3: SSMK Control Center sidebar
+Task 4: Revision request and report revision tracking
+Task 5A: Automation run start/finish logging
+Task 5B: Step, error, and bottleneck logging
+Task 5C: Operator QA review logging
+Task 6A: Weekly Lab template outline redesign
+Task 6B: Hypothesis Lab 5-card field structure
+Task 6C: Chart placeholder wording
+Task 6D: Weekly Lab automation prompt file
+Task 7A: Weekly Lab workflow draft and prompt helper
+```
+
+Next recommended task:
+
+```text
+Task 7B: Switch the default menu entry to runWeeklyLabWorkflow() while keeping the legacy workflow for compatibility
+```
+
+Important remaining work:
+
+```text
+1. Task 7B: menu default switch and legacy workflow relationship
+2. Task 8: Codex scheduled automation prompt and approval-gate documentation
+3. Task 9: Final verification, user runbook, and GitHub update
+```

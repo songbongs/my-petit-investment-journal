@@ -644,6 +644,138 @@ function showSettingsSidebar() {
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
+function runWeeklyLabWorkflow(issueDate) {
+  const runId = startAutomationRun_('weekly_lab', 'tuesday_weekly_report', 'manual_or_schedule');
+  let promptResult = null;
+  let reportStatus = '사용자 확인 필요';
+  let qaReview = null;
+
+  try {
+    const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
+
+    prepareSsmkWorkbook_();
+    logAutomationStep_(runId, 1, 'prepare_workbook', '오퍼레이터', 'success', '시트 구조 점검', '탭/헤더/드롭다운 점검 완료', '', 0);
+
+    const languageResult = autoSoftenWeeklyScoreLanguage(targetIssueDate);
+    logAutomationStep_(
+      runId,
+      2,
+      'soften_learning_language',
+      '세이지',
+      'success',
+      `issue_date: ${targetIssueDate}`,
+      `updated_cell_count: ${languageResult.updatedCellCount}`,
+      '',
+      0
+    );
+
+    promptResult = createWeeklyLabPromptDoc_(targetIssueDate, runId);
+    logAutomationStep_(
+      runId,
+      3,
+      'create_weekly_lab_prompt_doc',
+      '오퍼레이터',
+      'success',
+      `issue_date: ${targetIssueDate}`,
+      promptResult.url,
+      '',
+      0
+    );
+
+    const scheduledReviewCount = scheduleHypothesisReviews(targetIssueDate);
+    logAutomationStep_(
+      runId,
+      4,
+      'schedule_hypothesis_reviews',
+      '파일럿',
+      'success',
+      `issue_date: ${targetIssueDate}`,
+      `scheduled_reviews: ${scheduledReviewCount}`,
+      '',
+      0
+    );
+
+    const checks = runAgentReviewBoard(targetIssueDate, runId);
+    const blockingCount = checks.filter((check) => check.blocking).length;
+    const workflowStatus = blockingCount > 0 ? '사용자 확인 필요' : '초안 생성 준비 완료';
+    reportStatus = blockingCount > 0 ? '사용자 확인 필요' : '초안 생성';
+
+    logAutomationStep_(
+      runId,
+      5,
+      'run_agent_review_board',
+      '벡터/루미/세이지/파일럿/노바',
+      blockingCount > 0 ? 'warning' : 'success',
+      `issue_date: ${targetIssueDate}`,
+      `blocking_count: ${blockingCount}`,
+      '',
+      0
+    );
+
+    const readiness = evaluateAutomationReadiness();
+    logAutomationStep_(
+      runId,
+      6,
+      'evaluate_automation_readiness',
+      '노바',
+      'success',
+      `issue_date: ${targetIssueDate}`,
+      `quality_score: ${readiness.quality_score}`,
+      '',
+      0
+    );
+
+    const summary = [
+      `Weekly Lab 워크플로 실행일: ${nowText_()}`,
+      `run_id: ${runId}`,
+      `issue_date: ${targetIssueDate}`,
+      `문장 자동 순화: ${languageResult.updatedCellCount}개 셀`,
+      `프롬프트 문서: ${promptResult.url}`,
+      `새 가설 복기 예약: ${scheduledReviewCount}개`,
+      `에이전트 차단 항목: ${blockingCount}개`,
+      `자동화 준비도 점수: ${readiness.quality_score}`,
+      `현재 상태: ${reportStatus}`,
+      '이메일 발송 없음',
+    ].join('\n');
+
+    updateReportRunStatus_(promptResult.reportId, reportStatus, summary);
+    finishAutomationRun_(runId, workflowStatus, promptResult.reportId, promptResult.url, '', '이메일 발송 없음. Weekly Lab 초안 준비 단계만 실행함.');
+
+    try {
+      qaReview = createOperatorQaReview_(runId, promptResult.reportId);
+      logAutomationStep_(
+        runId,
+        7,
+        'create_operator_qa_review',
+        '오퍼레이터',
+        'success',
+        `report_id: ${promptResult.reportId}`,
+        `qa_id: ${qaReview.qa_id}`,
+        '',
+        0
+      );
+    } catch (qaError) {
+      logError_(runId, 'createOperatorQaReview_', 'medium', 'qa_review_error', qaError.message, 'QA 로그 생성 중 예외', 'qa_review_log와 workflow 로그를 함께 확인');
+    }
+
+    Logger.log(summary);
+    return {
+      run_id: runId,
+      issue_date: targetIssueDate,
+      report_id: promptResult.reportId,
+      prompt_url: promptResult.url,
+      blocking_count: blockingCount,
+      scheduled_reviews: scheduledReviewCount,
+      report_status: reportStatus,
+      qa_review_id: qaReview ? qaReview.qa_id : '',
+    };
+  } catch (error) {
+    logError_(runId, 'runWeeklyLabWorkflow', 'high', 'workflow_error', error.message, '워크플로 실행 중 예외', '로그 확인 후 재실행');
+    finishAutomationRun_(runId, 'failed', promptResult ? promptResult.reportId : '', promptResult ? promptResult.url : '', error.message, '자동 복구 없음');
+    throw error;
+  }
+}
+
 function runWeeklyDraftPrepWorkflow(issueDate) {
   const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
 
@@ -694,6 +826,11 @@ function runWeeklyDraftPrepWorkflow(issueDate) {
 }
 
 function setupSsmkWorkbook() {
+  prepareSsmkWorkbook_();
+  SpreadsheetApp.getUi().alert('SSMK 시트 구조 점검이 끝났습니다. 기존 데이터는 지우지 않았습니다.');
+}
+
+function prepareSsmkWorkbook_() {
   const ss = SpreadsheetApp.getActive();
 
   ensureControlCenterSheets_(ss);
@@ -704,8 +841,10 @@ function setupSsmkWorkbook() {
   setHeaders_(ss, SSMK.sheets.scoreHistory, SSMK.headers.weeklyScores);
   applyWeeklyScoreFormulas_(ss);
   applyDropdowns_(ss);
-
-  SpreadsheetApp.getUi().alert('SSMK 시트 구조 점검이 끝났습니다. 기존 데이터는 지우지 않았습니다.');
+  return {
+    ok: true,
+    issue_date: today_(),
+  };
 }
 
 function ensureWorkbookSchemaSheets_(ss) {
@@ -1326,6 +1465,64 @@ function buildWeeklyReportPrompt(issueDate) {
   ].join('\n');
 }
 
+function collectWeeklyLabPromptInputs_(issueDate, reportId, runId) {
+  const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
+  const pendingRevisionRequests = readObjects_(SSMK.sheets.revisionRequests)
+    .filter((row) => row.status === 'requested')
+    .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
+    .slice(-10);
+
+  return {
+    run_id: String(runId || '').trim(),
+    report_id: String(reportId || '').trim(),
+    issue_date: targetIssueDate,
+    generated_at: nowText_(),
+    reference_prompt_file: 'automation/codex-weekly-lab-automation-prompt.md',
+    reference_template_file: 'templates/weekly-report-template.md',
+    weekly_scores: readObjects_(SSMK.sheets.weeklyScores)
+      .filter((row) => sameDateText_(row.issue_date, targetIssueDate)),
+    hypothesis_lab: readObjects_(SSMK.sheets.hypothesisLab)
+      .filter((row) => sameDateText_(row.issue_date, targetIssueDate)),
+    visualization_queue: readObjects_(SSMK.sheets.visualizationQueue)
+      .filter((row) => (
+        String(row.report_id || '') === String(reportId || '') ||
+        sameDateText_(row.issue_date, targetIssueDate)
+      )),
+    revision_requests: pendingRevisionRequests,
+  };
+}
+
+function buildWeeklyLabPromptDocBody_(issueDate, reportId, runId) {
+  const inputs = collectWeeklyLabPromptInputs_(issueDate, reportId, runId);
+
+  return [
+    'SSMK Weekly Lab automation input doc',
+    '',
+    `run_id: ${inputs.run_id}`,
+    `report_id: ${inputs.report_id}`,
+    `issue_date: ${inputs.issue_date}`,
+    `generated_at: ${inputs.generated_at}`,
+    '',
+    '이 문서는 최종 리포트가 아니라 Codex 예약 자동화가 읽을 입력 프롬프트와 데이터 요약이다.',
+    '',
+    '기준 문서:',
+    `- ${inputs.reference_prompt_file}`,
+    `- ${inputs.reference_template_file}`,
+    '',
+    '이번 실행에서 반드시 지킬 것:',
+    '- weekly_scores, hypothesis_lab, visualization_queue, revision_requests를 먼저 확인한다.',
+    '- Google Docs 초안은 Weekly Lab 템플릿 구조를 그대로 따른다.',
+    '- 에이전트 리뷰 보드는 최대 3회까지 반복한다.',
+    '- 차단 항목이 남으면 사용자 확인 필요 상태로 정리한다.',
+    '- 차단 항목이 없으면 현재 프로젝트에서 초안 생성 완료 의미의 상태로 정리한다.',
+    '- 이메일은 보내지 않는다.',
+    '- 추가 과금 API는 호출하지 않는다.',
+    '',
+    '입력 데이터(JSON):',
+    JSON.stringify(inputs, null, 2),
+  ].join('\n');
+}
+
 function createWeeklyPromptDoc(issueDate) {
   return createWeeklyPromptDoc_(issueDate).url;
 }
@@ -1340,6 +1537,26 @@ function createWeeklyPromptDoc_(issueDate) {
   const reportId = createReportRunRow_(targetIssueDate, '', '', '초안 생성', doc.getUrl(), 'AI 프롬프트 문서 생성');
   Logger.log(`Created prompt doc: ${doc.getUrl()}`);
   Logger.log(`Created report run: ${reportId}`);
+  return {
+    url: doc.getUrl(),
+    reportId: reportId,
+  };
+}
+
+function createWeeklyLabPromptDoc_(issueDate, runId) {
+  const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
+  const doc = DocumentApp.create(`SSMK weekly lab prompt - ${targetIssueDate}`);
+  const reportId = createReportRunRow_(targetIssueDate, '', '', '준비', doc.getUrl(), 'Weekly Lab 입력 프롬프트 문서 생성');
+  const prompt = buildWeeklyLabPromptDocBody_(targetIssueDate, reportId, runId);
+
+  doc.getBody().setText(prompt);
+  doc.saveAndClose();
+
+  upsertReportSection_(reportId, 'weekly_lab_prompt', 'Weekly Lab Prompt Doc', 'draft', 'Codex 자동화가 읽을 입력 프롬프트와 데이터 요약');
+  createReportVersion_(reportId, 'v1', '', doc.getUrl(), 'Weekly Lab prompt doc created');
+
+  Logger.log(`Created weekly lab prompt doc: ${doc.getUrl()}`);
+  Logger.log(`Created weekly lab report run: ${reportId}`);
   return {
     url: doc.getUrl(),
     reportId: reportId,
