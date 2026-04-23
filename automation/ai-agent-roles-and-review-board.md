@@ -268,6 +268,9 @@
 
 ```text
 agent_review_log
+automation_step_log
+error_log
+bottleneck_log
 ```
 
 권장 컬럼:
@@ -295,6 +298,22 @@ pass
 warning
 block
 proposal
+```
+
+운영 로그 역할:
+
+| 탭 | 역할 |
+|---|---|
+| `automation_step_log` | 각 실행 단계가 언제, 어떤 상태로 끝났는지 기록 |
+| `error_log` | 오류가 난 단계, 심각도, 원인 추정, 복구 방법 기록 |
+| `bottleneck_log` | 느린 단계, 반복 실패, 수동 작업 병목 기록 |
+
+초보자용 설명:
+
+```text
+agent_review_log가 "콘텐츠 검토 결과표"라면,
+automation_step_log, error_log, bottleneck_log는 "작업 과정 CCTV"에 가깝다.
+문제가 생겼을 때 어디서 멈췄는지 거꾸로 따라가기 위한 기록이다.
 ```
 
 ---

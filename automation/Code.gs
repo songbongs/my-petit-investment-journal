@@ -1074,6 +1074,86 @@ function finishAutomationRun_(runId, status, reportId, finalOutputUrl, errorSumm
   };
 }
 
+function logAutomationStep_(runId, stepOrder, stepName, agentName, status, inputSummary, outputSummary, errorMessage, retryCount) {
+  const normalized = normalizeAutomationStep_(runId, stepOrder, stepName, agentName, status, inputSummary, outputSummary, errorMessage, retryCount);
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+  const timestamp = nowText_();
+
+  appendObject_(SSMK.sheets.automationStepLog, SSMK.headers.automationStepLog, {
+    run_id: normalized.run_id,
+    step_order: normalized.step_order,
+    step_name: normalized.step_name,
+    agent_name: normalized.agent_name,
+    started_at: timestamp,
+    ended_at: timestamp,
+    duration_sec: 0,
+    status: normalized.status,
+    input_summary: normalized.input_summary,
+    output_summary: normalized.output_summary,
+    error_message: normalized.error_message,
+    retry_count: normalized.retry_count,
+  });
+
+  return {
+    ok: true,
+    run_id: normalized.run_id,
+    step_order: normalized.step_order,
+    status: normalized.status,
+  };
+}
+
+function logError_(runId, stepName, severity, errorType, errorMessage, rootCauseGuess, recoveryAction) {
+  const normalized = normalizeErrorLog_(runId, stepName, severity, errorType, errorMessage, rootCauseGuess, recoveryAction);
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+  const errorId = `ERR-${compactDate_(today_())}-${compactTime_()}-${String(new Date().getTime()).slice(-3)}`;
+
+  appendObject_(SSMK.sheets.errorLog, SSMK.headers.errorLog, {
+    error_id: errorId,
+    occurred_at: nowText_(),
+    run_id: normalized.run_id,
+    step_name: normalized.step_name,
+    severity: normalized.severity,
+    error_type: normalized.error_type,
+    error_message: normalized.error_message,
+    root_cause_guess: normalized.root_cause_guess,
+    recovery_action: normalized.recovery_action,
+    resolved: 'FALSE',
+  });
+
+  return {
+    ok: true,
+    error_id: errorId,
+    severity: normalized.severity,
+  };
+}
+
+function logBottleneck_(runId, bottleneckType, location, symptom, impact, suggestedFix, priority, status) {
+  const normalized = normalizeBottleneckLog_(runId, bottleneckType, location, symptom, impact, suggestedFix, priority, status);
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+
+  appendObject_(SSMK.sheets.bottleneckLog, SSMK.headers.bottleneckLog, {
+    detected_at: nowText_(),
+    run_id: normalized.run_id,
+    bottleneck_type: normalized.bottleneck_type,
+    location: normalized.location,
+    symptom: normalized.symptom,
+    impact: normalized.impact,
+    suggested_fix: normalized.suggested_fix,
+    priority: normalized.priority,
+    status: normalized.status,
+  });
+
+  return {
+    ok: true,
+    run_id: normalized.run_id,
+    bottleneck_type: normalized.bottleneck_type,
+    status: normalized.status,
+  };
+}
+
 function collectWeeklyInputs(issueDate) {
   const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
   const weeklyScores = readObjects_(SSMK.sheets.weeklyScores)
@@ -1876,6 +1956,121 @@ function parseDateTimeText_(text) {
     Number(match[5]),
     Number(match[6])
   );
+}
+
+function normalizeAutomationStep_(runId, stepOrder, stepName, agentName, status, inputSummary, outputSummary, errorMessage, retryCount) {
+  const normalizedRunId = String(runId || '').trim();
+  const normalizedStepOrder = Number(stepOrder);
+  const normalizedStepName = String(stepName || '').trim();
+  const normalizedAgentName = String(agentName || '').trim();
+  const normalizedStatus = normalizeWorkflowStatus_(status);
+  const normalizedRetryCount = retryCount === undefined || retryCount === null || retryCount === ''
+    ? 0
+    : Number(retryCount);
+
+  if (!normalizedRunId) {
+    throw new Error('run_id가 필요합니다.');
+  }
+  if (!Number.isInteger(normalizedStepOrder) || normalizedStepOrder < 1) {
+    throw new Error('step_order는 1 이상의 정수여야 합니다.');
+  }
+  if (!normalizedStepName) {
+    throw new Error('step_name이 필요합니다.');
+  }
+  if (!normalizedAgentName) {
+    throw new Error('agent_name이 필요합니다.');
+  }
+  if (!normalizedStatus) {
+    throw new Error(`step status는 허용된 값만 사용할 수 있습니다: ${SSMK.dropdowns.workflowStatus.join(', ')}`);
+  }
+  if (!Number.isInteger(normalizedRetryCount) || normalizedRetryCount < 0) {
+    throw new Error('retry_count는 0 이상의 정수여야 합니다.');
+  }
+
+  return {
+    run_id: normalizedRunId,
+    step_order: normalizedStepOrder,
+    step_name: normalizedStepName,
+    agent_name: normalizedAgentName,
+    status: normalizedStatus,
+    input_summary: String(inputSummary || '').trim(),
+    output_summary: String(outputSummary || '').trim(),
+    error_message: String(errorMessage || '').trim(),
+    retry_count: normalizedRetryCount,
+  };
+}
+
+function normalizeErrorLog_(runId, stepName, severity, errorType, errorMessage, rootCauseGuess, recoveryAction) {
+  const normalizedRunId = String(runId || '').trim();
+  const normalizedStepName = String(stepName || '').trim();
+  const normalizedSeverity = String(severity || 'medium').trim().toLowerCase();
+  const normalizedErrorType = String(errorType || '').trim();
+  const normalizedErrorMessage = String(errorMessage || '').trim();
+
+  if (!normalizedRunId) {
+    throw new Error('run_id가 필요합니다.');
+  }
+  if (!normalizedStepName) {
+    throw new Error('step_name이 필요합니다.');
+  }
+  if (SSMK.dropdowns.riskLevel.indexOf(normalizedSeverity) === -1) {
+    throw new Error(`severity는 허용된 값만 사용할 수 있습니다: ${SSMK.dropdowns.riskLevel.join(', ')}`);
+  }
+  if (!normalizedErrorType) {
+    throw new Error('error_type이 필요합니다.');
+  }
+  if (!normalizedErrorMessage) {
+    throw new Error('error_message가 필요합니다.');
+  }
+
+  return {
+    run_id: normalizedRunId,
+    step_name: normalizedStepName,
+    severity: normalizedSeverity,
+    error_type: normalizedErrorType,
+    error_message: normalizedErrorMessage,
+    root_cause_guess: String(rootCauseGuess || '').trim(),
+    recovery_action: String(recoveryAction || '').trim(),
+  };
+}
+
+function normalizeBottleneckLog_(runId, bottleneckType, location, symptom, impact, suggestedFix, priority, status) {
+  const normalizedRunId = String(runId || '').trim();
+  const normalizedBottleneckType = String(bottleneckType || '').trim();
+  const normalizedLocation = String(location || '').trim();
+  const normalizedSymptom = String(symptom || '').trim();
+  const normalizedPriority = String(priority || 'medium').trim().toLowerCase();
+  const normalizedStatus = normalizeWorkflowStatus_(status || 'warning');
+
+  if (!normalizedRunId) {
+    throw new Error('run_id가 필요합니다.');
+  }
+  if (!normalizedBottleneckType) {
+    throw new Error('bottleneck_type이 필요합니다.');
+  }
+  if (!normalizedLocation) {
+    throw new Error('location이 필요합니다.');
+  }
+  if (!normalizedSymptom) {
+    throw new Error('symptom이 필요합니다.');
+  }
+  if (SSMK.dropdowns.riskLevel.indexOf(normalizedPriority) === -1) {
+    throw new Error(`priority는 허용된 값만 사용할 수 있습니다: ${SSMK.dropdowns.riskLevel.join(', ')}`);
+  }
+  if (!normalizedStatus) {
+    throw new Error(`bottleneck status는 허용된 값만 사용할 수 있습니다: ${SSMK.dropdowns.workflowStatus.join(', ')}`);
+  }
+
+  return {
+    run_id: normalizedRunId,
+    bottleneck_type: normalizedBottleneckType,
+    location: normalizedLocation,
+    symptom: normalizedSymptom,
+    impact: String(impact || '').trim(),
+    suggested_fix: String(suggestedFix || '').trim(),
+    priority: normalizedPriority,
+    status: normalizedStatus,
+  };
 }
 
 function normalizePreferenceUpdate_(existing, key, value) {

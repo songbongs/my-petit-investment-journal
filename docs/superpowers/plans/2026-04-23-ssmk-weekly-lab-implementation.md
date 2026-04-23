@@ -447,7 +447,7 @@ Expected:
 ended_at, total_duration_sec, final_output_url이 기록된다.
 ```
 
-- [ ] **Step 3: `logAutomationStep_()` 함수를 추가한다**
+- [x] **Step 3: `logAutomationStep_()` 함수를 추가한다**
 
 기록 컬럼:
 
@@ -456,7 +456,7 @@ run_id, step_order, step_name, agent_name, started_at, ended_at,
 duration_sec, status, input_summary, output_summary, error_message, retry_count
 ```
 
-- [ ] **Step 4: `logError_()`와 `logBottleneck_()`을 추가한다**
+- [x] **Step 4: `logError_()`와 `logBottleneck_()`을 추가한다**
 
 Expected:
 
