@@ -476,32 +476,38 @@ const SSMK = {
   },
 };
 
-const WORKBOOK_SCHEMA_SHEET_KEYS = [
-  'sourcePolicy',
-  'marketData',
-  'companyFundamentals',
-  'revenueBreakdown',
-  'shareholderReturns',
-  'insiderActivity',
-  'etfWatch',
-  'sectorThemeScores',
-  'hypothesisLab',
-  'hypothesisReviews',
-  'hypothesisEvolutionLog',
-  'visualizationQueue',
-  'reportRuns',
-  'reportSections',
-  'reportVersions',
-  'revisionRequests',
-  'automationStageReviews',
-  'changeApprovalLog',
-  'agentReviewLog',
-  'automationRunLog',
-  'automationStepLog',
-  'bottleneckLog',
-  'errorLog',
-  'qaReviewLog',
-  'glossary',
+const WORKBOOK_SCHEMA_SHEET_GROUPS = [
+  [
+    'sourcePolicy',
+    'marketData',
+    'companyFundamentals',
+    'revenueBreakdown',
+    'shareholderReturns',
+    'insiderActivity',
+    'etfWatch',
+    'sectorThemeScores',
+  ],
+  [
+    'hypothesisLab',
+    'hypothesisReviews',
+    'hypothesisEvolutionLog',
+    'visualizationQueue',
+    'reportRuns',
+    'reportSections',
+    'reportVersions',
+    'revisionRequests',
+  ],
+  [
+    'automationStageReviews',
+    'changeApprovalLog',
+    'agentReviewLog',
+    'automationRunLog',
+    'automationStepLog',
+    'bottleneckLog',
+    'errorLog',
+    'qaReviewLog',
+    'glossary',
+  ],
 ];
 
 const WORKBOOK_SETUP_LIMITS = {
@@ -509,6 +515,8 @@ const WORKBOOK_SETUP_LIMITS = {
   minDropdownRows: 200,
   maxDropdownRows: 300,
 };
+
+const SSMK_SETUP_BUILD = '2026-04-24-setup-debug-v1';
 
 const CONTROL_CENTER_DEFAULT_PREFERENCES = [
   {
@@ -836,8 +844,23 @@ function runWeeklyDraftPrepWorkflow(issueDate) {
 }
 
 function setupSsmkWorkbook() {
-  prepareSsmkWorkbook_({ includeDropdowns: false });
-  SpreadsheetApp.getUi().alert('SSMK 시트 구조 점검이 끝났습니다. 실행 시간을 줄이기 위해 입력용 드롭다운 보강은 이번 실행에서 생략했습니다.');
+  prepareSsmkWorkbook_({
+    includeDropdowns: false,
+    includeFormulas: false,
+    logProgress: true,
+  });
+  SpreadsheetApp.getUi().alert(`SSMK 시트 구조 점검이 끝났습니다. build=${SSMK_SETUP_BUILD}. 실행 시간을 줄이기 위해 이번 실행에서는 수식/드롭다운 보강을 생략했습니다.`);
+}
+
+function showSsmkSetupBuild() {
+  SpreadsheetApp.getUi().alert(`현재 setup build는 ${SSMK_SETUP_BUILD} 입니다.`);
+  return SSMK_SETUP_BUILD;
+}
+
+function applyWeeklyScoreFormulas() {
+  const ss = SpreadsheetApp.getActive();
+  applyWeeklyScoreFormulas_(ss);
+  SpreadsheetApp.getUi().alert('weekly_scores 수식 보강이 끝났습니다.');
 }
 
 function applySsmkWorkbookDropdowns() {
@@ -850,32 +873,51 @@ function prepareSsmkWorkbook_(options) {
   const normalizedOptions = normalizeWorkbookPrepareOptions_(options);
   const ss = SpreadsheetApp.getActive();
 
+  logSetupProgress_('prepare start', normalizedOptions.logProgress);
   ensureControlCenterSheets_(ss);
-  ensureWorkbookSchemaSheets_(ss);
+  logSetupProgress_('control center ready', normalizedOptions.logProgress);
+  ensureWorkbookSchemaSheets_(ss, normalizedOptions.logProgress);
+  logSetupProgress_('schema sheets ready', normalizedOptions.logProgress);
 
   normalizeWatchlistColumns_(ss);
+  logSetupProgress_('watchlist normalized', normalizedOptions.logProgress);
   setHeaders_(ss, SSMK.sheets.weeklyScores, SSMK.headers.weeklyScores);
   setHeaders_(ss, SSMK.sheets.scoreHistory, SSMK.headers.weeklyScores);
-  applyWeeklyScoreFormulas_(ss);
+  logSetupProgress_('score headers ready', normalizedOptions.logProgress);
+  if (normalizedOptions.includeFormulas) {
+    applyWeeklyScoreFormulas_(ss);
+    logSetupProgress_('weekly score formulas ready', normalizedOptions.logProgress);
+  }
   if (normalizedOptions.includeDropdowns) {
     applyDropdowns_(ss);
+    logSetupProgress_('dropdowns ready', normalizedOptions.logProgress);
   }
   return {
     ok: true,
     issue_date: today_(),
     include_dropdowns: normalizedOptions.includeDropdowns,
+    include_formulas: normalizedOptions.includeFormulas,
+    build: SSMK_SETUP_BUILD,
   };
 }
 
 function normalizeWorkbookPrepareOptions_(options) {
   return {
     includeDropdowns: Boolean(options && options.includeDropdowns),
+    includeFormulas: options && Object.prototype.hasOwnProperty.call(options, 'includeFormulas')
+      ? Boolean(options.includeFormulas)
+      : true,
+    logProgress: Boolean(options && options.logProgress),
   };
 }
 
-function ensureWorkbookSchemaSheets_(ss) {
-  WORKBOOK_SCHEMA_SHEET_KEYS.forEach((key) => {
-    setHeaders_(ss, SSMK.sheets[key], SSMK.headers[key]);
+function ensureWorkbookSchemaSheets_(ss, logProgress) {
+  WORKBOOK_SCHEMA_SHEET_GROUPS.forEach((group, index) => {
+    group.forEach((key) => {
+      setHeaders_(ss, SSMK.sheets[key], SSMK.headers[key]);
+    });
+    SpreadsheetApp.flush();
+    logSetupProgress_(`schema group ${index + 1}/${WORKBOOK_SCHEMA_SHEET_GROUPS.length} ready`, logProgress);
   });
 }
 
@@ -2105,9 +2147,10 @@ function applyWeeklyScoreFormulas_(ss) {
   const sheet = ss.getSheetByName(SSMK.sheets.weeklyScores);
   if (!sheet) return;
 
-  sheet.getRange('N2').setFormula('=ARRAYFORMULA(IF(C2:C="","",ROUND(H2:H*0.30 + I2:I*0.20 + J2:J*0.20 + K2:K*0.15 + L2:L*0.10 + M2:M*0.05, 2)))');
-  sheet.getRange('O2').setFormula('=ARRAYFORMULA(IF(N2:N="","",IF(N2:N>=8,"높음",IF(N2:N>=6,"중간","낮음"))))');
-  sheet.getRange('Q2').setFormula('=ARRAYFORMULA(IF(C2:C="","",IFERROR(N2:N-P2:P,"")))');
+  setFormulaIfDifferent_(sheet.getRange('N2'), '=ARRAYFORMULA(IF(C2:C="","",ROUND(H2:H*0.30 + I2:I*0.20 + J2:J*0.20 + K2:K*0.15 + L2:L*0.10 + M2:M*0.05, 2)))');
+  setFormulaIfDifferent_(sheet.getRange('O2'), '=ARRAYFORMULA(IF(N2:N="","",IF(N2:N>=8,"높음",IF(N2:N>=6,"중간","낮음"))))');
+  setFormulaIfDifferent_(sheet.getRange('Q2'), '=ARRAYFORMULA(IF(C2:C="","",IFERROR(N2:N-P2:P,"")))');
+  SpreadsheetApp.flush();
 }
 
 function applyDropdowns_(ss) {
@@ -2192,6 +2235,16 @@ function setDropdown_(ss, sheetName, columnNumber, values) {
     .setAllowInvalid(false)
     .build();
   sheet.getRange(2, columnNumber, maxRows, 1).setDataValidation(rule);
+}
+
+function setFormulaIfDifferent_(range, formula) {
+  if (String(range.getFormula() || '') === String(formula || '')) return;
+  range.setFormula(formula);
+}
+
+function logSetupProgress_(message, enabled) {
+  if (!enabled) return;
+  console.log(`[SSMK setup ${SSMK_SETUP_BUILD}] ${message}`);
 }
 
 function computeDropdownTargetRowCount_(lastRow, maxRows) {
