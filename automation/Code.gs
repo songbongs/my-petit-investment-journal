@@ -933,6 +933,88 @@ function saveRevisionRequest(request) {
   };
 }
 
+function upsertReportSection_(reportId, sectionKey, sectionTitle, status, contentSummary) {
+  const normalized = normalizeReportSection_(reportId, sectionKey, sectionTitle, status, contentSummary);
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+
+  const sheet = ss.getSheetByName(SSMK.sheets.reportSections);
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+  const rows = readIndexedObjects_(SSMK.sheets.reportSections);
+  const existing = rows.find((row) => (
+    String(row.report_id) === normalized.report_id &&
+    String(row.section_key) === normalized.section_key
+  ));
+
+  const rowObject = {
+    report_id: normalized.report_id,
+    section_key: normalized.section_key,
+    section_title: normalized.section_title,
+    section_order: existing ? existing.section_order : nextSectionOrder_(rows, normalized.report_id),
+    status: normalized.status,
+    content_summary: normalized.content_summary,
+    current_version: existing ? existing.current_version : 'v1',
+    last_updated_at: nowText_(),
+    notes: existing ? existing.notes : '',
+  };
+
+  if (existing) {
+    headers.forEach((header, index) => {
+      if (!Object.prototype.hasOwnProperty.call(rowObject, header)) return;
+      sheet.getRange(existing.__rowNumber, index + 1).setValue(rowObject[header]);
+    });
+    return {
+      ok: true,
+      action: 'updated',
+      row_number: existing.__rowNumber,
+      report_id: normalized.report_id,
+      section_key: normalized.section_key,
+    };
+  }
+
+  const row = headers.map((header) => Object.prototype.hasOwnProperty.call(rowObject, header) ? rowObject[header] : '');
+  sheet.appendRow(row);
+  return {
+    ok: true,
+    action: 'created',
+    row_number: sheet.getLastRow(),
+    report_id: normalized.report_id,
+    section_key: normalized.section_key,
+  };
+}
+
+function createReportVersion_(reportId, versionLabel, sourceRequestId, outputUrl, notes) {
+  const normalized = normalizeReportVersion_(reportId, versionLabel, sourceRequestId, outputUrl, notes);
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+
+  const existing = readObjects_(SSMK.sheets.reportVersions).find((row) => (
+    row.report_id === normalized.report_id &&
+    row.version_label === normalized.version_label
+  ));
+  if (existing) {
+    throw new Error(`이미 같은 리포트 버전이 있습니다: ${normalized.report_id} ${normalized.version_label}`);
+  }
+
+  appendObject_(SSMK.sheets.reportVersions, SSMK.headers.reportVersions, {
+    report_id: normalized.report_id,
+    version_label: normalized.version_label,
+    created_at: nowText_(),
+    source_request_id: normalized.source_request_id,
+    output_url: normalized.output_url,
+    changed_sections: normalized.changed_sections,
+    change_summary: normalized.change_summary,
+    created_by: 'Apps Script',
+    notes: normalized.notes,
+  });
+
+  return {
+    ok: true,
+    report_id: normalized.report_id,
+    version_label: normalized.version_label,
+  };
+}
+
 function collectWeeklyInputs(issueDate) {
   const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
   const weeklyScores = readObjects_(SSMK.sheets.weeklyScores)
@@ -1602,6 +1684,68 @@ function normalizeRevisionRequest_(request) {
     request_type: requestType,
     user_instruction: userInstruction,
   };
+}
+
+function normalizeReportSection_(reportId, sectionKey, sectionTitle, status, contentSummary) {
+  const normalizedReportId = String(reportId || '').trim();
+  const normalizedSectionKey = String(sectionKey || '').trim();
+  const normalizedSectionTitle = String(sectionTitle || '').trim();
+  const normalizedStatus = String(status || 'draft').trim();
+  const normalizedSummary = String(contentSummary || '').trim();
+
+  if (!normalizedReportId) {
+    throw new Error('report_id가 필요합니다.');
+  }
+  if (!normalizedSectionKey) {
+    throw new Error('section_key가 필요합니다.');
+  }
+  if (!normalizedSectionTitle) {
+    throw new Error('section_title이 필요합니다.');
+  }
+  if (SSMK.dropdowns.sectionStatus.indexOf(normalizedStatus) === -1) {
+    throw new Error(`section status는 허용된 값만 사용할 수 있습니다: ${SSMK.dropdowns.sectionStatus.join(', ')}`);
+  }
+
+  return {
+    report_id: normalizedReportId,
+    section_key: normalizedSectionKey,
+    section_title: normalizedSectionTitle,
+    status: normalizedStatus,
+    content_summary: normalizedSummary,
+  };
+}
+
+function normalizeReportVersion_(reportId, versionLabel, sourceRequestId, outputUrl, notes) {
+  const normalizedReportId = String(reportId || '').trim();
+  const normalizedVersionLabel = String(versionLabel || '').trim();
+  const normalizedSourceRequestId = String(sourceRequestId || '').trim();
+  const normalizedOutputUrl = String(outputUrl || '').trim();
+  const normalizedNotes = String(notes || '').trim();
+
+  if (!normalizedReportId) {
+    throw new Error('report_id가 필요합니다.');
+  }
+  if (!/^v\d+(\.\d+)?$/i.test(normalizedVersionLabel)) {
+    throw new Error('version_label은 v1, v2, v2.1 같은 형식으로 입력하세요.');
+  }
+
+  return {
+    report_id: normalizedReportId,
+    version_label: normalizedVersionLabel.toLowerCase(),
+    source_request_id: normalizedSourceRequestId,
+    output_url: normalizedOutputUrl,
+    changed_sections: '',
+    change_summary: normalizedNotes,
+    notes: normalizedNotes,
+  };
+}
+
+function nextSectionOrder_(rows, reportId) {
+  const orders = rows
+    .filter((row) => String(row.report_id) === String(reportId))
+    .map((row) => Number(row.section_order))
+    .filter((value) => !Number.isNaN(value));
+  return orders.length === 0 ? 1 : Math.max.apply(null, orders) + 1;
 }
 
 function normalizePreferenceUpdate_(existing, key, value) {

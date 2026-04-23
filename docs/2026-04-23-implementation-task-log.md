@@ -93,3 +93,27 @@ Notes:
 
 - `report_sections` and `report_versions` helper functions remain deferred to the next Task 4 slice.
 - Saving a revision request does not approve sending or publish a report.
+
+## Task 4B: Report section and version tracking
+
+Status: completed
+
+What changed:
+
+- Added `upsertReportSection_(reportId, sectionKey, sectionTitle, status, contentSummary)`.
+- Added `createReportVersion_(reportId, versionLabel, sourceRequestId, outputUrl, notes)`.
+- Added validation helpers for section status and version labels.
+- Kept section rows upsert-style by `report_id + section_key`.
+- Kept version rows append-only and blocked duplicate `report_id + version_label`.
+- Updated `automation/ai-report-generation-workflow.md` with the section/version tracking flow.
+
+Verification:
+
+- Passed: `node -e "const fs=require('fs'); new Function(fs.readFileSync('automation/Code.gs','utf8')); console.log('Code.gs syntax ok')"`
+- Passed: local section/version helper validation for valid rows, next section order, and invalid version label blocking.
+- Passed: `SettingsSidebar.html` script syntax check.
+- Passed: safe sensitive-name check with `rg`
+
+Notes:
+
+- These are Apps Script helper functions for later workflow steps. They do not generate a report by themselves.

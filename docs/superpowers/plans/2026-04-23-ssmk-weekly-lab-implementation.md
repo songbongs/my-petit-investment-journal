@@ -355,7 +355,7 @@ status는 requested로 시작한다.
 created_at과 request_id가 자동으로 들어간다.
 ```
 
-- [ ] **Step 2: `report_sections` 기록 함수를 추가한다**
+- [x] **Step 2: `report_sections` 기록 함수를 추가한다**
 
 추가 함수:
 
@@ -370,7 +370,7 @@ Expected:
 사용자가 전체가 아니라 특정 섹션만 재작업 요청할 수 있다.
 ```
 
-- [ ] **Step 3: `report_versions` 기록 함수를 추가한다**
+- [x] **Step 3: `report_versions` 기록 함수를 추가한다**
 
 추가 함수:
 
@@ -402,7 +402,7 @@ v1, v2, v3처럼 리포트 수정 이력이 남는다.
 ]
 ```
 
-- [ ] **Step 5: 커밋한다**
+- [x] **Step 5: 커밋한다**
 
 Run:
 

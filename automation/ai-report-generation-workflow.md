@@ -124,6 +124,15 @@ SSMK Control Center에서 리포트 ID를 입력한다
 → 다음 재작업 처리 단계에서 해당 요청을 읽고 반영한다
 ```
 
+섹션/버전 기록 흐름:
+
+```text
+리포트 초안이나 재작업 결과가 만들어진다
+→ upsertReportSection_()으로 report_sections에 섹션 상태를 남긴다
+→ createReportVersion_()으로 report_versions에 v1, v2 같은 버전 이력을 남긴다
+→ source_request_id로 어떤 재작업 요청 때문에 바뀌었는지 연결한다
+```
+
 주의:
 
 ```text
