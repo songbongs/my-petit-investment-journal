@@ -1,0 +1,2 @@
+change_id,proposed_at,change_type,proposal_title,reason,expected_benefit,risk,rollback_plan,approval_status,approved_at,applied_at,result_note
+CHG-20260422-001,2026-04-22,automation_stage,자동화 발전 승인 게이트 도입,"AI가 다음 단계 적용 시점을 사용자가 놓치지 않도록 하기 위함","중요 변경이 사용자 승인 없이 적용되는 것을 방지","승인 절차가 늘어나 진행 속도가 느려질 수 있음","승인 게이트 문서를 이전 버전으로 되돌리고 관련 탭을 비활성화",approved,2026-04-22,2026-04-22,"설계 문서와 템플릿에 반영"

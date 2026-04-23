@@ -1,0 +1,6 @@
+review_id,issue_date,agent_name,agent_role,review_target,status,finding_summary,risk_level,required_action,blocking,resolved,resolved_at,notes
+AR-20260422-001,2026-04-22,루미,콘텐츠 크리에이터,sample-weekly-report-001,pass,"샘플 리포트 구조와 초보자 설명 작성 완료",low,"실제 데이터 반영 필요",FALSE,FALSE,,"초안 작성 역할"
+AR-20260422-002,2026-04-22,벡터,데이터 검증,sample-weekly-report-001,warning,"샘플 데이터 기반이라 최신 공식 출처 확인 전",medium,"실제 발행 전 공식 출처 확인",FALSE,FALSE,,"데이터 검증 역할"
+AR-20260422-003,2026-04-22,세이지,편집자/품질 검증,sample-weekly-report-001,pass,"투자 추천 표현은 피하고 관찰 기록으로 작성됨",low,"실제 발행 전 표현 재검토",FALSE,FALSE,,"표현/품질 검증 역할"
+AR-20260422-004,2026-04-22,파일럿,운영/프로세스 감독,sample-weekly-report-001,warning,"첫 샘플이라 과거 가설 복기 대상 없음",medium,"다음 리포트부터 복기 예약",FALSE,FALSE,,"프로세스 감독 역할"
+AR-20260422-005,2026-04-22,노바,자동화 발전 제안,sample-weekly-report-001,pass,"첫 샘플이라 자동화 발전 제안 없음",low,"2~4회 운영 후 재평가",FALSE,FALSE,,"발전 제안 역할"

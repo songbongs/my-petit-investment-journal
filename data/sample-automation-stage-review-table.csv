@@ -1,0 +1,2 @@
+review_date,current_stage,quality_score,hypothesis_structure_pass_rate,beginner_explanation_quality,data_confidence_summary,source_stability,user_revision_level,recurring_manual_work,ai_recommendation,recommended_next_stage,proposal_summary,approval_status,approved_by,approved_at,notes
+2026-04-22,AI 자동 초안 설계,0.00,0%,보류,샘플 데이터만 있음,미확인,미확인,미확인,아직 발전 제안 없음,없음,"첫 샘플 단계라 품질 추세 판단 불가",postponed,,,실제 리포트 2~4회 누적 후 재평가
