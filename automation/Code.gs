@@ -836,11 +836,18 @@ function runWeeklyDraftPrepWorkflow(issueDate) {
 }
 
 function setupSsmkWorkbook() {
-  prepareSsmkWorkbook_();
-  SpreadsheetApp.getUi().alert('SSMK 시트 구조 점검이 끝났습니다. 기존 데이터는 지우지 않았습니다.');
+  prepareSsmkWorkbook_({ includeDropdowns: false });
+  SpreadsheetApp.getUi().alert('SSMK 시트 구조 점검이 끝났습니다. 실행 시간을 줄이기 위해 입력용 드롭다운 보강은 이번 실행에서 생략했습니다.');
 }
 
-function prepareSsmkWorkbook_() {
+function applySsmkWorkbookDropdowns() {
+  const ss = SpreadsheetApp.getActive();
+  applyDropdowns_(ss);
+  SpreadsheetApp.getUi().alert('SSMK 입력용 드롭다운 보강이 끝났습니다.');
+}
+
+function prepareSsmkWorkbook_(options) {
+  const normalizedOptions = normalizeWorkbookPrepareOptions_(options);
   const ss = SpreadsheetApp.getActive();
 
   ensureControlCenterSheets_(ss);
@@ -850,10 +857,19 @@ function prepareSsmkWorkbook_() {
   setHeaders_(ss, SSMK.sheets.weeklyScores, SSMK.headers.weeklyScores);
   setHeaders_(ss, SSMK.sheets.scoreHistory, SSMK.headers.weeklyScores);
   applyWeeklyScoreFormulas_(ss);
-  applyDropdowns_(ss);
+  if (normalizedOptions.includeDropdowns) {
+    applyDropdowns_(ss);
+  }
   return {
     ok: true,
     issue_date: today_(),
+    include_dropdowns: normalizedOptions.includeDropdowns,
+  };
+}
+
+function normalizeWorkbookPrepareOptions_(options) {
+  return {
+    includeDropdowns: Boolean(options && options.includeDropdowns),
   };
 }
 
@@ -2159,14 +2175,10 @@ function setHeaders_(ss, sheetName, headers) {
 
   if (headerChanged) {
     headerRange.setValues([headers]);
-  }
-
-  headerRange
-    .setFontWeight('bold')
-    .setFontColor('#ffffff')
-    .setBackground('#1e446b');
-
-  if (headerChanged) {
+    headerRange
+      .setFontWeight('bold')
+      .setFontColor('#ffffff')
+      .setBackground('#1e446b');
     sheet.autoResizeColumns(1, headers.length);
   }
 }
