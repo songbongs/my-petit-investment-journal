@@ -709,3 +709,71 @@ Important remaining work:
 2. Task 9: final verification and beginner runbook update
 3. Optional cleanup: tighten Task 8 wording if later docs diverge
 ```
+
+## Task 8B: Revision request prompt file
+
+Status: completed
+
+What changed:
+
+- Created `automation/codex-revision-request-prompt.md`.
+- Added beginner-friendly rules for reading `revision_requests` rows with `status=requested`.
+- Split the rewrite flow into:
+  - `section` requests: rewrite only the requested section
+  - `full_report` requests: rewrite the whole Weekly Lab draft while keeping the template structure
+- Added `request_type` interpretation hints so future runs can tell the difference between requests like `make_easier`, `fix_source`, and `soften_recommendation_risk`.
+- Added explicit version logging guidance for `report_versions`, including `source_request_id` linking and simple `v1 -> v1.1` / `v1 -> v2` examples.
+- Added a clear Sage block rule for recommendation-like language.
+
+Verification:
+
+- Passed: file existence and required-line check for `revision_requests`, `section`, `full_report`, `report_versions`, `source_request_id`, and `soften_recommendation_risk`
+- Passed: `git diff --check`
+
+Notes:
+
+- This slice only adds the prompt document.
+- No real automation was created or modified.
+- No email flow or external send action was added.
+
+## Handoff after Task 8B
+
+Current branch:
+
+```text
+codex/weekly-lab-control-center
+```
+
+Completed tasks:
+
+```text
+Task 1: Apps Script sheet schema v2
+Task 2: Default preferences and schedule policy
+Task 3: SSMK Control Center sidebar
+Task 4: Revision request and report revision tracking
+Task 5A: Automation run start/finish logging
+Task 5B: Step, error, and bottleneck logging
+Task 5C: Operator QA review logging
+Task 6A: Weekly Lab template outline redesign
+Task 6B: Hypothesis Lab 5-card field structure
+Task 6C: Chart placeholder wording
+Task 6D: Weekly Lab automation prompt file
+Task 7A: Weekly Lab workflow draft and prompt helper
+Task 7B: Weekly Lab menu default switch
+Task 8A: Scheduled Codex automation approval-gate wording
+Task 8B: Revision request prompt file
+```
+
+Next recommended task:
+
+```text
+Task 9A: Final verification pass across docs and prompts, then beginner-friendly runbook wording update
+```
+
+Important remaining work:
+
+```text
+1. Task 9A: final verification pass
+2. Task 9B: beginner-friendly runbook/update summary
+3. Optional cleanup: align any wording drift between workflow docs and prompt docs
+```
