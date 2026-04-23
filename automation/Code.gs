@@ -14,6 +14,7 @@ const SSMK = {
   sheets: {
     settings: 'settings',
     userPreferences: 'user_preferences',
+    sourcePolicy: 'source_policy',
     automationSchedules: 'automation_schedules',
     watchlist: 'watchlist',
     weeklyScores: 'weekly_scores',
@@ -23,13 +24,43 @@ const SSMK = {
     recipients: 'recipients',
     newsEvents: 'news_events',
     dataSources: 'data_sources',
+    marketData: 'market_data',
+    companyFundamentals: 'company_fundamentals',
+    revenueBreakdown: 'revenue_breakdown',
+    shareholderReturns: 'shareholder_returns',
+    insiderActivity: 'insider_activity',
+    etfWatch: 'etf_watch',
+    sectorThemeScores: 'sector_theme_scores',
+    hypothesisLab: 'hypothesis_lab',
     hypothesisReviews: 'hypothesis_reviews',
+    hypothesisEvolutionLog: 'hypothesis_evolution_log',
+    visualizationQueue: 'visualization_queue',
     reportRuns: 'report_runs',
+    reportSections: 'report_sections',
+    reportVersions: 'report_versions',
+    revisionRequests: 'revision_requests',
     automationStageReviews: 'automation_stage_reviews',
     changeApprovalLog: 'change_approval_log',
     agentReviewLog: 'agent_review_log',
+    automationRunLog: 'automation_run_log',
+    automationStepLog: 'automation_step_log',
+    bottleneckLog: 'bottleneck_log',
+    errorLog: 'error_log',
+    qaReviewLog: 'qa_review_log',
+    glossary: 'glossary',
   },
   headers: {
+    sourcePolicy: [
+      'source_key',
+      'source_name',
+      'source_type',
+      'source_url',
+      'trust_level',
+      'update_frequency',
+      'fallback_source',
+      'usage_notes',
+      'active',
+    ],
     watchlist: [
       'ticker',
       'company',
@@ -75,6 +106,125 @@ const SSMK = {
       'source_links',
       'review_status',
     ],
+    marketData: [
+      'market_date',
+      'symbol',
+      'name',
+      'asset_type',
+      'close_price',
+      'change_pct_1w',
+      'change_pct_4w',
+      'volume',
+      'data_confidence',
+      'source_name',
+      'source_url',
+      'updated_at',
+      'notes',
+    ],
+    companyFundamentals: [
+      'ticker',
+      'company',
+      'fiscal_period',
+      'revenue',
+      'revenue_growth_yoy',
+      'gross_margin',
+      'operating_margin',
+      'net_margin',
+      'eps',
+      'free_cash_flow',
+      'debt_to_equity',
+      'data_confidence',
+      'source_name',
+      'source_url',
+      'updated_at',
+      'notes',
+    ],
+    revenueBreakdown: [
+      'ticker',
+      'company',
+      'fiscal_period',
+      'segment_name',
+      'revenue_amount',
+      'revenue_pct',
+      'growth_yoy',
+      'source_name',
+      'source_url',
+      'notes',
+    ],
+    shareholderReturns: [
+      'ticker',
+      'company',
+      'fiscal_period',
+      'dividend_yield',
+      'payout_ratio',
+      'dividend_growth_5y',
+      'buyback_amount',
+      'buyback_yield',
+      'free_cash_flow_coverage',
+      'source_name',
+      'source_url',
+      'notes',
+    ],
+    insiderActivity: [
+      'ticker',
+      'company',
+      'transaction_date',
+      'insider_name',
+      'role',
+      'transaction_type',
+      'shares',
+      'value_usd',
+      'plan_type',
+      'source_name',
+      'source_url',
+      'notes',
+    ],
+    etfWatch: [
+      'etf_ticker',
+      'etf_name',
+      'category',
+      'expense_ratio',
+      'dividend_yield',
+      'top_holdings',
+      'top_10_weight',
+      'related_theme',
+      'source_name',
+      'source_url',
+      'updated_at',
+      'notes',
+    ],
+    sectorThemeScores: [
+      'issue_date',
+      'sector_or_theme',
+      'category',
+      'average_ssmk_score',
+      'score_change_4w',
+      'leading_tickers',
+      'lagging_tickers',
+      'data_confidence',
+      'interpretation',
+      'notes',
+    ],
+    hypothesisLab: [
+      'hypothesis_id',
+      'hypothesis_version',
+      'issue_date',
+      'hypothesis_type',
+      'related_tickers',
+      'related_industry',
+      'one_line_forecast',
+      'evidence_metrics',
+      'source_summary',
+      'interpretation',
+      'red_team_challenge',
+      'revised_hypothesis',
+      'forecast_condition',
+      'review_condition',
+      'beginner_lesson',
+      'glossary_terms',
+      'confidence_level',
+      'status',
+    ],
     hypothesisReviews: [
       'hypothesis_id',
       'issue_date',
@@ -98,6 +248,34 @@ const SSMK = {
       'uncertainty_level',
       'review_status',
     ],
+    hypothesisEvolutionLog: [
+      'hypothesis_id',
+      'hypothesis_version',
+      'issue_date',
+      'changed_at',
+      'previous_hypothesis',
+      'new_hypothesis',
+      'change_reason',
+      'added_conditions',
+      'removed_conditions',
+      'next_check',
+      'source_request_id',
+      'notes',
+    ],
+    visualizationQueue: [
+      'chart_id',
+      'issue_date',
+      'report_id',
+      'section_key',
+      'chart_type',
+      'data_range_or_source',
+      'title',
+      'description',
+      'status',
+      'owner_agent',
+      'output_url',
+      'notes',
+    ],
     reportRuns: [
       'report_id',
       'issue_date',
@@ -110,6 +288,41 @@ const SSMK = {
       'recipient_group',
       'report_file_path',
       'email_subject',
+      'notes',
+    ],
+    reportSections: [
+      'report_id',
+      'section_key',
+      'section_title',
+      'section_order',
+      'status',
+      'content_summary',
+      'current_version',
+      'last_updated_at',
+      'notes',
+    ],
+    reportVersions: [
+      'report_id',
+      'version_label',
+      'created_at',
+      'source_request_id',
+      'output_url',
+      'changed_sections',
+      'change_summary',
+      'created_by',
+      'notes',
+    ],
+    revisionRequests: [
+      'request_id',
+      'report_id',
+      'target_scope',
+      'target_section',
+      'request_type',
+      'user_instruction',
+      'status',
+      'created_at',
+      'processed_at',
+      'result_version',
       'notes',
     ],
     automationStageReviews: [
@@ -158,6 +371,80 @@ const SSMK = {
       'resolved_at',
       'notes',
     ],
+    automationRunLog: [
+      'run_id',
+      'run_type',
+      'started_at',
+      'ended_at',
+      'status',
+      'trigger_source',
+      'schedule_key',
+      'report_id',
+      'total_duration_sec',
+      'final_output_url',
+      'error_summary',
+      'notes',
+    ],
+    automationStepLog: [
+      'run_id',
+      'step_order',
+      'step_name',
+      'agent_name',
+      'started_at',
+      'ended_at',
+      'duration_sec',
+      'status',
+      'input_summary',
+      'output_summary',
+      'error_message',
+      'retry_count',
+    ],
+    bottleneckLog: [
+      'detected_at',
+      'run_id',
+      'bottleneck_type',
+      'location',
+      'symptom',
+      'impact',
+      'suggested_fix',
+      'priority',
+      'status',
+    ],
+    errorLog: [
+      'error_id',
+      'occurred_at',
+      'run_id',
+      'step_name',
+      'severity',
+      'error_type',
+      'error_message',
+      'root_cause_guess',
+      'recovery_action',
+      'resolved',
+      'resolved_at',
+    ],
+    qaReviewLog: [
+      'qa_id',
+      'run_id',
+      'review_date',
+      'overall_status',
+      'content_quality_score',
+      'data_quality_score',
+      'visualization_quality_score',
+      'process_efficiency_score',
+      'main_issues',
+      'recommended_next_action',
+      'automation_change_needed',
+    ],
+    glossary: [
+      'term',
+      'plain_language_definition',
+      'example',
+      'related_section',
+      'source_name',
+      'updated_at',
+      'notes',
+    ],
   },
   dropdowns: {
     grade: ['높음', '중간', '낮음'],
@@ -165,11 +452,55 @@ const SSMK = {
     resultLabel: ['맞음', '부분적으로 맞음', '빗나감', '아직 모름'],
     hypothesisReviewStatus: ['복기 대기', '복기 완료', '추가 확인', '보류'],
     reportStatus: ['준비', '초안 생성', '사용자 확인 필요', '승인', '발송 완료', '발송 보류'],
+    requestStatus: ['requested', 'in_progress', 'completed', 'blocked', 'cancelled'],
+    requestScope: ['section', 'full_report'],
+    requestType: [
+      'make_easier',
+      'add_more_data',
+      'add_visuals',
+      'make_more_human',
+      'strengthen_forecast',
+      'soften_recommendation_risk',
+      'fix_source',
+      'rewrite_with_red_team',
+    ],
+    workflowStatus: ['queued', 'running', 'success', 'warning', 'failed', 'blocked', 'skipped'],
+    sectionStatus: ['draft', 'needs_revision', 'approved', 'archived'],
+    hypothesisStatus: ['draft', 'active', 'review_scheduled', 'closed'],
     approvalStatus: ['proposed', 'approved', 'rejected', 'postponed', 'applied', 'rolled_back'],
     agentStatus: ['pass', 'warning', 'block', 'proposal'],
     riskLevel: ['low', 'medium', 'high'],
+    yesNo: ['TRUE', 'FALSE'],
   },
 };
+
+const WORKBOOK_SCHEMA_SHEET_KEYS = [
+  'sourcePolicy',
+  'marketData',
+  'companyFundamentals',
+  'revenueBreakdown',
+  'shareholderReturns',
+  'insiderActivity',
+  'etfWatch',
+  'sectorThemeScores',
+  'hypothesisLab',
+  'hypothesisReviews',
+  'hypothesisEvolutionLog',
+  'visualizationQueue',
+  'reportRuns',
+  'reportSections',
+  'reportVersions',
+  'revisionRequests',
+  'automationStageReviews',
+  'changeApprovalLog',
+  'agentReviewLog',
+  'automationRunLog',
+  'automationStepLog',
+  'bottleneckLog',
+  'errorLog',
+  'qaReviewLog',
+  'glossary',
+];
 
 const CONTROL_CENTER_DEFAULT_PREFERENCES = [
   {
@@ -366,24 +697,21 @@ function setupSsmkWorkbook() {
   const ss = SpreadsheetApp.getActive();
 
   ensureControlCenterSheets_(ss);
-  ensureSheet_(ss, SSMK.sheets.hypothesisReviews, SSMK.headers.hypothesisReviews.length);
-  ensureSheet_(ss, SSMK.sheets.reportRuns, SSMK.headers.reportRuns.length);
-  ensureSheet_(ss, SSMK.sheets.automationStageReviews, SSMK.headers.automationStageReviews.length);
-  ensureSheet_(ss, SSMK.sheets.changeApprovalLog, SSMK.headers.changeApprovalLog.length);
-  ensureSheet_(ss, SSMK.sheets.agentReviewLog, SSMK.headers.agentReviewLog.length);
+  ensureWorkbookSchemaSheets_(ss);
 
   normalizeWatchlistColumns_(ss);
   setHeaders_(ss, SSMK.sheets.weeklyScores, SSMK.headers.weeklyScores);
   setHeaders_(ss, SSMK.sheets.scoreHistory, SSMK.headers.weeklyScores);
-  setHeaders_(ss, SSMK.sheets.hypothesisReviews, SSMK.headers.hypothesisReviews);
-  setHeaders_(ss, SSMK.sheets.reportRuns, SSMK.headers.reportRuns);
-  setHeaders_(ss, SSMK.sheets.automationStageReviews, SSMK.headers.automationStageReviews);
-  setHeaders_(ss, SSMK.sheets.changeApprovalLog, SSMK.headers.changeApprovalLog);
-  setHeaders_(ss, SSMK.sheets.agentReviewLog, SSMK.headers.agentReviewLog);
   applyWeeklyScoreFormulas_(ss);
   applyDropdowns_(ss);
 
   SpreadsheetApp.getUi().alert('SSMK 시트 구조 점검이 끝났습니다. 기존 데이터는 지우지 않았습니다.');
+}
+
+function ensureWorkbookSchemaSheets_(ss) {
+  WORKBOOK_SCHEMA_SHEET_KEYS.forEach((key) => {
+    setHeaders_(ss, SSMK.sheets[key], SSMK.headers[key]);
+  });
 }
 
 function ensureControlCenterSheets_(ss) {
@@ -1006,26 +1334,48 @@ function applyWeeklyScoreFormulas_(ss) {
 }
 
 function applyDropdowns_(ss) {
+  setDropdown_(ss, SSMK.sheets.sourcePolicy, 5, SSMK.dropdowns.grade);
+  setDropdown_(ss, SSMK.sheets.sourcePolicy, 9, SSMK.dropdowns.yesNo);
+
   setDropdown_(ss, SSMK.sheets.watchlist, 7, SSMK.dropdowns.riskLevel.map(capitalize_));
-  setDropdown_(ss, SSMK.sheets.watchlist, 12, ['TRUE', 'FALSE']);
+  setDropdown_(ss, SSMK.sheets.watchlist, 12, SSMK.dropdowns.yesNo);
 
   setDropdown_(ss, SSMK.sheets.weeklyScores, 15, SSMK.dropdowns.grade);
   setDropdown_(ss, SSMK.sheets.weeklyScores, 18, SSMK.dropdowns.grade);
   setDropdown_(ss, SSMK.sheets.weeklyScores, 19, SSMK.dropdowns.grade);
   setDropdown_(ss, SSMK.sheets.weeklyScores, 28, SSMK.dropdowns.reviewStatus);
 
+  setDropdown_(ss, SSMK.sheets.marketData, 9, SSMK.dropdowns.grade);
+  setDropdown_(ss, SSMK.sheets.companyFundamentals, 12, SSMK.dropdowns.grade);
+  setDropdown_(ss, SSMK.sheets.sectorThemeScores, 8, SSMK.dropdowns.grade);
+  setDropdown_(ss, SSMK.sheets.hypothesisLab, 17, SSMK.dropdowns.grade);
+  setDropdown_(ss, SSMK.sheets.hypothesisLab, 18, SSMK.dropdowns.hypothesisStatus);
+
   setDropdown_(ss, SSMK.sheets.hypothesisReviews, 16, SSMK.dropdowns.resultLabel);
   setDropdown_(ss, SSMK.sheets.hypothesisReviews, 19, SSMK.dropdowns.grade);
   setDropdown_(ss, SSMK.sheets.hypothesisReviews, 20, SSMK.dropdowns.grade);
   setDropdown_(ss, SSMK.sheets.hypothesisReviews, 21, SSMK.dropdowns.hypothesisReviewStatus);
 
+  setDropdown_(ss, SSMK.sheets.visualizationQueue, 9, SSMK.dropdowns.workflowStatus);
   setDropdown_(ss, SSMK.sheets.reportRuns, 5, SSMK.dropdowns.reportStatus);
+  setDropdown_(ss, SSMK.sheets.reportSections, 5, SSMK.dropdowns.sectionStatus);
+  setDropdown_(ss, SSMK.sheets.revisionRequests, 3, SSMK.dropdowns.requestScope);
+  setDropdown_(ss, SSMK.sheets.revisionRequests, 5, SSMK.dropdowns.requestType);
+  setDropdown_(ss, SSMK.sheets.revisionRequests, 7, SSMK.dropdowns.requestStatus);
   setDropdown_(ss, SSMK.sheets.automationStageReviews, 13, SSMK.dropdowns.approvalStatus);
   setDropdown_(ss, SSMK.sheets.changeApprovalLog, 9, SSMK.dropdowns.approvalStatus);
   setDropdown_(ss, SSMK.sheets.agentReviewLog, 6, SSMK.dropdowns.agentStatus);
   setDropdown_(ss, SSMK.sheets.agentReviewLog, 8, SSMK.dropdowns.riskLevel);
-  setDropdown_(ss, SSMK.sheets.agentReviewLog, 10, ['TRUE', 'FALSE']);
-  setDropdown_(ss, SSMK.sheets.agentReviewLog, 11, ['TRUE', 'FALSE']);
+  setDropdown_(ss, SSMK.sheets.agentReviewLog, 10, SSMK.dropdowns.yesNo);
+  setDropdown_(ss, SSMK.sheets.agentReviewLog, 11, SSMK.dropdowns.yesNo);
+  setDropdown_(ss, SSMK.sheets.automationRunLog, 5, SSMK.dropdowns.workflowStatus);
+  setDropdown_(ss, SSMK.sheets.automationStepLog, 8, SSMK.dropdowns.workflowStatus);
+  setDropdown_(ss, SSMK.sheets.bottleneckLog, 8, SSMK.dropdowns.riskLevel);
+  setDropdown_(ss, SSMK.sheets.bottleneckLog, 9, SSMK.dropdowns.workflowStatus);
+  setDropdown_(ss, SSMK.sheets.errorLog, 5, SSMK.dropdowns.riskLevel);
+  setDropdown_(ss, SSMK.sheets.errorLog, 10, SSMK.dropdowns.yesNo);
+  setDropdown_(ss, SSMK.sheets.qaReviewLog, 4, SSMK.dropdowns.workflowStatus);
+  setDropdown_(ss, SSMK.sheets.qaReviewLog, 11, SSMK.dropdowns.yesNo);
 }
 
 function ensureSheet_(ss, sheetName, minColumns) {

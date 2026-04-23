@@ -65,7 +65,7 @@
 - Modify: `automation/google-sheets-structure-plan.md`
 - Create: `docs/2026-04-23-implementation-task-log.md`
 
-- [ ] **Step 1: 현재 `SSMK.sheets` 목록을 v2 탭 구조로 확장한다**
+- [x] **Step 1: 현재 `SSMK.sheets` 목록을 v2 탭 구조로 확장한다**
 
 `automation/Code.gs`의 `SSMK.sheets`에 아래 탭을 추가한다.
 
@@ -94,7 +94,7 @@ qaReviewLog: 'qa_review_log',
 glossary: 'glossary',
 ```
 
-- [ ] **Step 2: v2 헤더를 `SSMK.headers`에 추가한다**
+- [x] **Step 2: v2 헤더를 `SSMK.headers`에 추가한다**
 
 각 탭은 설계 문서의 컬럼명을 그대로 사용한다. 예를 들어 `hypothesis_lab`는 아래 컬럼을 포함한다.
 
@@ -121,7 +121,7 @@ hypothesisLab: [
 ],
 ```
 
-- [ ] **Step 3: `setupSsmkWorkbook()`이 모든 v2 탭을 생성하도록 수정한다**
+- [x] **Step 3: `setupSsmkWorkbook()`이 모든 v2 탭을 생성하도록 수정한다**
 
 `setupSsmkWorkbook()` 내부에서 기존 탭뿐 아니라 v2 탭 전체에 대해 `ensureSheet_()`와 `setHeaders_()`를 호출한다.
 
@@ -133,7 +133,7 @@ setupSsmkWorkbook() 한 번 실행 시 새 탭이 자동 생성된다.
 첫 행 헤더와 드롭다운만 보정된다.
 ```
 
-- [ ] **Step 4: 작업 로그 문서를 만든다**
+- [x] **Step 4: 작업 로그 문서를 만든다**
 
 `docs/2026-04-23-implementation-task-log.md`에 아래 구조를 추가한다.
 
@@ -149,7 +149,7 @@ setupSsmkWorkbook() 한 번 실행 시 새 탭이 자동 생성된다.
 - Next:
 ```
 
-- [ ] **Step 5: 금지어 검사를 실행한다**
+- [x] **Step 5: 금지어 검사를 실행한다**
 
 Run:
 
@@ -166,7 +166,7 @@ No matches
 
 민감 명칭은 이 계획 문서에도 직접 적지 않는다. 위 명령은 글자 코드를 조립해 검사하므로 문서 자체에는 민감 명칭이 남지 않는다.
 
-- [ ] **Step 6: 커밋한다**
+- [x] **Step 6: 커밋한다**
 
 Run:
 
@@ -183,7 +183,7 @@ git commit -m "feat: define weekly lab sheet schema"
 - Modify: `automation/Code.gs`
 - Modify: `automation/google-sheets-structure-plan.md`
 
-- [ ] **Step 1: `seedDefaultPreferences_()` 함수를 추가한다**
+- [x] **Step 1: `seedDefaultPreferences_()` 함수를 추가한다**
 
 아래 기본 설정을 `user_preferences`에 주입한다.
 
@@ -198,7 +198,7 @@ git commit -m "feat: define weekly lab sheet schema"
 ]
 ```
 
-- [ ] **Step 2: `seedAutomationSchedules_()` 함수를 추가한다**
+- [x] **Step 2: `seedDefaultSchedules_()` 함수를 추가한다**
 
 초기 스케줄은 아래처럼 저장한다.
 
@@ -211,7 +211,7 @@ git commit -m "feat: define weekly lab sheet schema"
 ]
 ```
 
-- [ ] **Step 3: `setupSsmkWorkbook()` 끝에서 기본값 함수를 호출한다**
+- [x] **Step 3: `setupSsmkWorkbook()` 끝에서 기본값 함수를 호출한다**
 
 Expected:
 
@@ -220,7 +220,7 @@ Expected:
 이미 같은 setting_key 또는 schedule_key가 있으면 덮어쓰지 않는다.
 ```
 
-- [ ] **Step 4: 수동 검증 절차를 문서에 남긴다**
+- [x] **Step 4: 수동 검증 절차를 문서에 남긴다**
 
 `automation/google-sheets-structure-plan.md`에 초보자용 확인 예시를 추가한다.
 
@@ -232,7 +232,7 @@ Expected:
 4. automation_schedules 탭에서 tuesday_weekly_report만 ON인지 확인
 ```
 
-- [ ] **Step 5: 커밋한다**
+- [x] **Step 5: 커밋한다**
 
 Run:
 
