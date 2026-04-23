@@ -777,3 +777,68 @@ Important remaining work:
 2. Task 9B: beginner-friendly runbook/update summary
 3. Optional cleanup: align any wording drift between workflow docs and prompt docs
 ```
+
+## Task 9A: Final verification pass and wording alignment
+
+Status: completed
+
+What changed:
+
+- Reviewed the current code and prompt/docs together instead of looking at each file alone.
+- Found wording drift where some older design docs still read as if the current default flow already automates email-ready output.
+- Updated `automation/ai-report-generation-workflow.md` to clearly separate the long-term target flow from the 2026-04-23 current implemented scope.
+- Updated `automation/ai-report-generation-workflow.md` file-status section so it now lists the actual current prompt/docs and the real default entry point.
+- Updated `automation/google-apps-script-plan.md` with a beginner-friendly "current implementation" note and the current priority functions `runWeeklyLabWorkflow()` / `createWeeklyLabPromptDoc_()`.
+
+Verification:
+
+- Passed: wording drift check for `runWeeklyLabWorkflow`, `legacy`, `codex-weekly-lab-automation-prompt`, and `codex-revision-request-prompt`
+- Passed: `git diff --check`
+
+Notes:
+
+- This slice changes wording only. It does not change runtime behavior.
+- Email sending, automation creation/modification, and major operational changes remain approval-gated.
+
+## Handoff after Task 9A
+
+Current branch:
+
+```text
+codex/weekly-lab-control-center
+```
+
+Completed tasks:
+
+```text
+Task 1: Apps Script sheet schema v2
+Task 2: Default preferences and schedule policy
+Task 3: SSMK Control Center sidebar
+Task 4: Revision request and report revision tracking
+Task 5A: Automation run start/finish logging
+Task 5B: Step, error, and bottleneck logging
+Task 5C: Operator QA review logging
+Task 6A: Weekly Lab template outline redesign
+Task 6B: Hypothesis Lab 5-card field structure
+Task 6C: Chart placeholder wording
+Task 6D: Weekly Lab automation prompt file
+Task 7A: Weekly Lab workflow draft and prompt helper
+Task 7B: Weekly Lab menu default switch
+Task 8A: Scheduled Codex automation approval-gate wording
+Task 8B: Revision request prompt file
+Task 9A: Final verification wording alignment
+```
+
+Next recommended task:
+
+```text
+Task 9B: Write a beginner-friendly runbook/update summary for how to use the current Weekly Lab flow safely
+```
+
+Important remaining work:
+
+```text
+1. Task 9B: beginner-friendly runbook/update summary
+2. Optional cleanup: historical docs that still mention old draft flow names
+3. Final branch finishing decision after the runbook is written
+```

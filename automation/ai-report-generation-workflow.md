@@ -6,6 +6,17 @@
 
 이 문서는 SSMK 투자 관찰노트를 매주 이메일 발행 가능한 형태로 자동 생성하기 위한 흐름을 정리한다.
 
+현재 구현 기준 메모:
+
+```text
+이 문서에는 장기 목표와 현재 구현 상태가 함께 들어 있다.
+2026-04-23 기준 실제 기본 실행은 runWeeklyLabWorkflow()이며,
+이 단계에서 하는 일은 Google Docs용 Weekly Lab 입력 초안 준비,
+로그 기록, 리뷰 보드 점검, QA 기록까지다.
+이메일 발송, 예약 자동화 생성/수정, 중요한 운영 변경은
+사용자 승인 전까지 자동 실행하지 않는다.
+```
+
 핵심 원칙:
 
 ```text
@@ -17,7 +28,7 @@ AI는 가설, 근거 지표, 해석 이유, 초보자 레슨, 한계, 다음 확
 
 ---
 
-## 2. 전체 자동화 흐름
+## 2. 전체 자동화 흐름(장기 목표)
 
 ```text
 Google Sheets 데이터 준비
@@ -53,6 +64,13 @@ hypothesis_reviews에 복기 예약
 필요하면 자동화 발전 제안서 작성
   ↓
 사용자 승인 후에만 다음 단계 적용
+```
+
+현재 구현 범위를 아주 짧게 말하면:
+
+```text
+지금은 "리포트를 바로 발송하는 자동화"보다
+"초안을 안전하게 준비하고 검토 상태를 남기는 자동화"에 가깝다.
 ```
 
 ---
@@ -326,26 +344,30 @@ change_approval_log.approval_status = approved
 
 ## 9. 다음 자동화 파일 상태
 
-작성 완료된 설계/프롬프트 파일:
-
-```text
-automation/ai-prompt-weekly-report.md
-automation/ai-prompt-hypothesis-review.md
-automation/google-apps-script-plan.md
-```
-
-다음에 만들 파일:
+현재 기준으로 확인된 주요 파일:
 
 ```text
 automation/Code.gs
+automation/google-apps-script-plan.md
+automation/codex-weekly-lab-automation-prompt.md
+automation/codex-revision-request-prompt.md
+automation/automation-evolution-approval-gate.md
+```
+
+현재 구현 메모:
+
+```text
+runWeeklyLabWorkflow()가 기본 실행 경로다.
+runWeeklyDraftPrepWorkflow()는 legacy 비교/비상용으로 남아 있다.
+Weekly Lab 쪽 기본 산출물은 최종 발송본이 아니라 Google Docs 초안 준비 자료다.
 ```
 
 권장 구현 순서:
 
-1. Google Sheets에서 샘플 데이터를 읽는 구조를 만든다.
-2. Markdown 초안을 생성한다.
-3. 가설을 `hypothesis_reviews`에 저장한다.
-4. 승인 상태일 때만 이메일 발송 함수가 실행되게 한다.
+1. Google Sheets에서 샘플 데이터를 읽는 구조를 유지한다.
+2. Google Docs 기반 Weekly Lab 초안 준비 흐름을 안정화한다.
+3. 재작업 요청과 버전 이력 연결을 계속 명확히 한다.
+4. 이메일 발송 관련 자동화는 승인 게이트를 유지한 채 나중 단계에서 검토한다.
 
 ---
 

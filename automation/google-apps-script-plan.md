@@ -6,6 +6,16 @@
 
 이 문서는 Google Sheets, Google Docs 또는 Markdown, Gmail, Google Drive를 연결해 SSMK 주간 리포트 생성과 승인 발송을 자동화하기 위한 설계안이다.
 
+현재 구현 기준 메모:
+
+```text
+이 문서는 장기 설계안이다.
+2026-04-23 기준 현재 기본 메뉴 실행은 runWeeklyLabWorkflow()이며,
+실제로 구현된 기본 범위는 Weekly Lab 입력용 Google Docs 초안 준비,
+로그 기록, 리뷰 보드 점검, QA 기록까지다.
+Gmail 발송과 예약 자동화 변경은 승인 전까지 실행하지 않는다.
+```
+
 초기 목표:
 
 ```text
@@ -55,6 +65,20 @@ automation_stage_reviews 품질 기록
 
 ## 3. 필요한 함수 목록
 
+### 3-0. 현재 우선 사용하는 함수
+
+```text
+runWeeklyLabWorkflow(issueDate)
+createWeeklyLabPromptDoc_(issueDate, runId)
+```
+
+초보자용 설명:
+
+```text
+현재는 "최종 발송 버튼"보다
+"초안을 만들 재료를 안전하게 준비하는 버튼"이 먼저 구현되어 있다.
+```
+
 ### 3-1. `collectWeeklyInputs()`
 
 역할:
@@ -91,6 +115,13 @@ automation_stage_reviews 품질 기록
 - AI에게 주간 리포트 초안 생성을 요청
 - 결과를 Google Docs 또는 Markdown 형태로 저장
 - `report_runs.generation_status`를 `초안 생성`으로 업데이트
+
+현재 메모:
+
+```text
+Weekly Lab 기준 현재 기본 흐름은 위 함수보다
+createWeeklyLabPromptDoc_()로 입력용 Google Docs 초안을 만드는 쪽이 먼저 구현되어 있다.
+```
 
 ### 3-4. `markReportApproved()`
 
