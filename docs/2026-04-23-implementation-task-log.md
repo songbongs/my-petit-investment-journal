@@ -225,3 +225,74 @@ Continue prompt:
 ```text
 SSMK 투자 관찰노트 작업을 이어서 진행해줘. 작업 폴더는 C:\Users\kblife\Documents\AI-Playground\SSMK-investment-journal 이고, 현재 브랜치는 codex/weekly-lab-control-center 야. Task 5C는 완료됐고, 다음은 Task 6으로 넘어가면 돼. 계속 짧게 끊어서 작업→검증→커밋→승인 요청 방식으로 진행해줘. 이메일 발송, 자동화 생성/수정, 중요한 운영 변경은 사용자 승인 전에는 하지 말고, 투자 추천처럼 읽히는 표현도 피해야 해.
 ```
+
+## Task 6A: Weekly Lab template outline redesign
+
+Status: completed
+
+What changed:
+
+- Replaced the old `Weekly Insight` template structure with the new `Weekly Lab` section order in `templates/weekly-report-template.md`.
+- Added the approved 12-section backbone:
+  - Executive Dashboard
+  - Market Map
+  - Industry & Theme Board
+  - SSMK Stock Dashboard
+  - SSMK Lens Deep Dive
+  - Hypothesis Lab
+  - Forecast vs Actual
+  - Dividend & ETF Corner
+  - Hypothesis Evolution Log
+  - Learning Notes
+  - Sources & Limitations
+  - Agent Review Board
+- Kept the document beginner-friendly with simple tables and plain-language guidance.
+- Softened wording that could be misread as encouraging an investment decision.
+
+Verification:
+
+- Passed: section-header check with `rg -n "^## " templates/weekly-report-template.md`
+- Passed: manual read-through for section order and beginner-friendly wording
+
+Notes:
+
+- This slice changes the outline only.
+- Detailed 5-hypothesis card fields and chart placeholder syntax remain for the next Task 6 slice.
+
+## Handoff after Task 6A
+
+Current branch:
+
+```text
+codex/weekly-lab-control-center
+```
+
+Completed tasks:
+
+```text
+Task 1: Apps Script sheet schema v2
+Task 2: Default preferences and schedule policy
+Task 3: SSMK Control Center sidebar
+Task 4: Revision request and report revision tracking
+Task 5A: Automation run start/finish logging
+Task 5B: Step, error, and bottleneck logging
+Task 5C: Operator QA review logging
+Task 6A: Weekly Lab template outline redesign
+```
+
+Next recommended task:
+
+```text
+Task 6B: Add the 5-hypothesis structure to templates/weekly-report-template.md
+```
+
+Important remaining work:
+
+```text
+1. Task 6B: Hypothesis Lab 5-card field structure
+2. Task 6C: chart placeholder wording
+3. Task 6D: codex-weekly-lab-automation-prompt.md creation
+4. Task 7: runWeeklyLabWorkflow() orchestration draft
+5. Task 8: Codex scheduled automation prompt and approval-gate documentation
+6. Task 9: Final verification, user runbook, and GitHub update
+```
