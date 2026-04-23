@@ -333,7 +333,7 @@ git commit -m "feat: add weekly lab control center"
 - Modify: `automation/Code.gs`
 - Modify: `automation/ai-report-generation-workflow.md`
 
-- [ ] **Step 1: `saveRevisionRequest(request)` 함수를 추가한다**
+- [x] **Step 1: `saveRevisionRequest(request)` 함수를 추가한다**
 
 필수 입력:
 
@@ -385,7 +385,7 @@ v1, v2, v3처럼 리포트 수정 이력이 남는다.
 어떤 재작업 요청 때문에 버전이 바뀌었는지 추적된다.
 ```
 
-- [ ] **Step 4: 재작업 유형 드롭다운을 추가한다**
+- [x] **Step 4: 재작업 유형 드롭다운을 추가한다**
 
 드롭다운 값:
 

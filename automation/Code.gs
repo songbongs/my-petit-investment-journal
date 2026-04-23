@@ -802,11 +802,13 @@ function getControlCenterState() {
     schedules: schedules,
     log_locations: [
       '설정 시트: user_preferences, automation_schedules',
+      '재작업 요청: revision_requests',
+      '리포트 이력: report_sections, report_versions',
       '검토 로그: agent_review_log, automation_stage_reviews',
       '변경 기록: change_approval_log',
       '리포트 상태: report_runs',
     ],
-    revision_request_placeholder: '재작업 요청 저장은 Task 4에서 연결합니다.',
+    revision_request_status: '재작업 요청은 revision_requests에 requested 상태로 저장됩니다.',
   };
 }
 
@@ -901,6 +903,33 @@ function saveScheduleSettings(schedules) {
     warnings: warnings,
     updated_keys: updatedKeys,
     state: getControlCenterState(),
+  };
+}
+
+function saveRevisionRequest(request) {
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+
+  const normalized = normalizeRevisionRequest_(request);
+  const requestId = `REV-${compactDate_(today_())}-${compactTime_()}-${String(new Date().getTime()).slice(-3)}`;
+
+  appendObject_(SSMK.sheets.revisionRequests, SSMK.headers.revisionRequests, {
+    request_id: requestId,
+    report_id: normalized.report_id,
+    target_scope: normalized.target_scope,
+    target_section: normalized.target_section,
+    request_type: normalized.request_type,
+    user_instruction: normalized.user_instruction,
+    status: 'requested',
+    created_at: nowText_(),
+    notes: 'SSMK Control Center에서 접수됨',
+  });
+
+  return {
+    ok: true,
+    request_id: requestId,
+    status: 'requested',
+    message: `재작업 요청을 접수했습니다. 요청 ID: ${requestId}`,
   };
 }
 
@@ -1537,6 +1566,42 @@ function normalizeSchedulePayload_(schedules) {
   }
   if (typeof schedules === 'object') return Object.assign({}, schedules);
   return {};
+}
+
+function normalizeRevisionRequest_(request) {
+  if (!request || typeof request !== 'object') {
+    throw new Error('재작업 요청 데이터가 비어 있습니다.');
+  }
+
+  const reportId = String(request.report_id || '').trim();
+  const targetScope = String(request.target_scope || 'section').trim();
+  const targetSection = String(request.target_section || '').trim();
+  const requestType = String(request.request_type || '').trim();
+  const userInstruction = String(request.user_instruction || '').trim();
+
+  if (!reportId) {
+    throw new Error('어느 리포트를 고칠지 report_id를 입력하세요. 예: RPT-20260428-12345');
+  }
+  if (SSMK.dropdowns.requestScope.indexOf(targetScope) === -1) {
+    throw new Error(`target_scope는 ${SSMK.dropdowns.requestScope.join(', ')} 중 하나여야 합니다.`);
+  }
+  if (targetScope === 'section' && !targetSection) {
+    throw new Error('특정 섹션 재작업은 어느 부분을 고칠지 입력해야 합니다.');
+  }
+  if (SSMK.dropdowns.requestType.indexOf(requestType) === -1) {
+    throw new Error(`request_type은 허용된 값만 사용할 수 있습니다: ${SSMK.dropdowns.requestType.join(', ')}`);
+  }
+  if (!userInstruction) {
+    throw new Error('추가 요청사항을 한 문장 이상 입력하세요.');
+  }
+
+  return {
+    report_id: reportId,
+    target_scope: targetScope,
+    target_section: targetScope === 'section' ? targetSection : '',
+    request_type: requestType,
+    user_instruction: userInstruction,
+  };
 }
 
 function normalizePreferenceUpdate_(existing, key, value) {

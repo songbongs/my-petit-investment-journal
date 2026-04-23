@@ -70,3 +70,26 @@ Notes:
 - `email_auto_send` remains approval-gated. OFF to ON is blocked with a warning.
 - Rework request persistence is still deferred to Task 4; the sidebar only shows a placeholder message.
 - Follow-up fix: the sidebar now preserves the final save warning/status message after refreshing state.
+
+## Task 4A: Revision request intake
+
+Status: completed
+
+What changed:
+
+- Added `saveRevisionRequest(request)` in `automation/Code.gs`.
+- Added validation for `report_id`, `target_scope`, `target_section`, `request_type`, and `user_instruction`.
+- Connected the Control Center revision button to save rows in `revision_requests` with `status=requested`.
+- Added a sidebar scope selector for section-only versus full-report revision requests.
+- Updated `automation/ai-report-generation-workflow.md` with the revision request intake flow.
+
+Verification:
+
+- Passed: `node -e "const fs=require('fs'); new Function(fs.readFileSync('automation/Code.gs','utf8')); const html=fs.readFileSync('automation/SettingsSidebar.html','utf8'); const scripts=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).join('\n'); new Function(scripts); console.log('syntax ok')"`
+- Passed: local `normalizeRevisionRequest_()` validation check for valid input and empty `report_id` blocking.
+- Passed: safe sensitive-name check with `rg`
+
+Notes:
+
+- `report_sections` and `report_versions` helper functions remain deferred to the next Task 4 slice.
+- Saving a revision request does not approve sending or publish a report.
