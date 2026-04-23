@@ -842,3 +842,76 @@ Important remaining work:
 2. Optional cleanup: historical docs that still mention old draft flow names
 3. Final branch finishing decision after the runbook is written
 ```
+
+## Task 9B: Beginner-friendly runbook and update summary
+
+Status: completed
+
+What changed:
+
+- Updated `README.md` with a new beginner-friendly Weekly Lab runbook section.
+- Clarified which files were the main outputs of this implementation slice.
+- Clarified which files must actually be copied into Google Apps Script (`Code.gs`, `SettingsSidebar.html`).
+- Added a step-by-step first-run checklist centered on `setupSsmkWorkbook()`.
+- Added simple guidance for:
+  - where to open `SSMK Control Center`
+  - how to run the current Weekly Lab default flow
+  - why Tuesday is the only default `ON` schedule
+  - why the other automations remain `OFF`
+  - which log tabs to read when something goes wrong
+- Updated the README "next work" wording so it now points to `runWeeklyLabWorkflow()` instead of the older default flow name.
+
+Verification:
+
+- Passed: README keyword check for `runWeeklyLabWorkflow`, `setupSsmkWorkbook`, `SSMK Control Center`, `automation_run_log`, `qa_review_log`, and `tuesday_weekly_report`
+- Passed: risky-expression check showed only project philosophy / warning-context matches
+- Passed: `git diff --check`
+
+Notes:
+
+- This slice changes documentation only.
+- No email sending, automation creation, or major operational change was executed.
+
+## Handoff after Task 9B
+
+Current branch:
+
+```text
+codex/weekly-lab-control-center
+```
+
+Completed tasks:
+
+```text
+Task 1: Apps Script sheet schema v2
+Task 2: Default preferences and schedule policy
+Task 3: SSMK Control Center sidebar
+Task 4: Revision request and report revision tracking
+Task 5A: Automation run start/finish logging
+Task 5B: Step, error, and bottleneck logging
+Task 5C: Operator QA review logging
+Task 6A: Weekly Lab template outline redesign
+Task 6B: Hypothesis Lab 5-card field structure
+Task 6C: Chart placeholder wording
+Task 6D: Weekly Lab automation prompt file
+Task 7A: Weekly Lab workflow draft and prompt helper
+Task 7B: Weekly Lab menu default switch
+Task 8A: Scheduled Codex automation approval-gate wording
+Task 8B: Revision request prompt file
+Task 9A: Final verification wording alignment
+Task 9B: Beginner-friendly runbook/update summary
+```
+
+Next recommended task:
+
+```text
+Branch finish step: decide whether to stop here, do an optional historical-doc cleanup, or prepare the branch for PR/merge
+```
+
+Important remaining work:
+
+```text
+1. Optional cleanup: historical docs that still mention older draft-flow wording
+2. Branch finish decision: commit set is complete for the planned Weekly Lab foundation slice
+3. If desired later: approval-based real schedule setup and send-flow testing
+```
