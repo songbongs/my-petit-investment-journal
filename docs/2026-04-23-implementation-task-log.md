@@ -444,3 +444,70 @@ Important remaining work:
 3. Task 8: Codex scheduled automation prompt and approval-gate documentation
 4. Task 9: Final verification, user runbook, and GitHub update
 ```
+
+## Task 6D: Weekly Lab automation prompt file
+
+Status: completed
+
+What changed:
+
+- Created `automation/codex-weekly-lab-automation-prompt.md`.
+- Added the approved minimum instructions:
+  - check latest `weekly_scores`, `hypothesis_lab`, `visualization_queue`, `revision_requests`
+  - create a Google Docs draft using `templates/weekly-report-template.md`
+  - run the agent review board up to 3 times
+  - if blockers remain, leave the report in `사용자 확인 필요`
+  - if blockers do not remain, leave the report in `초안 생성 완료` meaning
+  - do not send email
+  - do not call paid APIs
+- Added beginner-friendly writing rules, hypothesis-card rules, output summary expectations, and a clear forbidden-actions section.
+- Kept the prompt aligned with the current Weekly Lab template and approval-gate rules.
+
+Verification:
+
+- Passed: file existence and required-line checks for `weekly_scores`, `hypothesis_lab`, `visualization_queue`, `revision_requests`, `Google Docs 초안`, `에이전트 리뷰 보드 최대 3회`, `이메일`, and `추가 과금 API`
+- Passed: manual read-through for prompt flow, guardrails, and beginner-friendly wording
+
+Notes:
+
+- This slice creates the prompt file only.
+- No automation was created or modified.
+- The next implementation slice is the actual workflow orchestration draft in `automation/Code.gs`.
+
+## Handoff after Task 6D
+
+Current branch:
+
+```text
+codex/weekly-lab-control-center
+```
+
+Completed tasks:
+
+```text
+Task 1: Apps Script sheet schema v2
+Task 2: Default preferences and schedule policy
+Task 3: SSMK Control Center sidebar
+Task 4: Revision request and report revision tracking
+Task 5A: Automation run start/finish logging
+Task 5B: Step, error, and bottleneck logging
+Task 5C: Operator QA review logging
+Task 6A: Weekly Lab template outline redesign
+Task 6B: Hypothesis Lab 5-card field structure
+Task 6C: Chart placeholder wording
+Task 6D: Weekly Lab automation prompt file
+```
+
+Next recommended task:
+
+```text
+Task 7: runWeeklyLabWorkflow() orchestration draft
+```
+
+Important remaining work:
+
+```text
+1. Task 7: runWeeklyLabWorkflow() orchestration draft
+2. Task 8: Codex scheduled automation prompt and approval-gate documentation
+3. Task 9: Final verification, user runbook, and GitHub update
+```
