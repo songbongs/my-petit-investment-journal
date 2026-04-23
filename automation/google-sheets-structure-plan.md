@@ -6,6 +6,16 @@
 
 이 문서는 `SSMK 투자 관찰노트 - 점수표`를 현재 프로젝트 철학에 맞게 업데이트하기 위한 설계안이다.
 
+현재 구현 기준 메모:
+
+```text
+이 문서는 시트 설계안과 현재 구현 메모를 함께 담고 있다.
+2026-04-23 기준 기본 실행은 runWeeklyLabWorkflow()이며,
+현재 기본 범위는 Weekly Lab 초안 준비, 로그 기록, 리뷰 보드, QA 기록까지다.
+report_runs는 generation_status를 중심으로 쓰고,
+실제 Gmail 발송과 예약 자동화 변경은 승인 전까지 실행하지 않는다.
+```
+
 핵심 변화는 다음이다.
 
 ```text
@@ -94,9 +104,15 @@ approved_at
 sent_at
 recipient_group
 report_file_path
-pdf_file_path
 email_subject
 notes
+```
+
+현재 구현 메모:
+
+```text
+2026-04-23 기준 Code.gs 헤더에는 pdf_file_path가 아직 없다.
+현재 기본 흐름은 Google Docs 초안 준비 단계라 PDF 파일 경로는 나중 단계에서 검토한다.
 ```
 
 초보자용 설명:
@@ -154,9 +170,15 @@ expected_benefit
 risk
 rollback_plan
 approval_status
-approved_at
 applied_at
 result_note
+```
+
+현재 구현 메모:
+
+```text
+2026-04-23 기준 change_approval_log 헤더에는 approved_at가 없다.
+승인 여부는 approval_status로, 실제 적용 시점은 applied_at으로 기록한다.
 ```
 
 ### 3-5. agent_review_log
@@ -186,6 +208,8 @@ blocking
 resolved
 resolved_at
 notes
+run_id
+report_id
 ```
 
 상태값:

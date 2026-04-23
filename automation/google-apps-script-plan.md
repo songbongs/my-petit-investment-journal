@@ -108,7 +108,7 @@ createWeeklyLabPromptDoc_(issueDate, runId)
 프롬프트에는 반드시 투자 추천 금지와 AI 가설 6단 구조를 포함해야 합니다.
 ```
 
-### 3-3. `generateWeeklyReportDraft()`
+### 3-3. `generateWeeklyReportDraft()` (장기 후보)
 
 역할:
 
@@ -121,15 +121,23 @@ createWeeklyLabPromptDoc_(issueDate, runId)
 ```text
 Weekly Lab 기준 현재 기본 흐름은 위 함수보다
 createWeeklyLabPromptDoc_()로 입력용 Google Docs 초안을 만드는 쪽이 먼저 구현되어 있다.
+즉, 이 함수 이름은 장기 설계안에 가깝고 현재 기본 메뉴 함수는 아니다.
 ```
 
-### 3-4. `markReportApproved()`
+### 3-4. `markReportApproved()` (장기 후보)
 
 역할:
 
 - 사람이 리포트를 읽고 승인했을 때 상태 업데이트
 - `report_runs.approved_at` 기록
 - 승인 전에는 발송 함수가 실행되지 않게 함
+
+현재 메모:
+
+```text
+2026-04-23 기준 현재 기본 흐름은 초안 준비와 QA 기록까지다.
+승인 상태 기록은 장기 설계안에 남아 있지만, 발송 단계와 함께 아직 기본 흐름에 연결하지 않았다.
+```
 
 ### 3-5. `sendApprovedReport()`
 
@@ -142,7 +150,8 @@ createWeeklyLabPromptDoc_()로 입력용 Google Docs 초안을 만드는 쪽이 
 중요:
 
 ```text
-이 함수는 review_status가 승인인 경우에만 실행되어야 합니다.
+현재 Code.gs의 sendApprovedReport()는 의도적으로 비활성화되어 있습니다.
+장기적으로는 report_runs.generation_status가 승인이고 approved_at이 기록된 경우에만 실행 후보가 됩니다.
 ```
 
 ### 3-6. `scheduleHypothesisReviews()`
@@ -152,7 +161,7 @@ createWeeklyLabPromptDoc_()로 입력용 Google Docs 초안을 만드는 쪽이 
 - 이번 주 AI 가설을 `hypothesis_reviews`에 저장
 - 1주 후, 4주 후 복기 대상 날짜 생성
 
-### 3-7. `generateHypothesisReviewDraft()`
+### 3-7. `generateHypothesisReviewDraft()` (장기 후보)
 
 역할:
 
@@ -182,7 +191,7 @@ createWeeklyLabPromptDoc_()로 입력용 Google Docs 초안을 만드는 쪽이 
 
 - 벡터, 루미, 세이지, 파일럿, 노바 역할별 검토를 순서대로 실행
 - 각 에이전트의 결과를 `agent_review_log`에 기록
-- 최종 상태를 `발행 가능 / 사용자 확인 필요 / 발행 보류 권장` 중 하나로 분류
+- 현재 기본 흐름에서는 차단 이슈가 없으면 `report_runs.generation_status`를 `초안 생성`으로, 이슈가 남으면 `사용자 확인 필요`로 정리하는 데 참고한다
 
 초보자용 설명:
 
@@ -290,6 +299,16 @@ createWeeklyLabPromptDoc_()로 입력용 Google Docs 초안을 만드는 쪽이 
 
 ## 4. 권장 실행 요일
 
+현재 구현 우선 표:
+
+| 요일 | 함수 | 목적 |
+|---|---|---|
+| 화요일 | `runWeeklyLabWorkflow()` | 현재 기본 Weekly Lab 초안 준비, 리뷰 보드, QA 기록 |
+| 필요 시 | `runWeeklyDraftPrepWorkflow()` | 이전 흐름 비교/비상용 |
+| 필요 시 | `showSettingsSidebar()` | Control Center에서 설정/재작업/로그 안내 확인 |
+
+장기 설계 후보 표:
+
 | 요일 | 함수 | 목적 |
 |---|---|---|
 | 월요일 | `collectWeeklyInputs()` | 데이터 재료 정리 |
@@ -305,17 +324,24 @@ createWeeklyLabPromptDoc_()로 입력용 Google Docs 초안을 만드는 쪽이 
 발송 전 확인 조건:
 
 ```text
-review_status = 승인
+report_runs.generation_status = 승인
 data_confidence가 낮은 항목에 한계 표시 있음
 AI 가설 3개가 모두 6단 구조를 갖춤
 면책 문구 포함
 수신자 active = TRUE
 ```
 
+주의:
+
+```text
+이 조건은 장기 발송 단계 설계 메모다.
+2026-04-23 기준 sendApprovedReport()는 여전히 비활성화 상태다.
+```
+
 발송 차단 조건:
 
 ```text
-review_status가 초안 또는 질문 중
+report_runs.generation_status가 준비, 초안 생성 또는 사용자 확인 필요
 면책 문구 없음
 AI 가설에 근거 지표가 없음
 데이터 신뢰도 낮음인데 한계 설명 없음

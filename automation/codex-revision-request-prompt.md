@@ -179,6 +179,16 @@
 - version_label은 v1, v2, v2.1 같은 형식을 사용한다.
 ```
 
+요청 상태 전환 규칙:
+
+```text
+1. 처음 접수된 요청은 status=requested다.
+2. 실제 재작업을 시작하면 in_progress로 바꾼다.
+3. 결과 문서와 report_versions 기록까지 남기면 completed로 바꾼다.
+4. 막힌 이유가 있으면 blocked로 두고, notes에 이유를 남긴다.
+5. 완료 시에는 result_version에도 최종 버전 라벨을 함께 남긴다.
+```
+
 버전 예시:
 
 ```text

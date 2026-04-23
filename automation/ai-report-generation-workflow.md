@@ -4,7 +4,7 @@
 
 ## 1. 목적
 
-이 문서는 SSMK 투자 관찰노트를 매주 이메일 발행 가능한 형태로 자동 생성하기 위한 흐름을 정리한다.
+이 문서는 SSMK 투자 관찰노트의 Weekly Lab 초안 준비 흐름과, 나중에 발송 단계까지 확장할 장기 방향을 함께 정리한다.
 
 현재 구현 기준 메모:
 
@@ -104,12 +104,14 @@ AI가 할 일:
 3. 세이지가 가설 6단 구조, 추천화 표현, 한계 누락을 검토한다.
 4. 파일럿이 report_runs, hypothesis_reviews, 복기 예약 상태를 확인한다.
 5. 노바가 자동화 발전 제안이 필요한지 판단한다.
-6. 최종 상태를 `발행 가능 / 사용자 확인 필요 / 발행 보류 권장` 중 하나로 표시한다.
+6. 차단 항목이 없으면 `초안 생성`, 남으면 `사용자 확인 필요`로 정리한다.
 
-화요일의 핵심 산출물:
+화요일의 현재 핵심 산출물:
 
 ```text
-reports/YYYY-MM-DD-weekly-report-draft.md
+Google Docs용 Weekly Lab 입력 초안 1개
+report_sections / report_versions 기록 1세트
+automation_run_log / automation_step_log / qa_review_log 기록
 ```
 
 추가로 AI가 점검할 것:
@@ -158,13 +160,20 @@ SSMK Control Center에서 리포트 ID를 입력한다
 요청이 접수되어도 이메일 발송은 계속 사용자 승인 전까지 막혀 있다.
 ```
 
-발송 승인 후 자동화가 할 일:
+장기적으로 승인 후 연결할 후보 작업:
 
 - PDF 생성
 - Gmail 발송
 - Google Drive 보관
 - 로컬 `reports` 폴더 보관
 - `report_runs` 상태 업데이트
+
+주의:
+
+```text
+2026-04-23 기준 위 작업은 장기 목표이며 현재 기본 흐름에 연결되어 있지 않다.
+sendApprovedReport()도 아직 비활성화 상태다.
+```
 
 ---
 
@@ -276,18 +285,18 @@ AI는 제안할 수 있지만 승인 없이 적용하지 않는다.
 
 | 순서 | 에이전트 | 역할 | 실패 시 상태 |
 |---:|---|---|---|
-| 1 | 벡터 | 데이터 검증 | 사용자 확인 필요 또는 발행 보류 권장 |
+| 1 | 벡터 | 데이터 검증 | 사용자 확인 필요 |
 | 2 | 루미 | 콘텐츠 초안 작성 | 초안 보완 |
-| 3 | 세이지 | 표현/품질 검증 | 사용자 확인 필요 또는 발행 보류 권장 |
+| 3 | 세이지 | 표현/품질 검증 | 사용자 확인 필요 |
 | 4 | 파일럿 | 승인/발송/복기 흐름 확인 | 사용자 확인 필요 |
 | 5 | 노바 | 자동화 발전 제안 판단 | 제안서 작성, 적용은 보류 |
 
 최종 상태:
 
 ```text
-발행 가능
+초안 생성
 사용자 확인 필요
-발행 보류 권장
+승인
 ```
 
 자세한 역할 규칙은 `automation/ai-agent-roles-and-review-board.md`를 따른다.
@@ -300,28 +309,32 @@ AI는 제안할 수 있지만 승인 없이 적용하지 않는다.
 
 필수 포함 섹션:
 
-1. 이번 주 3줄 요약
-2. 시장 온도계
-3. 이번 주 산업 관찰 우선순위 3개
-4. SSMK 관찰 우선순위 3개
-5. 점수 변화 확인 후보 3개
-6. 이번 주 AI 가설 3개
-7. AI의 솔직한 한계
-8. 밸류에이션 재점검 후보 3개
-9. 리스크 먼저 확인할 후보 3개
-10. 지난 가설과 실제 결과 비교
-11. 종목 딥다이브 1개
-12. 이번 주 레슨&런
-13. 다음 주 체크 이벤트
-14. 데이터 출처
-15. 면책 문구
-16. AI 에이전트 리뷰 결과
+1. Executive Dashboard
+2. Market Map
+3. Industry & Theme Board
+4. SSMK Stock Dashboard
+5. SSMK Lens Deep Dive
+6. Hypothesis Lab
+7. Forecast vs Actual
+8. Dividend & ETF Corner
+9. Hypothesis Evolution Log
+10. Learning Notes
+11. Sources & Limitations
+12. Agent Review Board
+
+추가 규칙:
+
+```text
+- Hypothesis Lab은 5개 카드 구조를 유지한다.
+- 주요 시각 섹션에는 ![chart: ...] placeholder, 차트 설명, 읽는 포인트를 남긴다.
+- 최종 문서는 투자 추천이 아니라 학습용 관찰 기록 문체를 유지한다.
+```
 
 ---
 
 ## 8. 발송 승인 규칙
 
-리포트는 아래 조건을 만족해야 발송 가능하다.
+장기적으로 발송 단계를 열 때는 아래 조건을 만족해야 한다.
 
 - 모든 AI 가설에 근거 지표가 있다.
 - 모든 AI 가설에 해석 이유가 있다.
@@ -329,7 +342,7 @@ AI는 제안할 수 있지만 승인 없이 적용하지 않는다.
 - 데이터 신뢰도가 낮은 내용에는 한계가 표시되어 있다.
 - 투자 추천처럼 읽히는 문장이 없다.
 - 면책 문구가 상단과 하단에 있다.
-- `report_runs.review_status`가 `승인`이다.
+- `report_runs.generation_status`가 `승인`이다.
 
 자동화 발전 적용은 아래 조건도 필요하다.
 
@@ -338,7 +351,7 @@ automation_stage_reviews.approval_status = approved
 change_approval_log.approval_status = approved
 ```
 
-단, 이 조건은 자동화 발전 적용에만 사용한다. 리포트 발송 승인은 별도로 유지한다.
+단, 2026-04-23 기준 현재 기본 흐름은 발송이 아니라 초안 준비 단계다. 이 규칙은 장기 발송 단계 설계 메모로 유지한다.
 
 ---
 
@@ -393,7 +406,7 @@ runWeeklyLabWorkflow():
 - 가능하면 operator QA 리뷰도 남긴다
 
 createWeeklyLabPromptDoc_():
-- 최종 리포트가 아니라 Codex 자동화가 읽을 입력 문서를 만든다
+- 최종 리포트가 아니라, 현재는 수동 실행 참고용이고 나중에는 Codex 자동화도 참고할 입력 문서를 만든다
 - Google Docs 문서에 run_id, report_id, issue_date, 기준 파일 경로, 입력 데이터 JSON을 넣는다
 - report_sections와 report_versions에도 최소 기록을 남긴다
 ```

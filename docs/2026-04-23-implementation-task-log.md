@@ -457,7 +457,7 @@ What changed:
   - create a Google Docs draft using `templates/weekly-report-template.md`
   - run the agent review board up to 3 times
   - if blockers remain, leave the report in `사용자 확인 필요`
-  - if blockers do not remain, leave the report in `초안 생성 완료` meaning
+  - if blockers do not remain, leave the report in `초안 생성` meaning
   - do not send email
   - do not call paid APIs
 - Added beginner-friendly writing rules, hypothesis-card rules, output summary expectations, and a clear forbidden-actions section.
@@ -915,3 +915,48 @@ Important remaining work:
 2. Branch finish decision: commit set is complete for the planned Weekly Lab foundation slice
 3. If desired later: approval-based real schedule setup and send-flow testing
 ```
+
+## Post-Task 9 Audit: Cross-agent review and remediation
+
+Status: completed
+
+What changed:
+
+- Ran a final competitive review pass using two independent reviewers who did not implement these slices directly.
+- Consolidated the bug reports into a single safe-remediation pass before editing anything.
+- Hardened `automation/Code.gs` so the current Weekly Lab flow is more internally consistent:
+  - `agent_review_log` now stores `run_id` and `report_id`
+  - `runWeeklyLabWorkflow()` passes run/report context into the review board and downgrades the run to `warning` if QA creation fails
+  - `collectWeeklyLabPromptInputs_()` now limits pending revision requests to the current report or same issue date
+  - `scheduleHypothesisReviews()`, `runAgentReviewBoard()`, and `evaluateAutomationReadiness()` now use `hypothesis_lab` first and fall back to `weekly_scores`
+  - `createOperatorQaReview_()` now prefers exact `run_id`, then exact `report_id`, before same-date fallback
+  - revision-request status helper functions were added for `requested -> in_progress -> completed`
+  - the legacy menu item and email subject were relabeled to `Weekly Lab` wording
+- Updated `automation/SettingsSidebar.html` and Control Center log guidance so beginners are sent to:
+  - `automation_run_log`
+  - `automation_step_log`
+  - `error_log`
+  - `qa_review_log`
+- Cleaned up old wording drift in active docs, templates, plans, and historical notes:
+  - replaced `초안 생성 완료` with `초안 생성` where it described the current runtime status
+  - removed or re-labeled `발행 가능 / 발행 보류 권장` where it no longer matched the current operator-facing flow
+  - marked older `generateWeeklyReportDraft()`, `markReportApproved()`, and `generateHypothesisReviewDraft()` sections as long-term candidates
+  - marked historical architecture/handoff docs as historical and added current-scope notes
+  - corrected schema docs so `change_approval_log` no longer claims `approved_at`, and `report_runs` no longer claims `pdf_file_path`
+
+Verification:
+
+- Passed: `Code.gs` syntax check through `new Function(...)`
+- Passed: stub validation for:
+  - `collectHypothesisSignalRows_()` hypothesis-lab priority and weekly-score fallback
+  - `collectWeeklyLabPromptInputs_()` revision-request scoping
+  - `createOperatorQaReview_()` exact `run_id` preference over same-date fallback
+  - `recordRevisionRequestResult_()` status/version helper sequence
+- Passed: `SettingsSidebar.html` script syntax check
+- Passed: stale-phrase search for `초안 생성 완료`, `report_runs.review_status`, `review_status = 승인`, `review_status가 초안 또는 질문 중`, `Codex 예약 작업이`
+- Passed: `git diff --check`
+
+Notes:
+
+- Historical documents still keep long-term architecture ideas, but they now include current-implementation notes so beginners can tell "지금 되는 것"과 "나중 목표"를 구분할 수 있다.
+- Email sending, real schedule automation changes, and major operational changes remain approval-gated.

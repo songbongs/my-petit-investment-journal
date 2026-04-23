@@ -562,7 +562,7 @@ Google Sheets의 최신 weekly_scores, hypothesis_lab, visualization_queue, revi
 SSMK Weekly Lab 템플릿에 맞춰 Google Docs 초안을 만든다.
 에이전트 리뷰 보드를 최대 3회 반복한다.
 차단 항목이 남으면 report_runs 상태를 사용자 확인 필요로 둔다.
-차단 항목이 없으면 report_runs 상태를 초안 생성 완료로 둔다.
+차단 항목이 없으면 report_runs 상태를 초안 생성으로 둔다.
 이메일은 보내지 않는다.
 추가 과금 API를 호출하지 않는다.
 ```

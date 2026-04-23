@@ -370,6 +370,8 @@ const SSMK = {
       'resolved',
       'resolved_at',
       'notes',
+      'run_id',
+      'report_id',
     ],
     automationRunLog: [
       'run_id',
@@ -631,7 +633,7 @@ function onOpen() {
     .addItem('1. 시트 구조 점검/보정', 'setupSsmkWorkbook')
     .addItem('1-1. 추천화 표현 자동 순화', 'autoSoftenWeeklyScoreLanguage')
     .addItem('2. 주간 입력 데이터 묶기', 'collectWeeklyInputs')
-    .addItem('3. AI 프롬프트 문서 만들기', 'createWeeklyPromptDoc')
+    .addItem('3-legacy. 이전 AI 프롬프트 문서 만들기', 'createWeeklyPromptDoc')
     .addItem('4. 가설 복기 예약', 'scheduleHypothesisReviews')
     .addItem('5. 에이전트 리뷰 보드 실행', 'runAgentReviewBoard')
     .addItem('6. 자동화 준비도 기록', 'evaluateAutomationReadiness')
@@ -696,7 +698,7 @@ function runWeeklyLabWorkflow(issueDate) {
       0
     );
 
-    const checks = runAgentReviewBoard(targetIssueDate, runId);
+    const checks = runAgentReviewBoard(targetIssueDate, runId, promptResult.reportId);
     const blockingCount = checks.filter((check) => check.blocking).length;
     const workflowStatus = blockingCount > 0 ? '사용자 확인 필요' : '초안 생성 준비 완료';
     reportStatus = blockingCount > 0 ? '사용자 확인 필요' : '초안 생성';
@@ -757,6 +759,7 @@ function runWeeklyLabWorkflow(issueDate) {
       );
     } catch (qaError) {
       logError_(runId, 'createOperatorQaReview_', 'medium', 'qa_review_error', qaError.message, 'QA 로그 생성 중 예외', 'qa_review_log와 workflow 로그를 함께 확인');
+      finishAutomationRun_(runId, 'warning', promptResult.reportId, promptResult.url, qaError.message, 'QA 리뷰 생성 실패. qa_review_log 확인이 필요합니다.');
     }
 
     Logger.log(summary);
@@ -941,12 +944,13 @@ function getControlCenterState() {
     included_sections: preferences.filter((row) => String(row.setting_key).startsWith('include_')),
     schedules: schedules,
     log_locations: [
-      '설정 시트: user_preferences, automation_schedules',
+      '전체 실행 흐름: automation_run_log',
+      '단계별 진행 상황: automation_step_log',
+      '실제 에러 메시지: error_log',
+      '최종 검사표: qa_review_log',
       '재작업 요청: revision_requests',
       '리포트 이력: report_sections, report_versions',
-      '검토 로그: agent_review_log, automation_stage_reviews',
-      '변경 기록: change_approval_log',
-      '리포트 상태: report_runs',
+      '추가 검토 로그: agent_review_log, automation_stage_reviews, change_approval_log',
     ],
     revision_request_status: '재작업 요청은 revision_requests에 requested 상태로 저장됩니다.',
   };
@@ -1038,8 +1042,8 @@ function saveScheduleSettings(schedules) {
     ok: true,
     status: warnings.length > 0 ? 'warning' : 'ok',
     message: warnings.length > 0
-      ? '일부 스케줄은 저장했지만, 몇 가지 항목은 형식이 맞지 않아 그대로 두었습니다.'
-      : '자동화 스케줄을 저장했습니다.',
+      ? '일부 스케줄 정책은 저장했지만, 몇 가지 항목은 형식이 맞지 않아 그대로 두었습니다. 실제 Codex 예약 자동화는 아직 바뀌지 않았습니다.'
+      : '자동화 스케줄 정책을 저장했습니다. 실제 Codex 예약 자동화는 아직 생성/수정되지 않았습니다.',
     warnings: warnings,
     updated_keys: updatedKeys,
     state: getControlCenterState(),
@@ -1070,6 +1074,90 @@ function saveRevisionRequest(request) {
     request_id: requestId,
     status: 'requested',
     message: `재작업 요청을 접수했습니다. 요청 ID: ${requestId}`,
+  };
+}
+
+function updateRevisionRequestState_(requestId, nextStatus, resultVersion, notes) {
+  const normalizedRequestId = String(requestId || '').trim();
+  const normalizedStatus = String(nextStatus || '').trim();
+  const normalizedResultVersion = String(resultVersion || '').trim();
+  const normalizedNotes = String(notes || '').trim();
+
+  if (!normalizedRequestId) {
+    throw new Error('request_id가 필요합니다.');
+  }
+  if (SSMK.dropdowns.requestStatus.indexOf(normalizedStatus) === -1) {
+    throw new Error(`request status는 허용된 값만 사용할 수 있습니다: ${SSMK.dropdowns.requestStatus.join(', ')}`);
+  }
+
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+  const sheet = ss.getSheetByName(SSMK.sheets.revisionRequests);
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+  const rows = readIndexedObjects_(SSMK.sheets.revisionRequests);
+  const existing = rows.find((row) => String(row.request_id) === normalizedRequestId);
+
+  if (!existing) {
+    throw new Error(`request_id를 찾을 수 없습니다: ${normalizedRequestId}`);
+  }
+
+  const processedStatuses = ['completed', 'blocked', 'cancelled'];
+  const processedAt = processedStatuses.indexOf(normalizedStatus) !== -1 ? nowText_() : (existing.processed_at || '');
+  const rowObject = {
+    request_id: normalizedRequestId,
+    status: normalizedStatus,
+    processed_at: processedAt,
+    result_version: normalizedResultVersion || existing.result_version || '',
+    notes: normalizedNotes || existing.notes || '',
+  };
+
+  headers.forEach((header, index) => {
+    if (!Object.prototype.hasOwnProperty.call(rowObject, header)) return;
+    sheet.getRange(existing.__rowNumber, index + 1).setValue(rowObject[header]);
+  });
+
+  return {
+    ok: true,
+    request_id: normalizedRequestId,
+    status: normalizedStatus,
+    result_version: rowObject.result_version,
+  };
+}
+
+function markRevisionRequestInProgress_(requestId, notes) {
+  return updateRevisionRequestState_(requestId, 'in_progress', '', notes);
+}
+
+function completeRevisionRequest_(requestId, resultVersion, notes) {
+  return updateRevisionRequestState_(requestId, 'completed', resultVersion, notes);
+}
+
+function recordRevisionRequestResult_(requestId, reportId, versionLabel, outputUrl, notes) {
+  const normalizedRequestId = String(requestId || '').trim();
+  const normalizedReportId = String(reportId || '').trim();
+  const normalizedVersionLabel = String(versionLabel || '').trim();
+  const normalizedOutputUrl = String(outputUrl || '').trim();
+  const normalizedNotes = String(notes || '').trim() || '재작업 요청 처리 결과를 버전 이력에 기록했습니다.';
+
+  if (!normalizedRequestId) {
+    throw new Error('request_id가 필요합니다.');
+  }
+  if (!normalizedReportId) {
+    throw new Error('report_id가 필요합니다.');
+  }
+  if (!normalizedVersionLabel) {
+    throw new Error('version_label이 필요합니다. 예: v1.1');
+  }
+
+  markRevisionRequestInProgress_(normalizedRequestId, '재작업 결과를 기록하는 중입니다.');
+  const version = createReportVersion_(normalizedReportId, normalizedVersionLabel, normalizedRequestId, normalizedOutputUrl, normalizedNotes);
+  completeRevisionRequest_(normalizedRequestId, version.version_label, normalizedNotes);
+
+  return {
+    ok: true,
+    request_id: normalizedRequestId,
+    report_id: normalizedReportId,
+    version_label: version.version_label,
   };
 }
 
@@ -1333,10 +1421,18 @@ function createOperatorQaReview_(runId, reportId) {
     .filter((row) => String(row.report_id) === normalized.report_id);
   const visualizationRows = readObjects_(SSMK.sheets.visualizationQueue)
     .filter((row) => String(row.report_id) === normalized.report_id);
-  const agentRows = issueDate
-    ? readObjects_(SSMK.sheets.agentReviewLog)
-      .filter((row) => sameDateText_(row.issue_date, issueDate))
+  const allAgentRows = readObjects_(SSMK.sheets.agentReviewLog);
+  const exactRunRows = allAgentRows.filter((row) => String(row.run_id || '').trim() === normalized.run_id);
+  const exactReportRows = exactRunRows.length === 0 && normalized.report_id
+    ? allAgentRows.filter((row) => String(row.report_id || '').trim() === normalized.report_id)
     : [];
+  const agentRows = exactRunRows.length > 0
+    ? exactRunRows
+    : exactReportRows.length > 0
+      ? exactReportRows
+      : issueDate
+        ? allAgentRows.filter((row) => sameDateText_(row.issue_date, issueDate))
+        : [];
 
   const overallStatus = deriveOperatorQaStatus_(run.status, stepRows, errorRows, bottleneckRows, sectionRows, visualizationRows, agentRows);
   const contentQualityScore = clampScore_(Math.round((
@@ -1468,8 +1564,20 @@ function buildWeeklyReportPrompt(issueDate) {
 
 function collectWeeklyLabPromptInputs_(issueDate, reportId, runId) {
   const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
+  const reportIssueDateById = new Map(
+    readObjects_(SSMK.sheets.reportRuns)
+      .map((row) => [String(row.report_id || ''), String(row.issue_date || '')])
+      .filter((entry) => entry[0])
+  );
   const pendingRevisionRequests = readObjects_(SSMK.sheets.revisionRequests)
     .filter((row) => row.status === 'requested')
+    .filter((row) => {
+      const requestReportId = String(row.report_id || '').trim();
+      if (!requestReportId) return false;
+      if (requestReportId === String(reportId || '').trim()) return true;
+      const relatedIssueDate = reportIssueDateById.get(requestReportId);
+      return relatedIssueDate ? sameDateText_(relatedIssueDate, targetIssueDate) : false;
+    })
     .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
     .slice(-10);
 
@@ -1504,7 +1612,7 @@ function buildWeeklyLabPromptDocBody_(issueDate, reportId, runId) {
     `issue_date: ${inputs.issue_date}`,
     `generated_at: ${inputs.generated_at}`,
     '',
-    '이 문서는 최종 리포트가 아니라 Codex 예약 자동화가 읽을 입력 프롬프트와 데이터 요약이다.',
+    '이 문서는 최종 리포트가 아니라, 현재는 수동 실행 참고용이고 나중에는 Codex 예약 자동화도 참고할 입력 프롬프트와 데이터 요약이다.',
     '',
     '기준 문서:',
     `- ${inputs.reference_prompt_file}`,
@@ -1515,7 +1623,7 @@ function buildWeeklyLabPromptDocBody_(issueDate, reportId, runId) {
     '- Google Docs 초안은 Weekly Lab 템플릿 구조를 그대로 따른다.',
     '- 에이전트 리뷰 보드는 최대 3회까지 반복한다.',
     '- 차단 항목이 남으면 사용자 확인 필요 상태로 정리한다.',
-    '- 차단 항목이 없으면 현재 프로젝트에서 초안 생성 완료 의미의 상태로 정리한다.',
+    '- 차단 항목이 없으면 현재 프로젝트에서 초안 생성 상태로 정리한다.',
     '- 이메일은 보내지 않는다.',
     '- 추가 과금 API는 호출하지 않는다.',
     '',
@@ -1608,12 +1716,10 @@ function autoSoftenWeeklyScoreLanguage(issueDate) {
 
 function scheduleHypothesisReviews(issueDate) {
   const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
-  const rows = readObjects_(SSMK.sheets.weeklyScores)
-    .filter((row) => sameDateText_(row.issue_date, targetIssueDate))
-    .filter((row) => row.hypothesis_summary);
+  const rows = collectHypothesisSignalRows_(targetIssueDate);
 
   if (rows.length === 0) {
-    throw new Error('복기 예약할 hypothesis_summary가 없습니다. weekly_scores에 가설을 먼저 입력하세요.');
+    throw new Error('복기 예약할 가설이 없습니다. weekly_scores 또는 hypothesis_lab에 가설을 먼저 입력하세요.');
   }
 
   const existingIds = new Set(readObjects_(SSMK.sheets.hypothesisReviews).map((row) => row.hypothesis_id));
@@ -1624,7 +1730,8 @@ function scheduleHypothesisReviews(issueDate) {
       { window: '1w', days: 7 },
       { window: '4w', days: 28 },
     ].forEach((review) => {
-      const hypothesisId = `HYP-${compactDate_(targetIssueDate)}-${pad3_(index + 1)}-${review.window.toUpperCase()}`;
+      const baseHypothesisId = String(row.hypothesis_id || `HYP-${compactDate_(targetIssueDate)}-${pad3_(index + 1)}`).trim();
+      const hypothesisId = `${baseHypothesisId}-${review.window.toUpperCase()}`;
       if (existingIds.has(hypothesisId)) return;
 
       appendObject_(SSMK.sheets.hypothesisReviews, SSMK.headers.hypothesisReviews, {
@@ -1654,12 +1761,13 @@ function scheduleHypothesisReviews(issueDate) {
   return createdCount;
 }
 
-function runAgentReviewBoard(issueDate) {
+function runAgentReviewBoard(issueDate, runId, reportId) {
   const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
-  const weeklyRows = readObjects_(SSMK.sheets.weeklyScores)
-    .filter((row) => sameDateText_(row.issue_date, targetIssueDate));
-  const reportTarget = `weekly-report-${targetIssueDate}`;
-  const checks = buildAgentChecks_(targetIssueDate, weeklyRows);
+  const hypothesisRows = collectHypothesisSignalRows_(targetIssueDate);
+  const normalizedRunId = String(runId || '').trim();
+  const normalizedReportId = String(reportId || '').trim();
+  const reportTarget = normalizedReportId ? `report-${normalizedReportId}` : `weekly-report-${targetIssueDate}`;
+  const checks = buildAgentChecks_(targetIssueDate, hypothesisRows);
 
   checks.forEach((check, index) => {
     appendObject_(SSMK.sheets.agentReviewLog, SSMK.headers.agentReviewLog, {
@@ -1675,6 +1783,8 @@ function runAgentReviewBoard(issueDate) {
       blocking: check.blocking,
       resolved: false,
       notes: check.notes,
+      run_id: normalizedRunId,
+      report_id: normalizedReportId,
     });
   });
 
@@ -1684,7 +1794,7 @@ function runAgentReviewBoard(issueDate) {
 
 function evaluateAutomationReadiness() {
   const today = today_();
-  const weeklyRows = readObjects_(SSMK.sheets.weeklyScores).filter((row) => row.hypothesis_summary);
+  const weeklyRows = collectHypothesisSignalRows_();
   const reviewRows = readObjects_(SSMK.sheets.agentReviewLog);
   const totalHypotheses = weeklyRows.length;
   const completeHypotheses = weeklyRows.filter(hasCompleteHypothesis_).length;
@@ -1708,7 +1818,7 @@ function evaluateAutomationReadiness() {
     proposal_summary: canPropose
       ? '가설 구조와 리뷰 로그가 안정적이면 사용자 승인 요청 제안서를 작성합니다.'
       : '운영 기록이 아직 부족하거나 차단 항목이 있어 현 단계 유지가 적절합니다.',
-    approval_status: 'postponed',
+    approval_status: 'proposed',
     notes: '이 함수는 판단 근거만 기록합니다. 승인 없이 자동화 수준을 바꾸지 않습니다.',
   });
 
@@ -1761,11 +1871,13 @@ function applyApprovedChange(changeId) {
   throw new Error('중요 변경 자동 적용은 아직 비활성화되어 있습니다. 승인 후에도 수동 확인 절차를 먼저 거치세요.');
 }
 
-function buildAgentChecks_(issueDate, weeklyRows) {
-  const requiredCount = 3;
-  const completeRows = weeklyRows.filter(hasCompleteHypothesis_);
-  const lowConfidenceRows = weeklyRows.filter((row) => row.data_confidence === '낮음');
-  const recommendationRiskRows = weeklyRows.filter((row) => {
+function buildAgentChecks_(issueDate, hypothesisRows) {
+  const usesHypothesisLab = hypothesisRows.some((row) => String(row.source_sheet) === 'hypothesis_lab');
+  const requiredCount = usesHypothesisLab ? 5 : 3;
+  const sourceLabel = usesHypothesisLab ? 'hypothesis_lab' : 'weekly_scores';
+  const completeRows = hypothesisRows.filter(hasCompleteHypothesis_);
+  const lowConfidenceRows = hypothesisRows.filter((row) => row.data_confidence === '낮음');
+  const recommendationRiskRows = hypothesisRows.filter((row) => {
     const text = [
       row.hypothesis_summary,
       row.reasoning_explanation,
@@ -1783,7 +1895,7 @@ function buildAgentChecks_(issueDate, weeklyRows) {
       riskLevel: completeRows.length >= requiredCount ? 'low' : 'medium',
       blocking: false,
       summary: `완성된 AI 가설 ${completeRows.length}개 확인`,
-      requiredAction: completeRows.length >= requiredCount ? '문장 가독성 확인' : 'AI 가설 3개 이상을 5단 구조로 보완',
+      requiredAction: completeRows.length >= requiredCount ? '문장 가독성 확인' : `AI 가설 ${requiredCount}개를 핵심 필드와 함께 보완`,
       notes: '루미는 초안을 만들지만 최종 승인하지 않습니다.',
     },
     {
@@ -1809,11 +1921,11 @@ function buildAgentChecks_(issueDate, weeklyRows) {
     {
       agentName: '파일럿',
       agentRole: '운영/프로세스 감독',
-      status: weeklyRows.length > 0 ? 'pass' : 'warning',
-      riskLevel: weeklyRows.length > 0 ? 'low' : 'medium',
+      status: hypothesisRows.length > 0 ? 'pass' : 'warning',
+      riskLevel: hypothesisRows.length > 0 ? 'low' : 'medium',
       blocking: false,
-      summary: `issue_date ${issueDate} 기준 weekly_scores 행 ${weeklyRows.length}개`,
-      requiredAction: weeklyRows.length > 0 ? '가설 복기 예약 확인' : 'weekly_scores 입력 후 다시 실행',
+      summary: `issue_date ${issueDate} 기준 ${sourceLabel} 기반 가설 행 ${hypothesisRows.length}개`,
+      requiredAction: hypothesisRows.length > 0 ? '가설 복기 예약 확인' : `${sourceLabel} 입력 후 다시 실행`,
       notes: '파일럿은 승인, 발송, 복기 흐름이 끊기지 않는지 봅니다.',
     },
     {
@@ -1859,6 +1971,97 @@ function hasCompleteHypothesis_(row) {
       row.limitations &&
       row.next_check
   );
+}
+
+function normalizeConfidenceGrade_(value) {
+  const text = String(value || '').trim();
+  if (text === '높음' || text === '중간' || text === '낮음') return text;
+  if (/high/i.test(text)) return '높음';
+  if (/low/i.test(text)) return '낮음';
+  return '중간';
+}
+
+function confidenceToUncertainty_(value) {
+  const grade = normalizeConfidenceGrade_(value);
+  if (grade === '높음') return '낮음';
+  if (grade === '낮음') return '높음';
+  return '중간';
+}
+
+function mapWeeklyScoreToHypothesisSignalRow_(row, issueDate, index) {
+  return {
+    source_sheet: 'weekly_scores',
+    issue_date: row.issue_date,
+    hypothesis_id: `HYP-${compactDate_(issueDate)}-${pad3_(index + 1)}`,
+    ticker: row.ticker || '',
+    company: row.company || '',
+    core_industry: row.core_industry || '',
+    hypothesis_summary: row.hypothesis_summary || '',
+    evidence_metrics: row.evidence_metrics || '',
+    reasoning_explanation: row.reasoning_explanation || '',
+    beginner_lesson: row.beginner_lesson || '',
+    limitations: row.limitations || '',
+    next_check: row.next_check || '',
+    data_confidence: normalizeConfidenceGrade_(row.data_confidence),
+    uncertainty_level: normalizeConfidenceGrade_(row.uncertainty_level),
+  };
+}
+
+function mapHypothesisLabToSignalRow_(row, issueDate, index) {
+  const confidence = normalizeConfidenceGrade_(row.confidence_level);
+  const hypothesisId = String(row.hypothesis_id || `HLAB-${compactDate_(issueDate)}-${pad3_(index + 1)}`).trim();
+  const summary = String(row.revised_hypothesis || row.one_line_forecast || '').trim();
+  const reasoning = [row.interpretation, row.source_summary].filter(Boolean).join(' / ');
+
+  return {
+    source_sheet: 'hypothesis_lab',
+    issue_date: row.issue_date,
+    hypothesis_id: hypothesisId,
+    ticker: String(row.related_tickers || '').trim(),
+    company: '',
+    core_industry: String(row.related_industry || '').trim(),
+    hypothesis_summary: summary,
+    evidence_metrics: String(row.evidence_metrics || '').trim(),
+    reasoning_explanation: reasoning,
+    beginner_lesson: String(row.beginner_lesson || '').trim(),
+    limitations: String(row.red_team_challenge || '').trim(),
+    next_check: String(row.review_condition || row.forecast_condition || '').trim(),
+    data_confidence: confidence,
+    uncertainty_level: confidenceToUncertainty_(confidence),
+  };
+}
+
+function collectHypothesisSignalRows_(issueDate) {
+  const weeklyRows = readObjects_(SSMK.sheets.weeklyScores);
+  const labRows = readObjects_(SSMK.sheets.hypothesisLab);
+
+  if (issueDate) {
+    const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
+    const targetLabRows = labRows.filter((row) => sameDateText_(row.issue_date, targetIssueDate));
+    if (targetLabRows.length > 0) {
+      return targetLabRows.map((row, index) => mapHypothesisLabToSignalRow_(row, targetIssueDate, index));
+    }
+
+    return weeklyRows
+      .filter((row) => sameDateText_(row.issue_date, targetIssueDate))
+      .filter((row) => row.hypothesis_summary)
+      .map((row, index) => mapWeeklyScoreToHypothesisSignalRow_(row, targetIssueDate, index));
+  }
+
+  const issueDatesWithLab = new Set(
+    labRows
+      .map((row) => String(row.issue_date || '').trim())
+      .filter(Boolean)
+  );
+
+  return labRows
+    .map((row, index) => mapHypothesisLabToSignalRow_(row, row.issue_date || today_(), index))
+    .concat(
+      weeklyRows
+        .filter((row) => row.hypothesis_summary)
+        .filter((row) => !issueDatesWithLab.has(String(row.issue_date || '').trim()))
+        .map((row, index) => mapWeeklyScoreToHypothesisSignalRow_(row, row.issue_date || today_(), index))
+    );
 }
 
 function normalizeWatchlistColumns_(ss) {
@@ -2451,7 +2654,7 @@ function createReportRunRow_(issueDate, weekStart, weekEnd, status, filePath, no
     generated_at: nowText_(),
     recipient_group: 'active recipients',
     report_file_path: filePath,
-    email_subject: `[SSMK] Weekly Insight ${issueDate}`,
+    email_subject: `[SSMK] Weekly Lab ${issueDate}`,
     notes: notes,
   });
   return reportId;
