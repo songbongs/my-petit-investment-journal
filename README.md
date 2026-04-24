@@ -352,3 +352,22 @@ AI가 "이제 다음 단계로 넘어가도 좋겠다"고 판단해도 조용히
 | 글로벌 소비재/럭셔리 | EL, LVMUY | 중국 소비, 브랜드 파워, 럭셔리, 마진 | 소비재, 턴어라운드 |
 
 예를 들어 MSFT는 `AI/클라우드/반도체 인프라`에 넣되, 테마 태그에는 `AI`, `클라우드`, `게임`, `주주환원`을 함께 기록합니다. 이렇게 하면 월간 리뷰는 깔끔하게 유지하면서도, 여러 사업을 가진 기업을 한 칸에 억지로 가두지 않을 수 있습니다.
+
+### watchlist 분류 기준 운영 규칙
+
+`watchlist`의 분류는 AI가 초안을 만들 수 있지만, 최종 기준은 사용자가 편집장처럼 승인합니다. 이 분류는 투자 판단을 대신하는 신호가 아니라, Weekly Lab이 종목을 같은 기준으로 묶어 읽기 위한 공부용 라벨입니다.
+
+운영 기준:
+
+1. `core_industry`는 월간 리뷰용 큰 바구니라서 한 종목당 하나만 고릅니다.
+2. 여러 사업을 가진 회사는 `theme_tags`에 보조 주제를 여러 개 넣습니다.
+3. `investment_style`은 매수/매도 판단이 아니라 공부 관점을 적습니다.
+4. `role_in_watchlist`는 "왜 이 종목을 관찰하는가"를 초보자가 이해할 수 있는 문장으로 적습니다.
+
+좋은 예시:
+
+| ticker | core_industry | theme_tags | investment_style | role_in_watchlist |
+|---|---|---|---|---|
+| MSFT | AI/클라우드/반도체 인프라 | AI, 클라우드, Azure, Microsoft 365, Copilot, 게임, Xbox/Activision, 주주환원 | 성장주, 혼합, 플랫폼 | Azure/Microsoft 365/Copilot 중심의 클라우드·AI 플랫폼. Xbox/Activision은 콘텐츠·구독 확장 사례로 함께 관찰 |
+
+이 기준의 현재 20개 초기 워치리스트 초안은 `automation/Code.gs`의 `WATCHLIST_CLASSIFICATION_GUIDE`에 저장되어 있습니다. 새 AI가 분류를 다시 만들 때는 이 값을 좋은 예시로 보고, 종목의 실제 사업 비중과 관찰 목적이 바뀐 경우에만 근거를 남기고 수정합니다.

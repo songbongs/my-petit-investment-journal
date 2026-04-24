@@ -516,7 +516,190 @@ const WORKBOOK_SETUP_LIMITS = {
   maxDropdownRows: 300,
 };
 
-const SSMK_SETUP_BUILD = '2026-04-24-watchlist-migration-v1';
+const SSMK_SETUP_BUILD = '2026-04-24-watchlist-classification-v1';
+
+const WATCHLIST_CLASSIFICATION_GUIDE = [
+  {
+    ticker: 'TSLA',
+    company: 'Tesla',
+    core_industry: '자동차/전기차',
+    theme_tags: '전기차, 자율주행, 에너지 저장, 로봇, 가격 경쟁',
+    investment_style: '성장주, 경기민감',
+    role_in_watchlist: '전기차 수요, 가격 정책, 자율주행/에너지 사업의 실질 기여도를 관찰',
+    tracking_priority: 'High',
+  },
+  {
+    ticker: 'GM',
+    company: 'General Motors',
+    core_industry: '자동차/전기차',
+    theme_tags: '전통 자동차, 전기차 전환, 자율주행, 경기민감',
+    investment_style: '경기민감, 턴어라운드',
+    role_in_watchlist: '전통 완성차 기업이 전기차 전환과 수익성 방어를 어떻게 진행하는지 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'MSFT',
+    company: 'Microsoft',
+    core_industry: 'AI/클라우드/반도체 인프라',
+    theme_tags: 'AI, 클라우드, Azure, Microsoft 365, Copilot, 게임, Xbox/Activision, 주주환원',
+    investment_style: '성장주, 혼합, 플랫폼',
+    role_in_watchlist: 'Azure/Microsoft 365/Copilot 중심의 클라우드·AI 플랫폼. Xbox/Activision은 콘텐츠·구독 확장 사례로 함께 관찰',
+    tracking_priority: 'High',
+  },
+  {
+    ticker: 'TTWO',
+    company: 'Take-Two Interactive',
+    core_industry: '미디어/게임/콘텐츠',
+    theme_tags: '게임, GTA, 콘솔 사이클, 모바일 게임, 콘텐츠 IP',
+    investment_style: '성장주, 경기민감',
+    role_in_watchlist: '대형 게임 출시 주기와 장기 IP 가치가 실적 변동에 미치는 영향 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'NFLX',
+    company: 'Netflix',
+    core_industry: '미디어/게임/콘텐츠',
+    theme_tags: '스트리밍, 광고 요금제, 콘텐츠, 글로벌 구독',
+    investment_style: '성장주, 플랫폼',
+    role_in_watchlist: '구독·광고 모델이 콘텐츠 비용과 수익성에 어떻게 연결되는지 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'DIS',
+    company: 'Walt Disney',
+    core_industry: '미디어/게임/콘텐츠',
+    theme_tags: '스트리밍, 테마파크, 콘텐츠 IP, ESPN, 턴어라운드',
+    investment_style: '턴어라운드, 소비재, 혼합',
+    role_in_watchlist: '스트리밍 수익성, 테마파크, 콘텐츠 IP 회복 흐름을 함께 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'AAPL',
+    company: 'Apple',
+    core_industry: 'AI/클라우드/반도체 인프라',
+    theme_tags: '온디바이스 AI, iPhone, 서비스, 생태계, 주주환원',
+    investment_style: '혼합, 플랫폼, 주주환원',
+    role_in_watchlist: '하드웨어·서비스 생태계와 온디바이스 AI가 반복 매출과 사용자 충성도에 미치는 영향 관찰',
+    tracking_priority: 'High',
+  },
+  {
+    ticker: 'NVDA',
+    company: 'NVIDIA',
+    core_industry: 'AI/클라우드/반도체 인프라',
+    theme_tags: 'AI 반도체, GPU, 데이터센터, 가속 컴퓨팅, CUDA',
+    investment_style: '성장주, 경기민감',
+    role_in_watchlist: 'AI 인프라 수요가 반도체 매출과 마진에 어떻게 연결되는지 관찰',
+    tracking_priority: 'High',
+  },
+  {
+    ticker: 'QCOM',
+    company: 'Qualcomm',
+    core_industry: 'AI/클라우드/반도체 인프라',
+    theme_tags: '모바일 반도체, 온디바이스 AI, 자동차 반도체, 통신칩',
+    investment_style: '성장주, 경기민감, 혼합',
+    role_in_watchlist: '스마트폰 이후 자동차·온디바이스 AI로 사업 축이 넓어지는지 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'EL',
+    company: 'Estee Lauder',
+    core_industry: '글로벌 소비재/럭셔리',
+    theme_tags: '화장품, 중국 소비, 럭셔리, 마진 회복, 턴어라운드',
+    investment_style: '소비재, 턴어라운드',
+    role_in_watchlist: '중국·면세 채널과 브랜드 회복이 매출/마진에 어떻게 반영되는지 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'LVMUY',
+    company: 'LVMH Moet Hennessy Louis Vuitton ADR',
+    core_industry: '글로벌 소비재/럭셔리',
+    theme_tags: '럭셔리, 중국 소비, 브랜드 파워, 유럽 소비, 마진',
+    investment_style: '소비재, 혼합',
+    role_in_watchlist: '럭셔리 브랜드 포트폴리오와 지역별 소비 흐름을 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'GOOGL',
+    company: 'Alphabet',
+    core_industry: '디지털 플랫폼/광고',
+    theme_tags: '검색 광고, YouTube, 클라우드, AI, Gemini',
+    investment_style: '성장주, 플랫폼',
+    role_in_watchlist: '검색·광고 기반 현금흐름과 AI 전환, 클라우드 성장을 함께 관찰',
+    tracking_priority: 'High',
+  },
+  {
+    ticker: 'META',
+    company: 'Meta Platforms',
+    core_industry: '디지털 플랫폼/광고',
+    theme_tags: '소셜 광고, Instagram, WhatsApp, AI 광고 도구, Reality Labs',
+    investment_style: '성장주, 플랫폼',
+    role_in_watchlist: '광고 플랫폼 효율과 AI 추천/광고 도구가 실적에 미치는 영향 관찰',
+    tracking_priority: 'High',
+  },
+  {
+    ticker: 'TTD',
+    company: 'The Trade Desk',
+    core_industry: '디지털 플랫폼/광고',
+    theme_tags: '광고 기술, 커넥티드 TV, 오픈 인터넷, 데이터 광고',
+    investment_style: '성장주, 플랫폼',
+    role_in_watchlist: '대형 플랫폼 밖 광고 시장에서 독립 광고 기술 기업의 성장성을 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'JNJ',
+    company: 'Johnson & Johnson',
+    core_industry: '헬스케어/제약',
+    theme_tags: '제약, 의료기기, 방어주, 배당',
+    investment_style: '방어주, 배당주',
+    role_in_watchlist: '경기와 무관한 헬스케어 수요, 배당 지속성, 파이프라인 안정성을 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'LLY',
+    company: 'Eli Lilly',
+    core_industry: '헬스케어/제약',
+    theme_tags: '비만 치료제, 당뇨, 신약, 파이프라인',
+    investment_style: '성장주, 헬스케어',
+    role_in_watchlist: '신약 성장성과 생산능력, 기대가 실적 지표로 이어지는지 관찰',
+    tracking_priority: 'High',
+  },
+  {
+    ticker: 'MRK',
+    company: 'Merck',
+    core_industry: '헬스케어/제약',
+    theme_tags: '면역항암제, 신약, 특허 만료, 배당',
+    investment_style: '방어주, 배당주, 혼합',
+    role_in_watchlist: '주요 의약품 의존도와 후속 파이프라인이 장기 안정성에 미치는 영향 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'XOM',
+    company: 'Exxon Mobil',
+    core_industry: '에너지/산업소재',
+    theme_tags: '석유, 천연가스, 현금흐름, 배당, 자사주',
+    investment_style: '배당주, 경기민감',
+    role_in_watchlist: '유가와 현금흐름이 배당·자사주 정책에 어떻게 연결되는지 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'CVX',
+    company: 'Chevron',
+    core_industry: '에너지/산업소재',
+    theme_tags: '석유, 천연가스, 배당, 자본지출, 에너지 가격',
+    investment_style: '배당주, 경기민감',
+    role_in_watchlist: '에너지 가격 변동 속에서 현금흐름과 주주환원 안정성을 관찰',
+    tracking_priority: 'Medium',
+  },
+  {
+    ticker: 'LIN',
+    company: 'Linde',
+    core_industry: '에너지/산업소재',
+    theme_tags: '산업용 가스, 수소, 제조업, 장기 계약',
+    investment_style: '방어주, 경기민감, 혼합',
+    role_in_watchlist: '산업용 가스의 반복 수요와 장기 계약 구조가 안정성에 주는 영향 관찰',
+    tracking_priority: 'Medium',
+  },
+];
 
 const CONTROL_CENTER_DEFAULT_PREFERENCES = [
   {
@@ -662,6 +845,10 @@ function showSettingsSidebar() {
     .createHtmlOutputFromFile('SettingsSidebar')
     .setTitle('SSMK Control Center');
   SpreadsheetApp.getUi().showSidebar(html);
+}
+
+function getWatchlistClassificationGuide() {
+  return WATCHLIST_CLASSIFICATION_GUIDE.map((row) => Object.assign({}, row));
 }
 
 function runWeeklyLabWorkflow(issueDate) {

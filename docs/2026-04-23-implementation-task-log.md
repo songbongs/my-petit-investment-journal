@@ -1059,3 +1059,27 @@ Notes:
 
 - This change does not send email, create or modify real scheduled automation, or change an operating policy.
 - This change is a local/stub verification. It has not been live-run inside the bound Google Apps Script project yet.
+
+## 2026-04-24 Watchlist classification guide and live sheet update
+
+Status: completed
+
+What changed:
+
+- Updated the live Google Sheets `watchlist!C2:G21` range with the approved classification direction.
+- Filled `theme_tags` and `investment_style` for all 20 initial watchlist rows.
+- Reclassified MSFT from `게임` to `AI/클라우드/반도체 인프라`, while preserving game exposure through `theme_tags`.
+- Added `WATCHLIST_CLASSIFICATION_GUIDE` and `getWatchlistClassificationGuide()` to `automation/Code.gs` so future AI sessions have a stable good example for classification.
+- Updated `README.md` with beginner-friendly watchlist classification rules and the MSFT example.
+- Updated `SSMK_SETUP_BUILD` to `2026-04-24-watchlist-classification-v1`.
+
+Verification:
+
+- Passed: live readback from `watchlist!A1:G21` after the Google Sheets update.
+- Red check: `node tests\watchlist-classification-guide.test.js` failed before `getWatchlistClassificationGuide()` existed.
+- Passed: `node tests\watchlist-classification-guide.test.js`
+
+Notes:
+
+- This change is a study-label cleanup for the watchlist, not an investment recommendation.
+- This change did not send email, create or modify real scheduled automation, or publish anything externally.

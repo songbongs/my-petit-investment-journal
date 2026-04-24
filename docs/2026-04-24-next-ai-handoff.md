@@ -265,6 +265,8 @@ P1
 2. 새 표준 헤더 순서에 맞게 행 데이터를 다시 배치한다.
 3. 빠진 컬럼은 빈칸으로 둔다.
 4. `theme_tags`만 있거나 `investment_style`만 있는 중간 migration 상태를 stub test로 검증했다.
+5. 20개 초기 watchlist의 `core_industry`, `theme_tags`, `investment_style`, `role_in_watchlist`, `tracking_priority`는 승인된 분류 기준으로 live Google Sheets에 반영했다.
+6. 향후 분류 기준의 좋은 예시는 `automation/Code.gs`의 `WATCHLIST_CLASSIFICATION_GUIDE`와 `getWatchlistClassificationGuide()`를 먼저 확인한다.
 
 ### 리스크 2. 로그 1줄 쓸 때마다 전체 스키마 점검 반복
 
