@@ -1033,3 +1033,29 @@ docs/2026-04-23-implementation-task-log.md,
 automation/Code.gs
 순서로 읽는 것이 가장 안전하다.
 ```
+
+## 2026-04-24 Watchlist migration hardening
+
+Status: completed
+
+What changed:
+
+- Hardened `normalizeWatchlistColumns_()` so `watchlist` data is remapped by existing header names instead of inserting columns in the middle.
+- Covered the two risky partial-migration cases:
+  - `theme_tags` exists but `investment_style` is missing
+  - `investment_style` exists but `theme_tags` is missing
+- Added a preservation check so `FALSE`-like checkbox values are not turned into blanks during remapping.
+- Updated `SSMK_SETUP_BUILD` to `2026-04-24-watchlist-migration-v1` so a beginner can confirm the safer build is copied into Apps Script.
+- Updated the next-AI handoff so 리스크 1 is marked as handled and the next focus is 리스크 2.
+
+Verification:
+
+- Red check: `node tests\watchlist-normalization.test.js` failed on the old behavior because the code inserted columns after column 3.
+- Passed: `node tests\watchlist-normalization.test.js`
+- Passed: `node -e "const fs=require('fs'); new Function(fs.readFileSync('automation/Code.gs','utf8')); console.log('Code.gs syntax ok')"`
+- Passed: `git diff --check`
+
+Notes:
+
+- This change does not send email, create or modify real scheduled automation, or change an operating policy.
+- This change is a local/stub verification. It has not been live-run inside the bound Google Apps Script project yet.

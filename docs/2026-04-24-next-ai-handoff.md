@@ -240,6 +240,12 @@ applySsmkWorkbookDropdowns()
 P1
 ```
 
+처리 상태:
+
+```text
+2026-04-24 처리 완료
+```
+
 문제 설명:
 
 - `normalizeWatchlistColumns_()`는 `theme_tags` 또는 `investment_style` 둘 중 하나만 없어도 `insertColumnsAfter(3, 2)`를 실행한다.
@@ -253,12 +259,12 @@ P1
 새 구조 보정 후에는 E열이나 F열 의미로 밀릴 수 있다.
 ```
 
-권장 후속 작업:
+처리 내용:
 
-1. `watchlist` 헤더 패턴을 경우별로 나눈다.
-2. "둘 다 없음" / "하나만 있음" / "둘 다 있음"을 분기한다.
-3. "하나만 있음"이면 단순 insert가 아니라 실제 데이터 재배치 로직을 넣는다.
-4. 최소한 stub test 또는 시뮬레이션 케이스를 만든다.
+1. `watchlist` 데이터를 기존 헤더 이름 기준으로 읽는다.
+2. 새 표준 헤더 순서에 맞게 행 데이터를 다시 배치한다.
+3. 빠진 컬럼은 빈칸으로 둔다.
+4. `theme_tags`만 있거나 `investment_style`만 있는 중간 migration 상태를 stub test로 검증했다.
 
 ### 리스크 2. 로그 1줄 쓸 때마다 전체 스키마 점검 반복
 
@@ -319,7 +325,7 @@ P3
 
 작업 후보:
 
-1. `normalizeWatchlistColumns_()` 안전화
+1. `normalizeWatchlistColumns_()` 안전화: 2026-04-24 완료
 2. logging helper의 중복 schema ensure 축소
 3. 관련 stub 검증 추가
 
@@ -389,7 +395,7 @@ Weekly Lab foundation 구현 완료
    - `applySsmkWorkbookDropdowns()`
    - `normalizeWatchlistColumns_()`
    - logging helper들
-5. 리스크 1, 2 중 하나를 선택해서 작은 단위로 수정
+5. 남은 리스크 2부터 작은 단위로 수정
 6. 문법 검증
 7. 가능한 stub 검증
 8. 작은 체크포인트 커밋

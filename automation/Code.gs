@@ -516,7 +516,7 @@ const WORKBOOK_SETUP_LIMITS = {
   maxDropdownRows: 300,
 };
 
-const SSMK_SETUP_BUILD = '2026-04-24-setup-debug-v1';
+const SSMK_SETUP_BUILD = '2026-04-24-watchlist-migration-v1';
 
 const CONTROL_CENTER_DEFAULT_PREFERENCES = [
   {
@@ -2137,15 +2137,35 @@ function normalizeWatchlistColumns_(ss) {
   const sheet = ss.getSheetByName(SSMK.sheets.watchlist);
   if (!sheet) return;
 
-  const header = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getValues()[0];
-  const hasThemeTags = header.indexOf('theme_tags') !== -1;
-  const hasInvestmentStyle = header.indexOf('investment_style') !== -1;
+  const targetHeaders = SSMK.headers.watchlist;
+  const lastColumn = Math.max(1, sheet.getLastColumn());
+  const lastRow = Math.max(1, sheet.getLastRow());
+  const header = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0]
+    .map((value) => String(value || '').trim());
+  const headerMatchesTarget = targetHeaders.every((targetHeader, index) => header[index] === targetHeader);
+  const hasKnownWatchlistHeader = targetHeaders.some((targetHeader) => header.indexOf(targetHeader) !== -1);
+  const shouldRemapData = !headerMatchesTarget && hasKnownWatchlistHeader && lastRow > 1;
 
-  if (!hasThemeTags || !hasInvestmentStyle) {
-    sheet.insertColumnsAfter(3, 2);
+  if (shouldRemapData) {
+    const headerIndexByName = header.reduce((acc, headerName, index) => {
+      if (headerName && !Object.prototype.hasOwnProperty.call(acc, headerName)) {
+        acc[headerName] = index;
+      }
+      return acc;
+    }, {});
+    const values = sheet.getRange(2, 1, lastRow - 1, lastColumn).getValues();
+    const remappedValues = values.map((row) => targetHeaders.map((targetHeader) => {
+      if (!Object.prototype.hasOwnProperty.call(headerIndexByName, targetHeader)) return '';
+      const value = row[headerIndexByName[targetHeader]];
+      return value === undefined || value === null ? '' : value;
+    }));
+
+    setHeaders_(ss, SSMK.sheets.watchlist, targetHeaders);
+    sheet.getRange(2, 1, remappedValues.length, targetHeaders.length).setValues(remappedValues);
+    return;
   }
 
-  setHeaders_(ss, SSMK.sheets.watchlist, SSMK.headers.watchlist);
+  setHeaders_(ss, SSMK.sheets.watchlist, targetHeaders);
 }
 
 function applyWeeklyScoreFormulas_(ss) {
