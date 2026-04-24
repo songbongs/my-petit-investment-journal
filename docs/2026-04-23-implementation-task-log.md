@@ -1007,3 +1007,29 @@ Review-prep notes:
 - PR #1 can now be reviewed as a live-verified branch, not just a local/stub-verified branch.
 - The remaining dropdown helper is intentionally optional and does not block the current Weekly Lab flow.
 - Email sending, real schedule automation changes, and major operational changes still remain behind explicit approval.
+
+## 2026-04-24 Final handoff package for the next AI
+
+Status: completed
+
+What changed:
+
+- Added `docs/2026-04-24-next-ai-handoff.md` as the new single-entry handoff document for future AI sessions.
+- Summarized:
+  - current project phase
+  - live verification status
+  - exact current operator flow
+  - remaining risks from the solo final review
+  - recommended next-phase order
+  - operating constraints that must remain approval-gated
+  - short prompts the user can reuse in the next session
+
+Important note:
+
+```text
+다음 AI는 먼저 README.md,
+docs/2026-04-24-next-ai-handoff.md,
+docs/2026-04-23-implementation-task-log.md,
+automation/Code.gs
+순서로 읽는 것이 가장 안전하다.
+```
