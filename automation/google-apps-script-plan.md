@@ -10,10 +10,12 @@
 
 ```text
 이 문서는 장기 설계안이다.
-2026-04-23 기준 현재 기본 메뉴 실행은 runWeeklyLabWorkflow()이며,
+2026-04-24 기준 현재 기본 메뉴 실행은 runWeeklyLabWorkflow()이며,
 실제로 구현된 기본 범위는 Weekly Lab 입력용 Google Docs 초안 준비,
 로그 기록, 리뷰 보드 점검, QA 기록까지다.
 Gmail 발송과 예약 자동화 변경은 승인 전까지 실행하지 않는다.
+setupSsmkWorkbook()은 빠른 구조 점검용으로 가볍게 유지하고,
+applyWeeklyScoreFormulas() / applySsmkWorkbookDropdowns()는 필요할 때 따로 실행한다.
 ```
 
 초기 목표:

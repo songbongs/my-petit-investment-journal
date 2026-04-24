@@ -107,8 +107,11 @@ SSMK-investment-journal/
 
 1. Google Sheets를 엽니다.
 2. Apps Script 편집기에서 최신 `Code.gs`와 `SettingsSidebar.html`을 반영합니다.
-3. 함수 목록에서 `setupSsmkWorkbook()`를 한 번 실행합니다.
-4. 실행 후 아래 탭이 생겼는지 확인합니다.
+3. 문제 해결이나 버전 확인이 필요하면 `showSsmkSetupBuild()`를 먼저 실행해서 최신 build가 보이는지 확인합니다.
+4. 함수 목록에서 `setupSsmkWorkbook()`를 한 번 실행합니다.
+5. 함수 목록에서 `applyWeeklyScoreFormulas()`를 한 번 실행합니다.
+6. 드롭다운이 바로 필요하면 `applySsmkWorkbookDropdowns()`를 추가로 실행합니다. 이 단계는 선택 사항입니다.
+7. 실행 후 아래 탭이 생겼는지 확인합니다.
 
 확인할 대표 탭:
 
@@ -128,7 +131,8 @@ SSMK-investment-journal/
 
 - `automation_schedules`에서 `tuesday_weekly_report`만 `ON`인지 확인합니다.
 - 나머지 스케줄은 `OFF`인지 확인합니다.
-- 드롭다운이 필요한 칸에 선택값이 보이는지 확인합니다.
+- `weekly_scores`의 총점/관찰 등급 수식이 정상인지 확인합니다.
+- 드롭다운은 `applySsmkWorkbookDropdowns()` 실행 뒤 보이면 정상입니다.
 
 ### 4. SSMK Control Center 여는 법
 
@@ -144,6 +148,7 @@ SSMK 자동화
 - 리포트 깊이, 가설 개수, 리뷰 반복 수 같은 기본 설정 확인
 - 재작업 요청 입력
 - 스케줄 정책 상태 확인
+- 메뉴의 `1-0`, `1-1`, `1-2` 항목으로 build 확인, 수식 보강, 드롭다운 보강을 따로 실행
 
 ### 5. 지금 Weekly Lab 초안 준비를 실행하는 법
 
@@ -157,6 +162,7 @@ SSMK 자동화
 이 버튼이 하는 일:
 
 - 시트 구조를 조용히 다시 점검
+- `weekly_scores` 수식을 다시 확인
 - 추천처럼 읽히는 문장을 자동 순화
 - Google Docs용 Weekly Lab 입력 초안 생성
 - 가설 복기 예약 기록
@@ -168,6 +174,7 @@ SSMK 자동화
 - 이메일 발송
 - 예약 자동화 생성/수정/삭제
 - 중요한 운영 규칙 변경
+- 입력용 드롭다운 전체 보강
 
 예전 방식이 필요하면 아래 레거시 메뉴를 비교용으로만 씁니다.
 
@@ -222,11 +229,28 @@ SSMK 자동화
 최종 검사표는 qa_review_log를 보면 됩니다.
 ```
 
+### 9. 2026-04-24 기준 실제 검증 결과
+
+현재 구현은 문서 설계만 끝난 상태가 아니라, 실제 Google Sheets와 bound Apps Script에서도 1회 끝까지 실행 확인을 마친 상태입니다.
+
+- `showSsmkSetupBuild()` 성공
+- `setupSsmkWorkbook()` 성공
+- `applyWeeklyScoreFormulas()` 성공
+- `runWeeklyLabWorkflow()` 성공
+- 생성 확인:
+  - `automation_run_log`
+  - `report_runs`
+  - Google Docs 입력 초안 1건
+- 실행 로그 기준 최종 상태:
+  - `초안 생성`
+  - `에이전트 차단 항목: 0개`
+  - `자동화 준비도 점수: 90`
+
 ## 다음 작업 후보
 
 1. 실제 Google Sheets에 `automation/google-sheets-structure-plan.md` 기준으로 컬럼 추가하기: 완료
 2. `automation/Code.gs` 초안 만들기: 완료
-3. Google Sheets 샘플 데이터로 `runWeeklyLabWorkflow()` 수동 실행 테스트하기
+3. Google Sheets 샘플/실데이터 기준 `runWeeklyLabWorkflow()` 수동 실행 테스트하기: 완료
 4. `agent_review_log`, `automation_stage_reviews`, `change_approval_log` 탭 반영하기: 완료
 5. `runWeeklyLabWorkflow()` 기반 운영 로그가 2~4회 안정적으로 쌓이는지 확인하기
 6. 승인 상태일 때만 이메일 발송되도록 테스트하기

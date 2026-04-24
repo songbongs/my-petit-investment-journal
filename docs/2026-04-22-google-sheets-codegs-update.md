@@ -16,13 +16,14 @@ AI 가설은 근거와 해석 과정을 함께 설명
 외부 이메일 발송은 승인 후에만 진행
 ```
 
-2026-04-23 현재 구현 메모:
+2026-04-24 현재 구현 메모:
 
 ```text
 현재 기본 실행 함수는 runWeeklyLabWorkflow()이다.
 runWeeklyDraftPrepWorkflow()는 legacy 비교/비상용으로 남아 있다.
 Apps Script에는 Code.gs뿐 아니라 SettingsSidebar.html도 함께 반영해야 한다.
 로그를 볼 때는 automation_run_log → automation_step_log → error_log → qa_review_log 순서가 가장 안전하다.
+setupSsmkWorkbook()은 빠른 구조 점검용이며, 수식과 드롭다운은 helper 함수로 따로 보강할 수 있다.
 ```
 
 ---
@@ -131,7 +132,9 @@ automation/Code.gs
 
 | 함수 | 역할 |
 |---|---|
-| `setupSsmkWorkbook()` | 시트 구조, 헤더, 수식, 드롭다운 점검/보정 |
+| `setupSsmkWorkbook()` | 시트 구조와 헤더를 빠르게 점검/보정 |
+| `applyWeeklyScoreFormulas()` | `weekly_scores` 수식을 따로 보강 |
+| `applySsmkWorkbookDropdowns()` | 입력용 드롭다운을 선택적으로 보강 |
 | `runWeeklyLabWorkflow()` | 현재 기본 Weekly Lab 초안 준비 전체 실행 |
 | `runWeeklyDraftPrepWorkflow()` | 이전 주간 초안 준비 흐름. legacy 비교/비상용 |
 | `autoSoftenWeeklyScoreLanguage()` | 추천처럼 읽힐 수 있는 표현을 관찰형 문장으로 순화 |

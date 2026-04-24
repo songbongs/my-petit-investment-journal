@@ -644,8 +644,11 @@ function onOpen() {
     .addItem('0. Weekly Lab 초안 준비 전체 실행', 'runWeeklyLabWorkflow')
     .addItem('0-legacy. 이전 주간 초안 준비 실행', 'runWeeklyDraftPrepWorkflow')
     .addSeparator()
-    .addItem('1. 시트 구조 점검/보정', 'setupSsmkWorkbook')
-    .addItem('1-1. 추천화 표현 자동 순화', 'autoSoftenWeeklyScoreLanguage')
+    .addItem('1. 시트 구조 점검/보정(빠른)', 'setupSsmkWorkbook')
+    .addItem('1-0. setup build 확인', 'showSsmkSetupBuild')
+    .addItem('1-1. weekly_scores 수식 보강', 'applyWeeklyScoreFormulas')
+    .addItem('1-2. 입력용 드롭다운 보강(선택)', 'applySsmkWorkbookDropdowns')
+    .addItem('1-3. 추천화 표현 자동 순화', 'autoSoftenWeeklyScoreLanguage')
     .addItem('2. 주간 입력 데이터 묶기', 'collectWeeklyInputs')
     .addItem('3-legacy. 이전 AI 프롬프트 문서 만들기', 'createWeeklyPromptDoc')
     .addItem('4. 가설 복기 예약', 'scheduleHypothesisReviews')
@@ -671,7 +674,7 @@ function runWeeklyLabWorkflow(issueDate) {
     const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
 
     prepareSsmkWorkbook_();
-    logAutomationStep_(runId, 1, 'prepare_workbook', '오퍼레이터', 'success', '시트 구조 점검', '탭/헤더/드롭다운 점검 완료', '', 0);
+    logAutomationStep_(runId, 1, 'prepare_workbook', '오퍼레이터', 'success', '시트 구조 점검', '탭/헤더/수식 점검 완료(드롭다운은 선택 보강)', '', 0);
 
     const languageResult = autoSoftenWeeklyScoreLanguage(targetIssueDate);
     logAutomationStep_(
@@ -797,7 +800,7 @@ function runWeeklyLabWorkflow(issueDate) {
 function runWeeklyDraftPrepWorkflow(issueDate) {
   const targetIssueDate = issueDate || getLatestIssueDate_() || today_();
 
-  setupSsmkWorkbook();
+  prepareSsmkWorkbook_({ includeDropdowns: false, includeFormulas: true, logProgress: false });
   const languageResult = autoSoftenWeeklyScoreLanguage(targetIssueDate);
   const promptResult = createWeeklyPromptDoc_(targetIssueDate);
   const scheduledReviewCount = scheduleHypothesisReviews(targetIssueDate);

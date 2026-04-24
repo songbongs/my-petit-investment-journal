@@ -960,3 +960,50 @@ Notes:
 
 - Historical documents still keep long-term architecture ideas, but they now include current-implementation notes so beginners can tell "지금 되는 것"과 "나중 목표"를 구분할 수 있다.
 - Email sending, real schedule automation changes, and major operational changes remain approval-gated.
+
+## 2026-04-24 Live verification and setup hardening
+
+Status: completed
+
+What changed:
+
+- Split the setup path into a fast structure pass plus optional helper steps so the bound Apps Script no longer times out on first run:
+  - `setupSsmkWorkbook()`
+  - `applyWeeklyScoreFormulas()`
+  - `applySsmkWorkbookDropdowns()`
+- Added `showSsmkSetupBuild()` so a beginner can confirm the latest `Code.gs` is really copied into Apps Script before debugging anything else.
+- Replaced blocking `SpreadsheetApp.getUi().alert()` calls in the setup/debug helpers with non-blocking log + toast notifications.
+- Added progress logging for setup phases so execution logs show:
+  - `prepare start`
+  - `control center ready`
+  - `schema group 1/3 ~ 3/3 ready`
+  - `watchlist normalized`
+  - `score headers ready`
+- Updated the menu and operator wording so the current behavior matches the code:
+  - quick setup
+  - setup build check
+  - formula helper
+  - optional dropdown helper
+  - workflow step log now says formulas are checked and dropdowns are optional
+- Added `.playwright-cli/` to `.gitignore` and prepared local cleanup for Playwright residue.
+
+Live verification:
+
+- Passed: `showSsmkSetupBuild()` on the real bound Apps Script project
+- Passed: `setupSsmkWorkbook()` on the real bound Apps Script project
+- Passed: `applyWeeklyScoreFormulas()` on the real bound Apps Script project
+- Passed: `runWeeklyLabWorkflow()` on the real bound Apps Script project
+- Confirmed from live logs:
+  - `run_id: RUN-20260424-084822-588`
+  - `report_id: RPT-20260422-30086`
+  - prompt doc created successfully
+  - `automation_run_log` and `report_runs` updated
+  - `error_log` remained empty during the successful run
+  - final workflow state: `초안 생성`
+  - readiness score: `90`
+
+Review-prep notes:
+
+- PR #1 can now be reviewed as a live-verified branch, not just a local/stub-verified branch.
+- The remaining dropdown helper is intentionally optional and does not block the current Weekly Lab flow.
+- Email sending, real schedule automation changes, and major operational changes still remain behind explicit approval.

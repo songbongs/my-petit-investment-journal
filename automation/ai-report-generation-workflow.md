@@ -10,11 +10,13 @@
 
 ```text
 이 문서에는 장기 목표와 현재 구현 상태가 함께 들어 있다.
-2026-04-23 기준 실제 기본 실행은 runWeeklyLabWorkflow()이며,
+2026-04-24 기준 실제 기본 실행은 runWeeklyLabWorkflow()이며,
 이 단계에서 하는 일은 Google Docs용 Weekly Lab 입력 초안 준비,
 로그 기록, 리뷰 보드 점검, QA 기록까지다.
 이메일 발송, 예약 자동화 생성/수정, 중요한 운영 변경은
 사용자 승인 전까지 자동 실행하지 않는다.
+setupSsmkWorkbook()은 빠른 구조 점검용이고,
+weekly_scores 수식과 입력용 드롭다운은 helper 함수로 따로 보강할 수 있다.
 ```
 
 핵심 원칙:
