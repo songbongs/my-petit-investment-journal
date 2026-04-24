@@ -1083,3 +1083,31 @@ Notes:
 
 - This change is a study-label cleanup for the watchlist, not an investment recommendation.
 - This change did not send email, create or modify real scheduled automation, or publish anything externally.
+
+## 2026-04-24 Session close checkpoint
+
+Status: completed
+
+What changed:
+
+- Updated `README.md` and `docs/2026-04-24-next-ai-handoff.md` so the current handoff state reflects the latest watchlist classification work.
+- Marked the latest feature baseline as `1bbe925 feat: add watchlist classification guide`.
+- Recorded that the user confirmed the real bound Apps Script build with `showSsmkSetupBuild()`:
+  - `2026-04-24-watchlist-classification-v1`
+- Refocused the next reusable prompt on the remaining 리스크 2 work:
+  - logging helper 중복 `ensureWorkbookSchemaSheets_()` 축소
+  - stub validation
+  - syntax verification
+  - small commit
+
+Verification:
+
+- Passed: `node tests\watchlist-classification-guide.test.js`
+- Passed: `node tests\watchlist-normalization.test.js`
+- Passed: `node -e "const fs=require('fs'); new Function(fs.readFileSync('automation/Code.gs','utf8')); console.log('Code.gs syntax ok')"`
+- Passed: `git diff --check`
+
+Notes:
+
+- No Google Sheets data write was performed in this checkpoint.
+- No email sending, scheduled automation creation/modification, or external publishing was performed.

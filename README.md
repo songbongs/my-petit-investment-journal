@@ -245,6 +245,11 @@ SSMK 자동화
   - `초안 생성`
   - `에이전트 차단 항목: 0개`
   - `자동화 준비도 점수: 90`
+- 이후 watchlist 분류 기준 보강도 실제 Google Sheets에 반영 및 재확인 완료:
+  - `watchlist!C2:G21` 분류 업데이트
+  - 20개 초기 종목의 `theme_tags`, `investment_style` 입력 완료
+  - MSFT는 `AI/클라우드/반도체 인프라`로 정리하고, 게임 노출은 `theme_tags`에 보존
+  - bound Apps Script에서 `showSsmkSetupBuild()` 실행 결과 `2026-04-24-watchlist-classification-v1` 확인
 
 ## 다음 작업 후보
 
@@ -252,10 +257,13 @@ SSMK 자동화
 2. `automation/Code.gs` 초안 만들기: 완료
 3. Google Sheets 샘플/실데이터 기준 `runWeeklyLabWorkflow()` 수동 실행 테스트하기: 완료
 4. `agent_review_log`, `automation_stage_reviews`, `change_approval_log` 탭 반영하기: 완료
-5. `runWeeklyLabWorkflow()` 기반 운영 로그가 2~4회 안정적으로 쌓이는지 확인하기
-6. 승인 상태일 때만 이메일 발송되도록 테스트하기
-7. 실제 예약 자동화는 승인 게이트 문서 확인 후 따로 제안서 만들기
-8. 4주 동안 AI 자동 초안 리포트를 운영하며 가설과 실제 결과를 비교하기
+5. watchlist 부분 마이그레이션 안전화 및 분류 기준 반영하기: 완료
+6. 로그 helper의 중복 시트 구조 점검을 줄여 성능 하드닝하기
+7. `applySsmkWorkbookDropdowns()` live 검증하기
+8. `runWeeklyLabWorkflow()` 기반 운영 로그가 2~4회 안정적으로 쌓이는지 확인하기
+9. 승인 상태일 때만 이메일 발송되도록 테스트하기
+10. 실제 예약 자동화는 승인 게이트 문서 확인 후 따로 제안서 만들기
+11. 4주 동안 AI 자동 초안 리포트를 운영하며 가설과 실제 결과를 비교하기
 
 ## 점수 표현 방식
 

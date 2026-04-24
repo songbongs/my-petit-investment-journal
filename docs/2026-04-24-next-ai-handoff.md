@@ -43,7 +43,13 @@ ready for review
 최신 기준 커밋:
 
 ```text
-88af9c4 chore: finalize weekly lab runbook and review prep
+1bbe925 feat: add watchlist classification guide
+```
+
+현재 로컬 브랜치 상태:
+
+```text
+origin/codex/weekly-lab-control-center보다 앞서 있음. 정확한 ahead 수는 git status --short --branch로 확인.
 ```
 
 ## 3. 외부 작업공간
@@ -141,10 +147,12 @@ report_id: RPT-20260422-30086
 - blocking alert 제거
 - build 확인 helper 추가
 - 드롭다운을 선택 단계로 분리
+- watchlist 부분 마이그레이션 안전화
+- 20개 초기 watchlist 분류 기준 live Google Sheets 반영
+- bound Apps Script에서 `showSsmkSetupBuild()` 결과 `2026-04-24-watchlist-classification-v1` 확인
 
 아직 남은 것:
 
-- 재실행 안전성 이슈 1건
 - 로그 기록 성능 이슈 1건
 - 드롭다운 helper live 실행 검증
 - 2~4회 반복 운영 검증
@@ -196,6 +204,7 @@ applySsmkWorkbookDropdowns()
 
 - 시트 구조 점검/보정
 - Control Center 설정 UI
+- watchlist 분류 기준 반영
 - revision request 기록
 - report version 기록
 - run / step / error / bottleneck / QA 로그
@@ -328,8 +337,9 @@ P3
 작업 후보:
 
 1. `normalizeWatchlistColumns_()` 안전화: 2026-04-24 완료
-2. logging helper의 중복 schema ensure 축소
-3. 관련 stub 검증 추가
+2. watchlist 분류 기준 반영 및 build 확인: 2026-04-24 완료
+3. logging helper의 중복 schema ensure 축소
+4. 관련 stub 검증 추가
 
 이 단계가 중요한 이유:
 
@@ -379,8 +389,8 @@ P3
 ```text
 Weekly Lab foundation 구현 완료
 → 실제 Apps Script 1회 라이브 검증 완료
-→ 하드닝 일부 완료
-→ 다음은 재실행 안전성/성능 보강과 반복 운영 검증
+→ watchlist 안전화와 분류 기준 반영 완료
+→ 다음은 로그 기록 성능 하드닝과 반복 운영 검증
 ```
 
 ## 12. 다음 AI를 위한 추천 작업 시작 절차
@@ -396,6 +406,7 @@ Weekly Lab foundation 구현 완료
    - `applyWeeklyScoreFormulas()`
    - `applySsmkWorkbookDropdowns()`
    - `normalizeWatchlistColumns_()`
+   - `getWatchlistClassificationGuide()`
    - logging helper들
 5. 남은 리스크 2부터 작은 단위로 수정
 6. 문법 검증
@@ -412,7 +423,7 @@ Weekly Lab foundation 구현 완료
 ```text
 SSMK 투자 관찰노트 작업 이어서 해줘.
 먼저 README.md, docs/2026-04-24-next-ai-handoff.md, docs/2026-04-23-implementation-task-log.md, automation/Code.gs를 읽고 현재 상태를 파악해줘.
-그 다음 인수인계서의 남은 리스크 중 1순위 작업부터 작은 단위로 진행해줘.
+그 다음 인수인계서의 남은 리스크 2, 즉 로그 helper의 중복 schema ensure를 줄이는 성능 하드닝부터 작은 단위로 진행해줘.
 작업 방식은 항상 작업 → 검증 → 커밋 → 쉬운 설명 순서로 하고,
 이메일 발송, 실제 예약 자동화 생성/수정, 중요한 운영 변경은 내 승인 전에는 하지 말아줘.
 투자 추천처럼 읽히는 표현도 피해줘.
@@ -422,7 +433,7 @@ SSMK 투자 관찰노트 작업 이어서 해줘.
 
 ```text
 SSMK 투자 관찰노트 디버그 이어서 해줘.
-docs/2026-04-24-next-ai-handoff.md의 리스크 1과 리스크 2를 먼저 확인하고,
+docs/2026-04-24-next-ai-handoff.md의 리스크 2를 먼저 확인하고,
 다른 기능에 영향이 가장 적은 방식으로 작은 수정부터 진행해줘.
 수정 전에는 영향 범위를 설명하고, 수정 후에는 검증 결과를 쉬운 말로 알려줘.
 ```
