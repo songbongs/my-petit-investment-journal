@@ -6,6 +6,16 @@
 
 이 문서는 `SSMK 투자 관찰노트 - 점수표`를 현재 프로젝트 철학에 맞게 업데이트하기 위한 설계안이다.
 
+현재 구현 기준 메모:
+
+```text
+이 문서는 시트 설계안과 현재 구현 메모를 함께 담고 있다.
+2026-04-23 기준 기본 실행은 runWeeklyLabWorkflow()이며,
+현재 기본 범위는 Weekly Lab 초안 준비, 로그 기록, 리뷰 보드, QA 기록까지다.
+report_runs는 generation_status를 중심으로 쓰고,
+실제 Gmail 발송과 예약 자동화 변경은 승인 전까지 실행하지 않는다.
+```
+
 핵심 변화는 다음이다.
 
 ```text
@@ -94,9 +104,15 @@ approved_at
 sent_at
 recipient_group
 report_file_path
-pdf_file_path
 email_subject
 notes
+```
+
+현재 구현 메모:
+
+```text
+2026-04-23 기준 Code.gs 헤더에는 pdf_file_path가 아직 없다.
+현재 기본 흐름은 Google Docs 초안 준비 단계라 PDF 파일 경로는 나중 단계에서 검토한다.
 ```
 
 초보자용 설명:
@@ -154,9 +170,15 @@ expected_benefit
 risk
 rollback_plan
 approval_status
-approved_at
 applied_at
 result_note
+```
+
+현재 구현 메모:
+
+```text
+2026-04-23 기준 change_approval_log 헤더에는 approved_at가 없다.
+승인 여부는 approval_status로, 실제 적용 시점은 applied_at으로 기록한다.
 ```
 
 ### 3-5. agent_review_log
@@ -186,6 +208,8 @@ blocking
 resolved
 resolved_at
 notes
+run_id
+report_id
 ```
 
 상태값:
@@ -195,6 +219,67 @@ pass
 warning
 block
 proposal
+```
+
+### 3-6. Weekly Lab v2 확장 탭
+
+아래 탭은 `setupSsmkWorkbook()`을 실행하면 자동으로 만들어지는 v2 구조다.
+초보자용으로 말하면, 지금 단계에서는 “데이터를 넣을 방”을 먼저 만드는 작업이다.
+실제 재작업 저장, 실행 로그 기록, 차트 생성 같은 기능은 다음 Task에서 하나씩 연결한다.
+
+설정/출처:
+
+```text
+user_preferences
+source_policy
+automation_schedules
+```
+
+원천 데이터:
+
+```text
+market_data
+company_fundamentals
+revenue_breakdown
+shareholder_returns
+insider_activity
+etf_watch
+```
+
+분석 데이터:
+
+```text
+sector_theme_scores
+hypothesis_lab
+hypothesis_evolution_log
+```
+
+출력/자동화:
+
+```text
+visualization_queue
+report_sections
+report_versions
+revision_requests
+automation_run_log
+automation_step_log
+bottleneck_log
+error_log
+qa_review_log
+glossary
+```
+
+수동 확인 방법:
+
+```text
+1. Google Sheets에서 확장 프로그램 → Apps Script를 연다.
+2. 최신 automation/Code.gs 내용을 붙여 넣고 저장한다.
+3. 함수 목록에서 setupSsmkWorkbook을 고른다.
+4. 실행 버튼을 누른다.
+5. Google Sheets로 돌아온다.
+6. user_preferences 탭에 report_depth가 있는지 확인한다.
+7. automation_schedules 탭에서 tuesday_weekly_report만 ON인지 확인한다.
+8. revision_requests, report_versions, automation_run_log, qa_review_log 같은 새 탭이 보이는지 확인한다.
 ```
 
 ---

@@ -16,6 +16,16 @@ AI 가설은 근거와 해석 과정을 함께 설명
 외부 이메일 발송은 승인 후에만 진행
 ```
 
+2026-04-24 현재 구현 메모:
+
+```text
+현재 기본 실행 함수는 runWeeklyLabWorkflow()이다.
+runWeeklyDraftPrepWorkflow()는 legacy 비교/비상용으로 남아 있다.
+Apps Script에는 Code.gs뿐 아니라 SettingsSidebar.html도 함께 반영해야 한다.
+로그를 볼 때는 automation_run_log → automation_step_log → error_log → qa_review_log 순서가 가장 안전하다.
+setupSsmkWorkbook()은 빠른 구조 점검용이며, 수식과 드롭다운은 helper 함수로 따로 보강할 수 있다.
+```
+
 ---
 
 ## 2. 실제 Google Sheets 반영 내용
@@ -122,12 +132,16 @@ automation/Code.gs
 
 | 함수 | 역할 |
 |---|---|
-| `setupSsmkWorkbook()` | 시트 구조, 헤더, 수식, 드롭다운 점검/보정 |
-| `runWeeklyDraftPrepWorkflow()` | 주간 초안 준비 전체 실행 |
+| `setupSsmkWorkbook()` | 시트 구조와 헤더를 빠르게 점검/보정 |
+| `applyWeeklyScoreFormulas()` | `weekly_scores` 수식을 따로 보강 |
+| `applySsmkWorkbookDropdowns()` | 입력용 드롭다운을 선택적으로 보강 |
+| `runWeeklyLabWorkflow()` | 현재 기본 Weekly Lab 초안 준비 전체 실행 |
+| `runWeeklyDraftPrepWorkflow()` | 이전 주간 초안 준비 흐름. legacy 비교/비상용 |
 | `autoSoftenWeeklyScoreLanguage()` | 추천처럼 읽힐 수 있는 표현을 관찰형 문장으로 순화 |
 | `collectWeeklyInputs()` | 주간 리포트에 필요한 데이터를 JSON으로 묶음 |
 | `buildWeeklyReportPrompt()` | AI 주간 리포트 생성용 프롬프트 작성 |
 | `createWeeklyPromptDoc()` | AI에게 넣을 프롬프트를 Google Docs로 저장 |
+| `createWeeklyLabPromptDoc_()` | Weekly Lab 입력용 Google Docs 초안 생성 |
 | `scheduleHypothesisReviews()` | 이번 주 가설을 1주/4주 복기 대상으로 예약 |
 | `runAgentReviewBoard()` | 루미/벡터/세이지/파일럿/노바 검토 로그 생성 |
 | `evaluateAutomationReadiness()` | 자동화 발전 가능성을 점검하고 기록 |
@@ -145,7 +159,7 @@ node --check 통과
 
 ## 5. 사용자가 다음에 해야 할 수동 작업
 
-현재 `automation/Code.gs`는 로컬 파일이다. Google Sheets 안에서 실행하려면 한 번은 직접 붙여 넣어야 한다.
+현재 `automation/Code.gs`와 `automation/SettingsSidebar.html`은 로컬 파일이다. Google Sheets 안에서 실행하려면 한 번은 직접 붙여 넣어야 한다.
 
 초보자용 순서:
 
@@ -154,11 +168,14 @@ node --check 통과
 3. `Apps Script`를 누른다.
 4. 기본으로 보이는 `Code.gs` 파일 내용을 모두 선택한다.
 5. 로컬 파일 `automation/Code.gs` 내용을 복사해서 붙여 넣는다.
-6. 저장 버튼을 누른다.
-7. 함수 목록에서 `setupSsmkWorkbook`을 선택한다.
-8. 실행 버튼을 누른다.
-9. 처음 실행할 때 권한 승인 화면이 나오면 안내에 따라 승인한다.
-10. 다시 Google Sheets로 돌아오면 상단에 `SSMK 자동화` 메뉴가 생긴다.
+6. 왼쪽 파일 목록에서 `+` 버튼을 눌러 `HTML` 파일을 새로 만든다.
+7. 파일 이름을 `SettingsSidebar`로 적는다.
+8. 로컬 파일 `automation/SettingsSidebar.html` 내용을 복사해서 붙여 넣는다.
+9. 저장 버튼을 누른다.
+10. 함수 목록에서 `setupSsmkWorkbook`을 선택한다.
+11. 실행 버튼을 누른다.
+12. 처음 실행할 때 권한 승인 화면이 나오면 안내에 따라 승인한다.
+13. 다시 Google Sheets로 돌아오면 상단에 `SSMK 자동화` 메뉴와 `SSMK Control Center` 메뉴가 생긴다.
 
 주의:
 
@@ -169,32 +186,33 @@ node --check 통과
 
 ---
 
-## 6. 원클릭 주간 준비 자동화
+## 6. 현재 기본 Weekly Lab 실행
 
-사용자 승인에 따라 `runWeeklyDraftPrepWorkflow()`를 추가했다.
+2026-04-23 기준 현재 기본 실행 함수는 `runWeeklyLabWorkflow()`다.
+기존 `runWeeklyDraftPrepWorkflow()`는 이전 흐름을 비교하거나 비상용으로 다시 확인할 때만 쓴다.
 
 이 함수 하나를 실행하면 아래 작업을 순서대로 처리한다.
 
 ```text
 시트 구조 점검/보정
-→ 추천처럼 읽힐 수 있는 표현 자동 순화
-→ AI 프롬프트 문서 생성
+→ Weekly Lab 입력용 Google Docs 초안 생성
 → 가설 1주/4주 복기 예약
 → 루미/벡터/세이지/파일럿/노바 리뷰 보드 실행
 → 자동화 준비도 기록
 → report_runs에 결과 요약 기록
+→ 가능하면 qa_review_log에 최종 검사표 기록
 ```
 
 초보자용으로 말하면, 기존에는 여러 버튼을 순서대로 눌러야 했지만 이제는 매주 아래 함수 하나만 실행하면 된다.
 
 ```text
-runWeeklyDraftPrepWorkflow()
+runWeeklyLabWorkflow()
 ```
 
 주의:
 
 ```text
-이 함수는 리포트 초안 준비까지만 자동화한다.
+이 함수는 Weekly Lab 초안 준비와 검수 로그 기록까지만 자동화한다.
 이메일 발송, 점수 모델 변경, 데이터 출처 변경, 자동화 단계 상승은 계속 사용자 승인 후에만 진행한다.
 ```
 
@@ -202,13 +220,13 @@ runWeeklyDraftPrepWorkflow()
 
 ## 7. 다음 추천 작업
 
-1. Google Apps Script의 `Code.gs`를 로컬 `automation/Code.gs` 최신 내용으로 다시 교체한다.
-2. 저장 후 함수 목록에서 `runWeeklyDraftPrepWorkflow`를 선택한다.
+1. Google Apps Script의 `Code.gs`와 `SettingsSidebar.html`를 로컬 최신 내용으로 다시 교체한다.
+2. 저장 후 함수 목록에서 `runWeeklyLabWorkflow`를 선택한다.
 3. 실행한다.
-4. `report_runs`에서 새 프롬프트 문서 링크와 결과 요약을 확인한다.
-5. `agent_review_log`에서 `blocking = TRUE` 항목이 있는지 확인한다.
+4. `report_runs`와 `automation_run_log`에서 새 Google Docs 초안 링크와 결과 요약을 확인한다.
+5. 문제가 있으면 `automation_step_log`, `error_log`, `qa_review_log`를 순서대로 확인한다.
 6. 차단 항목이 없으면 프롬프트 문서를 사용해 AI 주간 리포트 초안을 만든다.
-7. 차단 항목이 있으면 해당 문장을 수정한 뒤 다시 `runWeeklyDraftPrepWorkflow()`를 실행한다.
+7. 차단 항목이 있으면 해당 문장을 수정한 뒤 다시 `runWeeklyLabWorkflow()`를 실행한다.
 
 자동화 발전이나 중요한 변경은 계속 아래 규칙을 따른다.
 
