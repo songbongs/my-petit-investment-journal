@@ -730,8 +730,24 @@ const CONTROL_CENTER_DEFAULT_PREFERENCES = [
     setting_key: 'final_output_type',
     setting_value: 'google_docs_draft',
     setting_type: 'select',
-    description: '최종 결과물: 초안 저장 방식을 고릅니다.',
-    allowed_values: 'google_docs_draft,markdown',
+    description: '최종 결과물: 초안 저장 방식을 고릅니다. 이메일 발송 전에는 HTML 최종본을 따로 만들 수 있습니다.',
+    allowed_values: 'google_docs_draft,email_html_draft,markdown',
+    user_editable: 'TRUE',
+  },
+  {
+    setting_key: 'weekly_lab_run_day',
+    setting_value: 'TUESDAY',
+    setting_type: 'select',
+    description: 'Weekly Lab 실행 요일: Apps Script 자체 예약이 실행될 요일입니다.',
+    allowed_values: 'MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY,SUNDAY',
+    user_editable: 'TRUE',
+  },
+  {
+    setting_key: 'weekly_lab_run_hour',
+    setting_value: '8',
+    setting_type: 'number',
+    description: 'Weekly Lab 실행 시간: 0~23 사이 숫자입니다. 예: 8은 오전 8시입니다.',
+    allowed_values: '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23',
     user_editable: 'TRUE',
   },
   {
@@ -825,6 +841,8 @@ function onOpen() {
     .addItem('설정 열기: SSMK Control Center', 'showSettingsSidebar')
     .addSeparator()
     .addItem('0. Weekly Lab 초안 준비 전체 실행', 'runWeeklyLabWorkflow')
+    .addItem('0-1. 오늘 전체 사이클 실행(이어가기)', 'forceRunWeeklyLabFullCycleForToday')
+    .addItem('0-2. 오늘 전체 사이클 처음부터 다시 실행', 'forceRestartWeeklyLabFullCycleForToday')
     .addItem('0-legacy. 이전 주간 초안 준비 실행', 'runWeeklyDraftPrepWorkflow')
     .addSeparator()
     .addItem('1. 시트 구조 점검/보정(빠른)', 'setupSsmkWorkbook')
@@ -961,6 +979,7 @@ function runWeeklyLabWorkflow(issueDate) {
         '',
         0
       );
+      finishAutomationRun_(runId, workflowStatus, promptResult.reportId, promptResult.url, '', '이메일 발송 없음. Weekly Lab 초안 준비와 QA 리뷰까지 완료함.');
     } catch (qaError) {
       logError_(runId, 'createOperatorQaReview_', 'medium', 'qa_review_error', qaError.message, 'QA 로그 생성 중 예외', 'qa_review_log와 workflow 로그를 함께 확인');
       finishAutomationRun_(runId, 'warning', promptResult.reportId, promptResult.url, qaError.message, 'QA 리뷰 생성 실패. qa_review_log 확인이 필요합니다.');
@@ -1195,6 +1214,8 @@ function getControlCenterState() {
   return {
     project_name: SSMK.projectName,
     disclaimer: SSMK.disclaimer,
+    operation_home: getOperationHomeState_(),
+    trigger_state: getWeeklyLabTriggerState_(),
     preferences: preferences,
     basic_preferences: preferences.filter((row) => !String(row.setting_key).startsWith('include_')),
     included_sections: preferences.filter((row) => String(row.setting_key).startsWith('include_')),
@@ -1209,6 +1230,224 @@ function getControlCenterState() {
       '추가 검토 로그: agent_review_log, automation_stage_reviews, change_approval_log',
     ],
     revision_request_status: '재작업 요청은 revision_requests에 requested 상태로 저장됩니다.',
+  };
+}
+
+function getOperationHomeState_() {
+  const reportRuns = readObjects_(SSMK.sheets.reportRuns);
+  const automationRuns = readObjects_(SSMK.sheets.automationRunLog);
+  const automationSteps = readObjects_(SSMK.sheets.automationStepLog);
+  const errorRows = readObjects_(SSMK.sheets.errorLog);
+  const visualizationRows = readObjects_(SSMK.sheets.visualizationQueue);
+  const qaRows = readObjects_(SSMK.sheets.qaReviewLog);
+  const reportVersions = readObjects_(SSMK.sheets.reportVersions);
+  const latestRun = latestRowByText_(automationRuns, 'started_at');
+  const latestRunId = latestRun ? String(latestRun.run_id || '').trim() : '';
+  const latestSteps = latestRunId ? automationSteps.filter((row) => String(row.run_id || '').trim() === latestRunId) : [];
+  const latestStep = getLatestStepByOrder_(latestSteps);
+  const inferredReport = inferReportForRun_(latestRun, latestSteps, reportRuns);
+  const latestReportId = inferredReport ? String(inferredReport.report_id || '').trim() : '';
+  const latestQa = latestRunId
+    ? latestRowByText_(qaRows.filter((row) => String(row.run_id || '').trim() === latestRunId), 'review_date')
+    : null;
+  const latestErrors = latestRunId ? errorRows.filter((row) => String(row.run_id || '').trim() === latestRunId) : [];
+  const latestVisualizations = latestReportId ? visualizationRows.filter((row) => String(row.report_id || '').trim() === latestReportId) : [];
+  const latestVersions = latestReportId ? reportVersions.filter((row) => String(row.report_id || '').trim() === latestReportId) : [];
+  const warningStepCount = latestSteps.filter((row) => normalizeWorkflowStatus_(row.status) === 'warning').length;
+  const failedStepCount = latestSteps.filter((row) => {
+    const status = normalizeWorkflowStatus_(row.status);
+    return status === 'failed' || status === 'blocked';
+  }).length;
+  const totalStepCount = weeklyLabFullCycleSteps_().length;
+  const completedStepCount = latestSteps.length;
+  const runElapsedSec = latestRun && latestRun.started_at ? calculateDurationSeconds_(latestRun.started_at, nowText_()) : '';
+  const remainingSteps = summarizeRemainingWeeklyLabSteps_(latestSteps);
+  const hasEmailHtmlDraft = latestVersions.some((row) => /drive\.google\.com\/file/.test(String(row.output_url || '')));
+  const operationVerdict = deriveOperationHomeVerdict_({
+    run_status: latestRun ? latestRun.status : '',
+    qa_status: latestQa ? latestQa.overall_status : '',
+    error_count: latestErrors.length,
+    failed_step_count: failedStepCount,
+    warning_step_count: warningStepCount,
+    elapsed_sec: runElapsedSec,
+    completed_step_count: completedStepCount,
+    total_step_count: totalStepCount,
+    has_email_html_draft: hasEmailHtmlDraft,
+  });
+
+  return {
+    operation_verdict: operationVerdict,
+    latest_report_id: inferredReport ? inferredReport.report_id || '' : '',
+    latest_issue_date: inferredReport ? inferredReport.issue_date || '' : '',
+    latest_report_status: inferredReport ? inferredReport.generation_status || '' : '',
+    latest_report_url: inferredReport ? inferredReport.report_file_path || '' : '',
+    latest_run_id: latestRun ? latestRun.run_id || '' : '',
+    latest_run_status: latestRun ? latestRun.status || '' : '',
+    latest_run_started_at: latestRun ? latestRun.started_at || '' : '',
+    latest_run_elapsed_min: runElapsedSec === '' ? '' : Math.max(0, Math.round(Number(runElapsedSec) / 60)),
+    latest_current_step: latestStep ? `${latestStep.step_order}. ${plainStepName_(latestStep.step_name)}` : '',
+    latest_remaining_steps: remainingSteps,
+    latest_progress_label: latestRun ? `${Math.min(completedStepCount, totalStepCount)}/${totalStepCount}단계` : '',
+    latest_step_count: latestSteps.length,
+    latest_warning_step_count: warningStepCount,
+    latest_failed_step_count: failedStepCount,
+    latest_error_count: latestErrors.length,
+    latest_visualization_count: latestVisualizations.length,
+    latest_qa_status: latestQa ? latestQa.overall_status || '' : '',
+    latest_qa_action: latestQa ? latestQa.recommended_next_action || '' : '',
+  };
+}
+
+function weeklyLabFullCycleSteps_() {
+  return [
+    ['reset_issue_date_rows', '오늘 작업 행 정리'],
+    ['prepare_workbook', '시트 구조 점검'],
+    ['collect_weekly_back_data', '시장 데이터 수집'],
+    ['collect_news_events', '뉴스 후보 수집'],
+    ['build_weekly_scores', '주간 점수 생성'],
+    ['soften_learning_language', '표현 순화'],
+    ['create_weekly_lab_draft_report', 'Google Docs 보고서 초안'],
+    ['create_visualization_queue', '자동 시각화 생성'],
+    ['schedule_hypothesis_reviews', '가설 복기 예약'],
+    ['run_agent_review_board', '에이전트 검토'],
+    ['create_email_html_final_draft', '이메일 HTML 초안'],
+    ['create_operator_qa_review', '최종 QA 리뷰'],
+  ];
+}
+
+function getLatestStepByOrder_(steps) {
+  if (!steps || steps.length === 0) return null;
+  return steps.slice().sort((a, b) => Number(a.step_order || 0) - Number(b.step_order || 0)).pop() || null;
+}
+
+function summarizeRemainingWeeklyLabSteps_(steps) {
+  const done = new Set((steps || []).map((row) => String(row.step_name || '').trim()));
+  return weeklyLabFullCycleSteps_()
+    .filter((item) => !done.has(item[0]))
+    .map((item) => item[1])
+    .slice(0, 3)
+    .join(', ');
+}
+
+function plainStepName_(stepName) {
+  const found = weeklyLabFullCycleSteps_().find((item) => item[0] === String(stepName || '').trim());
+  return found ? found[1] : String(stepName || '').trim();
+}
+
+function inferReportForRun_(run, steps, reportRuns) {
+  if (!run) return latestRowByText_(reportRuns, 'generated_at');
+  const runReportId = String(run.report_id || '').trim();
+  if (runReportId) {
+    const exact = reportRuns.find((row) => String(row.report_id || '').trim() === runReportId);
+    if (exact) return exact;
+  }
+
+  const reportStep = (steps || []).slice().reverse().find((row) => /report_id:\s*RPT-/.test(String(row.input_summary || '')));
+  const match = reportStep ? String(reportStep.input_summary || '').match(/report_id:\s*(RPT-[0-9-]+)/) : null;
+  if (match) {
+    const fromStep = reportRuns.find((row) => String(row.report_id || '').trim() === match[1]);
+    if (fromStep) return fromStep;
+  }
+
+  const startedAt = String(run.started_at || '');
+  const afterStart = reportRuns.filter((row) => String(row.generated_at || '') >= startedAt);
+  return latestRowByText_(afterStart.length ? afterStart : reportRuns, 'generated_at');
+}
+
+function deriveOperationHomeVerdict_(state) {
+  const normalizedRun = normalizeWorkflowStatus_(state.run_status);
+  const normalizedQa = normalizeWorkflowStatus_(state.qa_status);
+  if (!state.run_status) return '아직 실행 기록 없음';
+  if (normalizedRun === 'running') {
+    if (Number(state.elapsed_sec || 0) >= 540) return state.has_email_html_draft ? '마감 확인 필요' : '진행 멈춤 가능';
+    return `진행 중 ${Math.min(Number(state.completed_step_count || 0), Number(state.total_step_count || 0))}/${state.total_step_count || '?'}단계`;
+  }
+  if (normalizedRun === 'failed' || normalizedQa === 'failed' || normalizedQa === 'blocked' || state.error_count > 0 || state.failed_step_count > 0) {
+    return '확인 필요';
+  }
+  if (normalizedRun === 'warning' || normalizedQa === 'warning' || state.warning_step_count > 0) {
+    return '경고 확인';
+  }
+  if (normalizedRun === 'success') return '완료';
+  return '진행 상태 확인';
+}
+
+function getWeeklyLabTriggerState_() {
+  const config = getWeeklyLabScheduleConfig_();
+  return {
+    schedule_enabled: config.enabled,
+    run_day: config.runDay,
+    run_hour: config.runHour,
+    trigger_count: countWeeklyLabTriggers_(),
+    next_run_hint: `${localizeWeekDay_(config.runDay)} ${config.runHour}:00 전후`,
+    primary_engine: 'Apps Script 자체 트리거',
+    codex_role: '실행 후 점검/요약/보조',
+  };
+}
+
+function recoverLatestWeeklyLabRunStatus() {
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+
+  const runs = readObjects_(SSMK.sheets.automationRunLog)
+    .filter((row) => String(row.run_type || '') === 'weekly_lab_full_cycle')
+    .filter((row) => normalizeWorkflowStatus_(row.status) === 'running')
+    .sort((a, b) => String(a.started_at || '').localeCompare(String(b.started_at || '')));
+  const run = runs.pop();
+  if (!run) {
+    return {
+      ok: true,
+      message: 'running 상태의 Weekly Lab 실행이 없습니다.',
+      state: getControlCenterState(),
+    };
+  }
+
+  const runId = String(run.run_id || '').trim();
+  const steps = readObjects_(SSMK.sheets.automationStepLog)
+    .filter((row) => String(row.run_id || '').trim() === runId);
+  const report = inferReportForRun_(run, steps, readObjects_(SSMK.sheets.reportRuns));
+  const reportId = report ? String(report.report_id || '').trim() : '';
+  const versions = reportId
+    ? readObjects_(SSMK.sheets.reportVersions).filter((row) => String(row.report_id || '').trim() === reportId)
+    : [];
+  const latestVersion = latestRowByText_(versions, 'created_at');
+  const htmlVersion = versions.find((row) => /drive\.google\.com\/file/.test(String(row.output_url || '')));
+  const finalOutputUrl = htmlVersion ? htmlVersion.output_url : (latestVersion ? latestVersion.output_url : (report ? report.report_file_path : ''));
+
+  if (!reportId) {
+    return {
+      ok: false,
+      message: `마감할 report_id를 찾지 못했습니다. run_id=${runId}`,
+      state: getControlCenterState(),
+    };
+  }
+
+  const warningStepCount = steps.filter((row) => normalizeWorkflowStatus_(row.status) === 'warning').length;
+  const finalStatus = warningStepCount > 0 ? 'warning' : 'success';
+  finishAutomationRun_(runId, finalStatus, reportId, finalOutputUrl, '', '상태 복구: 산출물 확인 후 실행을 마감했습니다. 이메일 발송 없음.');
+
+  let qaMessage = '';
+  const existingQa = readObjects_(SSMK.sheets.qaReviewLog)
+    .find((row) => String(row.run_id || '').trim() === runId);
+  if (!existingQa) {
+    try {
+      const qaReview = createOperatorQaReview_(runId, reportId);
+      logAutomationStep_(runId, 12, 'create_operator_qa_review', '오퍼레이터', 'success', `report_id: ${reportId}`, `qa_id: ${qaReview.qa_id}`, '', 0);
+      qaMessage = ` QA 리뷰도 생성했습니다: ${qaReview.qa_id}`;
+    } catch (error) {
+      logError_(runId, 'recoverLatestWeeklyLabRunStatus', 'medium', 'qa_recovery_error', error.message, '마감 복구 중 QA 생성 실패', 'qa_review_log를 확인하고 필요하면 다시 복구 실행');
+      qaMessage = ` QA 리뷰 생성은 실패했습니다: ${error.message}`;
+    }
+  }
+
+  return {
+    ok: true,
+    run_id: runId,
+    report_id: reportId,
+    status: finalStatus,
+    final_output_url: finalOutputUrl,
+    message: `최신 running 실행을 ${finalStatus} 상태로 마감했습니다.${qaMessage}`,
+    state: getControlCenterState(),
   };
 }
 
@@ -1298,11 +1537,592 @@ function saveScheduleSettings(schedules) {
     ok: true,
     status: warnings.length > 0 ? 'warning' : 'ok',
     message: warnings.length > 0
-      ? '일부 스케줄 정책은 저장했지만, 몇 가지 항목은 형식이 맞지 않아 그대로 두었습니다. 실제 Codex 예약 자동화는 아직 바뀌지 않았습니다.'
-      : '자동화 스케줄 정책을 저장했습니다. 실제 Codex 예약 자동화는 아직 생성/수정되지 않았습니다.',
+      ? '일부 스케줄 정책은 저장했지만, 몇 가지 항목은 형식이 맞지 않아 그대로 두었습니다. Codex 예약 자동화 자체는 Control Center에서 자동 변경되지 않습니다.'
+      : '자동화 스케줄 정책을 저장했습니다. Codex 예약 자동화 자체는 Control Center에서 자동 변경되지 않습니다.',
     warnings: warnings,
     updated_keys: updatedKeys,
     state: getControlCenterState(),
+  };
+}
+
+function syncWeeklyLabTriggerFromControlCenter() {
+  const ss = SpreadsheetApp.getActive();
+  ensureControlCenterSheets_(ss);
+  const config = getWeeklyLabScheduleConfig_();
+
+  deleteWeeklyLabTriggers_();
+
+  if (config.enabled !== 'ON') {
+    updateScheduleMetadata_('tuesday_weekly_report', {
+      last_run_at: '',
+      next_run_hint: 'OFF: Apps Script 예약 없음',
+    });
+    return {
+      ok: true,
+      status: 'disabled',
+      message: 'Weekly Lab 스케줄 정책이 OFF라서 Apps Script 예약을 만들지 않았습니다.',
+      trigger_count: 0,
+      state: getControlCenterState(),
+    };
+  }
+
+  ScriptApp.newTrigger('scheduledWeeklyLabTrigger')
+    .timeBased()
+    .onWeekDay(toScriptWeekDay_(config.runDay))
+    .atHour(config.runHour)
+    .create();
+
+  const hint = `${localizeWeekDay_(config.runDay)} ${config.runHour}:00 전후`;
+  updateScheduleMetadata_('tuesday_weekly_report', {
+    next_run_hint: hint,
+  });
+
+  return {
+    ok: true,
+    status: 'ok',
+    message: `Apps Script 자체 예약을 적용했습니다. 다음 기준: ${hint}`,
+    trigger_count: countWeeklyLabTriggers_(),
+    state: getControlCenterState(),
+  };
+}
+
+function removeWeeklyLabTimeTriggers() {
+  const removedCount = deleteWeeklyLabTriggers_();
+  updateScheduleMetadata_('tuesday_weekly_report', {
+    next_run_hint: '예약 제거됨',
+  });
+  return {
+    ok: true,
+    status: 'ok',
+    message: `Weekly Lab Apps Script 예약 ${removedCount}개를 제거했습니다.`,
+    trigger_count: countWeeklyLabTriggers_(),
+    state: getControlCenterState(),
+  };
+}
+
+function scheduledWeeklyLabTrigger() {
+  const config = getWeeklyLabScheduleConfig_();
+  const issueDate = today_();
+
+  if (config.enabled !== 'ON') {
+    const runId = startAutomationRun_('weekly_lab', 'tuesday_weekly_report', 'apps_script_trigger');
+    finishAutomationRun_(runId, 'skipped', '', '', '', '스케줄 정책이 OFF라서 실행하지 않았습니다.');
+    return { ok: true, status: 'skipped', reason: 'schedule_off', issue_date: issueDate };
+  }
+
+  const result = runWeeklyLabFullCycle(issueDate, { triggerSource: 'apps_script_trigger', mode: 'resume' });
+  updateScheduleMetadata_('tuesday_weekly_report', { last_run_at: nowText_() });
+  return result;
+}
+
+function forceRunWeeklyLabFullCycleForToday() {
+  return runWeeklyLabFullCycle(today_(), { triggerSource: 'manual_force', mode: 'resume' });
+}
+
+function forceRestartWeeklyLabFullCycleForToday() {
+  return runWeeklyLabFullCycle(today_(), { triggerSource: 'manual_force', mode: 'restart' });
+}
+
+function runWeeklyLabFullCycle(issueDate, options) {
+  const targetIssueDate = issueDate || today_();
+  const normalizedOptions = normalizeFullCycleOptions_(options);
+  const runId = startAutomationRun_('weekly_lab_full_cycle', 'tuesday_weekly_report', normalizedOptions.triggerSource);
+  let reportResult = null;
+  let emailDraftResult = null;
+  let qaReview = null;
+  let visualizationResult = null;
+
+  try {
+    if (normalizedOptions.mode === 'restart') {
+      resetIssueDateWorkingRows_(targetIssueDate);
+      logAutomationStep_(runId, 1, 'reset_issue_date_rows', '오퍼레이터', 'success', `issue_date: ${targetIssueDate}`, '오늘 기준 작업 행을 정리하고 새로 시작', '', 0);
+    } else if (hasExistingWeeklyLabRunForIssueDate_(targetIssueDate)) {
+      finishAutomationRun_(runId, 'skipped', '', '', '', `issue_date ${targetIssueDate} 리포트가 이미 있어 중복 실행을 막았습니다. 처음부터 다시 만들려면 restart 함수를 사용하세요.`);
+      return { ok: true, status: 'skipped', reason: 'completed_report_exists', issue_date: targetIssueDate, run_id: runId };
+    }
+
+    prepareSsmkWorkbook_({ includeDropdowns: false, includeFormulas: true, logProgress: false });
+    logAutomationStep_(runId, 2, 'prepare_workbook', '오퍼레이터', 'success', '시트 구조와 수식 점검', '필수 탭/헤더/weekly_scores 수식 확인', '', 0);
+
+    const dataResult = collectAndStoreWeeklyBackData_(targetIssueDate, runId, normalizedOptions.mode);
+    logAutomationStep_(runId, 3, 'collect_weekly_back_data', '벡터', dataResult.warning_count > 0 ? 'warning' : 'success', `watchlist rows: ${dataResult.watchlist_count}`, `market_data rows created: ${dataResult.created_market_rows}, reused: ${dataResult.reused_market_rows}`, dataResult.warning_summary, 0);
+
+    const newsResult = collectAndStoreNewsEvents_(targetIssueDate, runId, normalizedOptions.mode);
+    logAutomationStep_(runId, 4, 'collect_news_events', '벡터', newsResult.warning_count > 0 ? 'warning' : 'success', `watchlist targets: ${newsResult.target_count}`, `news_events rows created: ${newsResult.created_news_rows}, reused: ${newsResult.reused_news_rows}`, newsResult.warning_summary, 0);
+
+    const scoreResult = buildWeeklyScoresFromBackData_(targetIssueDate, runId, normalizedOptions.mode);
+    logAutomationStep_(runId, 5, 'build_weekly_scores', '루미', scoreResult.created_score_rows > 0 ? 'success' : 'warning', `issue_date: ${targetIssueDate}`, `weekly_scores rows created: ${scoreResult.created_score_rows}, reused: ${scoreResult.reused_score_rows}`, scoreResult.warning_summary, 0);
+
+    const languageResult = autoSoftenWeeklyScoreLanguage(targetIssueDate);
+    logAutomationStep_(runId, 6, 'soften_learning_language', '세이지', 'success', `issue_date: ${targetIssueDate}`, `updated_cell_count: ${languageResult.updatedCellCount}`, '', 0);
+
+    reportResult = createWeeklyLabDraftReportDoc_(targetIssueDate, runId);
+    logAutomationStep_(runId, 7, 'create_weekly_lab_draft_report', '루미', 'success', `report_id: ${reportResult.reportId}`, reportResult.url, '', 0);
+
+    visualizationResult = createVisualizationQueueForReport_(targetIssueDate, reportResult.reportId);
+    logAutomationStep_(runId, 8, 'create_visualization_queue', '벡터/루미', visualizationResult.created_visualization_rows > 0 ? 'success' : 'warning', `report_id: ${reportResult.reportId}`, `visualization rows created: ${visualizationResult.created_visualization_rows}`, visualizationResult.warning_summary, 0);
+
+    const scheduledReviewCount = scheduleHypothesisReviews(targetIssueDate);
+    logAutomationStep_(runId, 9, 'schedule_hypothesis_reviews', '파일럿', 'success', `issue_date: ${targetIssueDate}`, `scheduled_reviews: ${scheduledReviewCount}`, '', 0);
+
+    const checks = runAgentReviewBoard(targetIssueDate, runId, reportResult.reportId);
+    const blockingCount = checks.filter((check) => check.blocking).length;
+    logAutomationStep_(runId, 10, 'run_agent_review_board', '벡터/루미/세이지/파일럿/노바', blockingCount > 0 ? 'warning' : 'success', `issue_date: ${targetIssueDate}`, `blocking_count: ${blockingCount}`, '', 0);
+
+    emailDraftResult = createEmailFinalReportDraft(reportResult.reportId);
+    logAutomationStep_(runId, 11, 'create_email_html_final_draft', '오퍼레이터', 'success', `report_id: ${reportResult.reportId}`, emailDraftResult.html_url, '', 0);
+
+    const finalStatus = blockingCount > 0 || dataResult.warning_count > 0 ? 'warning' : 'success';
+    finishAutomationRun_(runId, finalStatus, reportResult.reportId, emailDraftResult.html_url || reportResult.url, '', '자료 수집, 시트 기록, 스코어링, 보고서 초안, 이메일용 HTML 최종본 생성 완료. 이메일 발송 없음.');
+
+    try {
+      qaReview = createOperatorQaReview_(runId, reportResult.reportId);
+      logAutomationStep_(runId, 12, 'create_operator_qa_review', '오퍼레이터', 'success', `report_id: ${reportResult.reportId}`, `qa_id: ${qaReview.qa_id}`, '', 0);
+      finishAutomationRun_(runId, finalStatus, reportResult.reportId, emailDraftResult.html_url || reportResult.url, '', 'QA 리뷰까지 완료. 이메일 발송 없음.');
+    } catch (qaError) {
+      logError_(runId, 'createOperatorQaReview_', 'medium', 'qa_review_error', qaError.message, 'QA 로그 생성 중 예외', 'qa_review_log와 workflow 로그 확인');
+      finishAutomationRun_(runId, 'warning', reportResult.reportId, emailDraftResult.html_url || reportResult.url, qaError.message, 'QA 리뷰 생성 실패. 이메일 발송 없음.');
+    }
+
+    return {
+      ok: true,
+      status: finalStatus,
+      run_id: runId,
+      issue_date: targetIssueDate,
+      report_id: reportResult.reportId,
+      report_url: reportResult.url,
+      email_html_url: emailDraftResult.html_url,
+      created_market_rows: dataResult.created_market_rows,
+      created_news_rows: newsResult.created_news_rows,
+      created_score_rows: scoreResult.created_score_rows,
+      created_visualization_rows: visualizationResult ? visualizationResult.created_visualization_rows : 0,
+      qa_review_id: qaReview ? qaReview.qa_id : '',
+    };
+  } catch (error) {
+    logError_(runId, 'runWeeklyLabFullCycle', 'high', 'workflow_error', error.message, '전체 사이클 실행 중 예외', '로그 확인 후 resume 또는 restart 선택');
+    finishAutomationRun_(runId, 'failed', reportResult ? reportResult.reportId : '', emailDraftResult ? emailDraftResult.html_url : (reportResult ? reportResult.url : ''), error.message, '전체 사이클 실패. 기본 재시도는 resume, 완전 재시작은 restart 함수 사용.');
+    throw error;
+  }
+}
+
+function collectAndStoreWeeklyBackData_(issueDate, runId, mode) {
+  const ss = SpreadsheetApp.getActive();
+  const sheet = ss.getSheetByName(SSMK.sheets.marketData);
+  const targetIssueDate = issueDate || today_();
+  const watchlistRows = getActiveWatchlistRows_();
+  const existingKeys = new Set(readObjects_(SSMK.sheets.marketData)
+    .filter((row) => sameDateText_(row.market_date, targetIssueDate))
+    .map((row) => `${String(row.market_date).slice(0, 10)}|${String(row.symbol || '').trim().toUpperCase()}`));
+  let createdCount = 0;
+  let reusedCount = 0;
+  const warnings = [];
+
+  watchlistRows.forEach((item) => {
+    const symbol = String(item.ticker || '').trim().toUpperCase();
+    if (!symbol) return;
+    const key = `${targetIssueDate}|${symbol}`;
+    if (existingKeys.has(key) && mode !== 'restart') {
+      reusedCount += 1;
+      return;
+    }
+
+    const nextRow = sheet.getLastRow() + 1;
+    const symbolFormula = googleFinanceSymbolFormula_(symbol);
+    const row = [
+      targetIssueDate,
+      symbol,
+      item.company || symbol,
+      'equity',
+      `=IFERROR(GOOGLEFINANCE("${symbolFormula}","price"),"")`,
+      `=IFERROR((E${nextRow}/INDEX(GOOGLEFINANCE("${symbolFormula}","price",TODAY()-10,TODAY()),2,2)-1)*100,"")`,
+      `=IFERROR((E${nextRow}/INDEX(GOOGLEFINANCE("${symbolFormula}","price",TODAY()-35,TODAY()),2,2)-1)*100,"")`,
+      `=IFERROR(GOOGLEFINANCE("${symbolFormula}","volume"),"")`,
+      isHardToAutomateTicker_(symbol) ? '낮음' : '중간',
+      'GoogleFinance',
+      `https://www.google.com/finance/quote/${encodeURIComponent(symbol)}`,
+      nowText_(),
+      `run_id=${runId}. GOOGLEFINANCE 수식 기반 1차 자동 수집. 뉴스/공시는 다음 단계에서 보강 필요.`,
+    ];
+    sheet.getRange(nextRow, 1, 1, SSMK.headers.marketData.length).setValues([row]);
+    existingKeys.add(key);
+    createdCount += 1;
+    if (isHardToAutomateTicker_(symbol)) {
+      warnings.push(`${symbol}은 ADR/OTC 또는 데이터 공백 가능성이 있어 수동 확인 필요`);
+    }
+  });
+
+  return {
+    watchlist_count: watchlistRows.length,
+    created_market_rows: createdCount,
+    reused_market_rows: reusedCount,
+    warning_count: warnings.length,
+    warning_summary: warnings.join(' / '),
+  };
+}
+
+function collectAndStoreNewsEvents_(issueDate, runId, mode) {
+  const ss = SpreadsheetApp.getActive();
+  const sheet = ss.getSheetByName(SSMK.sheets.newsEvents);
+  const targetIssueDate = issueDate || today_();
+  const targetRows = getActiveWatchlistRows_()
+    .filter((row) => String(row.tracking_priority || '').trim().toLowerCase() === 'high')
+    .slice(0, 8);
+  const existingKeys = new Set(readObjects_(SSMK.sheets.newsEvents)
+    .filter((row) => sameDateText_(row.date, targetIssueDate))
+    .map((row) => `${String(row.date).slice(0, 10)}|${String(row.ticker_or_industry || '').trim().toUpperCase()}|${String(row.headline || '').trim()}`));
+  let createdCount = 0;
+  let reusedCount = 0;
+  const warnings = [];
+
+  targetRows.forEach((item) => {
+    const symbol = String(item.ticker || '').trim().toUpperCase();
+    const query = `${item.company || symbol} ${symbol} stock earnings`;
+    try {
+      const feedUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+      const response = UrlFetchApp.fetch(feedUrl, { muteHttpExceptions: true });
+      if (response.getResponseCode() >= 400) {
+        warnings.push(`${symbol} 뉴스 RSS 응답 오류 ${response.getResponseCode()}`);
+        return;
+      }
+      const items = parseGoogleNewsRssItems_(response.getContentText()).slice(0, 2);
+      if (items.length === 0) {
+        warnings.push(`${symbol} 뉴스 후보 없음`);
+        return;
+      }
+      items.forEach((newsItem) => {
+        const key = `${targetIssueDate}|${symbol}|${newsItem.title}`;
+        if (existingKeys.has(key) && mode !== 'restart') {
+          reusedCount += 1;
+          return;
+        }
+        sheet.appendRow([
+          targetIssueDate,
+          symbol,
+          'news_candidate',
+          newsItem.title,
+          '이번 주 관찰 후보. 실제 영향은 보고서 검토 때 확인 필요',
+          'medium',
+          newsItem.source || 'Google News RSS',
+          newsItem.link,
+          'FALSE',
+        ]);
+        existingKeys.add(key);
+        createdCount += 1;
+      });
+    } catch (error) {
+      warnings.push(`${symbol} 뉴스 수집 실패: ${error.message}`);
+    }
+  });
+
+  return {
+    target_count: targetRows.length,
+    created_news_rows: createdCount,
+    reused_news_rows: reusedCount,
+    warning_count: warnings.length,
+    warning_summary: warnings.join(' / '),
+  };
+}
+
+function parseGoogleNewsRssItems_(xmlText) {
+  const document = XmlService.parse(xmlText);
+  const channel = document.getRootElement().getChild('channel');
+  if (!channel) return [];
+
+  return channel.getChildren('item').map((item) => {
+    const sourceElement = item.getChild('source');
+    return {
+      title: item.getChildText('title') || '',
+      link: item.getChildText('link') || '',
+      source: sourceElement ? sourceElement.getText() : 'Google News RSS',
+    };
+  }).filter((item) => item.title);
+}
+
+function buildWeeklyScoresFromBackData_(issueDate, runId, mode) {
+  const ss = SpreadsheetApp.getActive();
+  const sheet = ss.getSheetByName(SSMK.sheets.weeklyScores);
+  const targetIssueDate = issueDate || today_();
+  const weekStart = addDaysText_(targetIssueDate, -6);
+  const watchlistRows = getActiveWatchlistRows_();
+  const existingKeys = new Set(readObjects_(SSMK.sheets.weeklyScores)
+    .filter((row) => sameDateText_(row.issue_date, targetIssueDate))
+    .map((row) => `${String(row.issue_date).slice(0, 10)}|${String(row.ticker || '').trim().toUpperCase()}`));
+  const previousScores = latestPreviousScoreByTicker_(targetIssueDate);
+  let createdCount = 0;
+  let reusedCount = 0;
+  const warnings = [];
+  const rowsToAppend = [];
+  const existingTargetRowCount = countIssueDateRowsInSheet_(sheet, 'issue_date', targetIssueDate);
+
+  watchlistRows.forEach((item) => {
+    const symbol = String(item.ticker || '').trim().toUpperCase();
+    if (!symbol) return;
+    const key = `${targetIssueDate}|${symbol}`;
+    if (existingKeys.has(key) && mode !== 'restart') {
+      reusedCount += 1;
+      return;
+    }
+
+    const scores = deriveStarterScoresFromWatchlist_(item);
+    const previousScore = previousScores[symbol] || '';
+    const totalScore = computeSsmkTotalScore_(scores);
+    const scoreChange = previousScore === '' || Number.isNaN(Number(previousScore))
+      ? ''
+      : roundTo2_(totalScore - Number(previousScore));
+    const row = [
+      targetIssueDate,
+      weekStart,
+      symbol,
+      item.company || symbol,
+      item.core_industry || '',
+      item.theme_tags || '',
+      item.investment_style || '',
+      scores.core_score,
+      scores.shareholder_return_score,
+      scores.industry_score,
+      scores.business_model_score,
+      scores.valuation_timing_score,
+      scores.insider_event_score,
+      totalScore,
+      gradeFromScore_(totalScore),
+      previousScore,
+      scoreChange,
+      isHardToAutomateTicker_(symbol) ? '낮음' : '중간',
+      scores.uncertainty_level,
+      scores.risk_flag,
+      `${item.company || symbol}은 이번 주 ${item.key_metrics_to_watch || '핵심 지표'}를 통해 관찰 우선순위를 확인합니다.`,
+      item.key_metrics_to_watch || '가격 변화, 거래량, 실적 발표, 주요 이벤트',
+      `${item.role_in_watchlist || '관찰 목적'} 이 관점에서 이번 주 데이터가 실제 사업 흐름과 연결되는지 확인합니다.`,
+      `초보자는 점수 자체보다 어떤 지표가 어떤 사업 질문과 연결되는지 보는 연습을 합니다.`,
+      `현재 자동 수집은 가격/거래량 중심 1차 데이터입니다. 뉴스, 공시, 실적 세부값은 추가 확인이 필요합니다.`,
+      item.main_events_to_watch || '다음 실적 발표와 주요 뉴스 확인',
+      'GoogleFinance; data_sources; 기업 IR/SEC 후보',
+      '초안',
+    ];
+    rowsToAppend.push(row);
+    existingKeys.add(key);
+    createdCount += 1;
+  });
+
+  if (rowsToAppend.length > 0) {
+    const startRow = findAppendRowByKeyColumns_(sheet, 3);
+    sheet.getRange(startRow, 1, rowsToAppend.length, SSMK.headers.weeklyScores.length).setValues(rowsToAppend);
+    SpreadsheetApp.flush();
+  }
+  applyWeeklyScoreFormulas_(ss);
+  SpreadsheetApp.flush();
+
+  const finalTargetRowCount = countIssueDateRowsInSheet_(sheet, 'issue_date', targetIssueDate);
+  if (finalTargetRowCount < existingTargetRowCount + createdCount) {
+    throw new Error(`weekly_scores 저장 검증 실패: ${targetIssueDate} 행이 ${existingTargetRowCount + createdCount}개 이상이어야 하는데 ${finalTargetRowCount}개만 확인됐습니다.`);
+  }
+
+  if (createdCount === 0 && reusedCount === 0) {
+    warnings.push('활성 watchlist 행이 없어 weekly_scores를 만들지 못했습니다.');
+  }
+
+  return {
+    created_score_rows: createdCount,
+    reused_score_rows: reusedCount,
+    warning_summary: warnings.join(' / '),
+  };
+}
+
+function computeSsmkTotalScore_(scores) {
+  return roundTo2_(
+    Number(scores.core_score || 0) * 0.30 +
+    Number(scores.shareholder_return_score || 0) * 0.20 +
+    Number(scores.industry_score || 0) * 0.20 +
+    Number(scores.business_model_score || 0) * 0.15 +
+    Number(scores.valuation_timing_score || 0) * 0.10 +
+    Number(scores.insider_event_score || 0) * 0.05
+  );
+}
+
+function gradeFromScore_(score) {
+  const numeric = Number(score || 0);
+  if (numeric >= 8) return '높음';
+  if (numeric >= 6) return '중간';
+  return '낮음';
+}
+
+function roundTo2_(value) {
+  return Math.round(Number(value || 0) * 100) / 100;
+}
+
+function countIssueDateRowsInSheet_(sheet, dateHeader, issueDate) {
+  if (!sheet || sheet.getLastRow() < 2) return 0;
+
+  const values = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getDisplayValues();
+  const headers = values[0];
+  const dateColumn = headers.indexOf(dateHeader);
+  if (dateColumn < 0) return 0;
+
+  return values.slice(1).filter((row) => sameDateText_(row[dateColumn], issueDate)).length;
+}
+
+function findAppendRowByKeyColumns_(sheet, keyColumnCount) {
+  if (!sheet || sheet.getMaxRows() < 2) return 2;
+
+  const rowCount = sheet.getMaxRows() - 1;
+  const columnCount = Math.max(1, Number(keyColumnCount || 1));
+  const values = sheet.getRange(2, 1, rowCount, columnCount).getDisplayValues();
+  for (let index = values.length - 1; index >= 0; index -= 1) {
+    const hasKeyValue = values[index].some((value) => String(value || '').trim() !== '');
+    if (hasKeyValue) return index + 3;
+  }
+  return 2;
+}
+
+function createWeeklyLabDraftReportDoc_(issueDate, runId) {
+  const targetIssueDate = issueDate || today_();
+  const rows = readObjects_(SSMK.sheets.weeklyScores)
+    .filter((row) => sameDateText_(row.issue_date, targetIssueDate));
+  if (rows.length === 0) {
+    throw new Error(`${targetIssueDate} 기준 weekly_scores가 없어 보고서 초안을 만들 수 없습니다.`);
+  }
+
+  const sortedRows = rows.slice().sort((a, b) => estimateScoreFromRow_(b) - estimateScoreFromRow_(a));
+  const doc = DocumentApp.create(`SSMK Weekly Lab 초안 보고서 - ${targetIssueDate}`);
+  const reportText = buildWeeklyLabDraftReportText_(targetIssueDate, runId, sortedRows);
+  doc.getBody().setText(reportText);
+  doc.saveAndClose();
+
+  const reportId = createReportRunRow_(targetIssueDate, addDaysText_(targetIssueDate, -6), targetIssueDate, '초안 생성', doc.getUrl(), 'Full cycle generated draft report. 이메일 발송 없음.');
+  upsertReportSection_(reportId, 'executive_summary', '이번 주 3줄 요약', 'draft', summarizeTopRows_(sortedRows, 3));
+  upsertReportSection_(reportId, 'market_overview', '시장 온도계', 'draft', 'GOOGLEFINANCE 기반 가격/거래량 1차 수집을 바탕으로 관찰 후보를 정리했습니다.');
+  upsertReportSection_(reportId, 'hypothesis_lab', '이번 주 AI 가설', 'draft', summarizeHypotheses_(sortedRows, 5));
+  upsertReportSection_(reportId, 'risk_summary', '리스크와 한계', 'draft', '자동 수집 1차 단계라 뉴스/공시/실적 세부 데이터는 추가 확인 필요로 표시했습니다.');
+  upsertReportSection_(reportId, 'beginner_lesson', '이번 주 레슨', 'draft', '점수보다 지표와 사업 질문의 연결을 보는 학습 흐름으로 작성했습니다.');
+  createReportVersion_(reportId, 'v1', '', doc.getUrl(), 'Full cycle draft report created');
+
+  return {
+    reportId: reportId,
+    url: doc.getUrl(),
+  };
+}
+
+function createVisualizationQueueForReport_(issueDate, reportId) {
+  const targetIssueDate = issueDate || today_();
+  const scoreRows = readObjects_(SSMK.sheets.weeklyScores)
+    .filter((row) => sameDateText_(row.issue_date, targetIssueDate));
+  const marketRows = readObjects_(SSMK.sheets.marketData)
+    .filter((row) => sameDateText_(row.market_date, targetIssueDate));
+  const existingKeys = new Set(readObjects_(SSMK.sheets.visualizationQueue)
+    .filter((row) => String(row.report_id) === String(reportId))
+    .map((row) => String(row.section_key || '').trim()));
+  const warnings = [];
+  const items = [];
+
+  if (scoreRows.length === 0) {
+    warnings.push('weekly_scores 행이 없어 점수 시각화를 만들 수 없습니다.');
+  } else {
+    items.push({
+      section_key: 'score_top5',
+      chart_type: 'html_bar_list',
+      data_range_or_source: `weekly_scores issue_date=${targetIssueDate}`,
+      title: '관찰 점수 Top 5',
+      description: buildTopScoreVisualizationSummary_(scoreRows, 5),
+      owner_agent: '루미',
+    });
+    items.push({
+      section_key: 'confidence_mix',
+      chart_type: 'html_badge_summary',
+      data_range_or_source: `weekly_scores issue_date=${targetIssueDate}`,
+      title: '데이터 신뢰도 분포',
+      description: summarizeConfidence_(scoreRows),
+      owner_agent: '벡터',
+    });
+  }
+
+  if (marketRows.length === 0) {
+    warnings.push('market_data 행이 없어 가격 변화 시각화를 만들 수 없습니다.');
+  } else {
+    items.push({
+      section_key: 'market_change_1w',
+      chart_type: 'html_bar_list',
+      data_range_or_source: `market_data market_date=${targetIssueDate}`,
+      title: '1주 가격 변화 관찰',
+      description: buildMarketChangeVisualizationSummary_(marketRows, 5),
+      owner_agent: '벡터',
+    });
+  }
+
+  let createdCount = 0;
+  items.forEach((item, index) => {
+    if (existingKeys.has(item.section_key)) return;
+    appendObject_(SSMK.sheets.visualizationQueue, SSMK.headers.visualizationQueue, {
+      chart_id: `VIZ-${compactDate_(targetIssueDate)}-${pad3_(index + 1)}`,
+      issue_date: targetIssueDate,
+      report_id: reportId,
+      section_key: item.section_key,
+      chart_type: item.chart_type,
+      data_range_or_source: item.data_range_or_source,
+      title: item.title,
+      description: item.description,
+      status: 'success',
+      owner_agent: item.owner_agent,
+      output_url: '',
+      notes: '이메일 HTML에서 인라인 요약 시각화로 자동 표시됩니다.',
+    });
+    createdCount += 1;
+  });
+
+  if (createdCount > 0) {
+    upsertReportSection_(reportId, 'visualization_summary', '자동 시각화 요약', 'draft', items.map((item) => `${item.title}: ${item.description}`).join(' / '));
+  }
+
+  return {
+    ok: true,
+    report_id: reportId,
+    created_visualization_rows: createdCount,
+    warning_summary: warnings.join(' / '),
+  };
+}
+
+function buildTopScoreVisualizationSummary_(rows, count) {
+  return rows
+    .slice()
+    .sort((a, b) => estimateScoreFromRow_(b) - estimateScoreFromRow_(a))
+    .slice(0, count)
+    .map((row) => `${row.ticker || '-'} ${estimateScoreFromRow_(row)}`)
+    .join(', ');
+}
+
+function buildMarketChangeVisualizationSummary_(rows, count) {
+  return rows
+    .slice()
+    .filter((row) => row.change_pct_1w !== '')
+    .sort((a, b) => Math.abs(Number(b.change_pct_1w || 0)) - Math.abs(Number(a.change_pct_1w || 0)))
+    .slice(0, count)
+    .map((row) => `${row.symbol || '-'} ${roundTo2_(Number(row.change_pct_1w || 0))}%`)
+    .join(', ');
+}
+
+function createEmailFinalReportDraft(reportId) {
+  const report = findReportRun_(reportId);
+  if (!report) throw new Error(`report_id를 찾을 수 없습니다: ${reportId}`);
+
+  const sectionRows = readObjects_(SSMK.sheets.reportSections)
+    .filter((row) => String(row.report_id) === String(reportId));
+  const qaRows = getQaRowsForReport_(reportId);
+  const html = buildEmailFinalReportHtml_(report, sectionRows, qaRows);
+  const file = DriveApp.createFile(
+    `SSMK email final draft - ${reportId}.html`,
+    html,
+    MimeType.HTML
+  );
+  const versionLabel = nextReportVersionLabel_(reportId);
+
+  createReportVersion_(reportId, versionLabel, '', file.getUrl(), 'Email HTML final draft created. 이메일 발송 전 검토용 HTML 최종본입니다.');
+  updateReportRunStatus_(reportId, report.generation_status || '초안 생성', `이메일용 HTML 최종본 생성: ${file.getUrl()}`);
+
+  return {
+    ok: true,
+    report_id: reportId,
+    version_label: versionLabel,
+    html_url: file.getUrl(),
+    message: '이메일 발송 전 검토할 HTML 최종본을 만들었습니다. 아직 이메일은 보내지 않았습니다.',
   };
 }
 
@@ -2114,7 +2934,177 @@ function sendApprovedReport(reportId) {
     throw new Error('발송 차단: report_runs.generation_status가 승인일 때만 발송할 수 있습니다.');
   }
 
-  throw new Error('이메일 발송은 아직 초안 단계에서 비활성화되어 있습니다. 본문/PDF 검증 후 별도 승인으로 구현하세요.');
+  const recipients = collectActiveRecipientEmails_();
+  if (recipients.length === 0) {
+    throw new Error('발송 차단: recipients 시트에 active 수신자 이메일이 없습니다.');
+  }
+
+  const sectionRows = readObjects_(SSMK.sheets.reportSections)
+    .filter((row) => String(row.report_id) === String(reportId));
+  const qaRows = getQaRowsForReport_(reportId);
+  const htmlBody = buildEmailFinalReportHtml_(report, sectionRows, qaRows);
+
+  MailApp.sendEmail({
+    to: recipients.join(','),
+    subject: report.email_subject || `[SSMK] Weekly Lab ${report.issue_date || today_()}`,
+    htmlBody: htmlBody,
+    name: 'SSMK Weekly Lab',
+  });
+
+  markReportSent_(reportId, `HTML 이메일 발송 완료: ${recipients.length}명`);
+  return {
+    ok: true,
+    report_id: reportId,
+    sent_count: recipients.length,
+    message: '승인된 리포트를 HTML 이메일로 발송했습니다.',
+  };
+}
+
+function buildEmailFinalReportHtml_(report, sectionRows, qaRows) {
+  const latestQa = latestRowByText_(qaRows, 'review_date') || {};
+  const reportUrl = report.report_file_path || '';
+  const visualizationRows = readObjects_(SSMK.sheets.visualizationQueue)
+    .filter((row) => String(row.report_id) === String(report.report_id));
+  const sections = (sectionRows || []).length > 0 ? sectionRows : [{
+    section_title: '리포트 초안',
+    status: report.generation_status || '초안',
+    content_summary: '자세한 내용은 Google Docs 초안 링크에서 확인합니다.',
+  }];
+
+  const sectionHtml = sections.map((section) => [
+    '<section style="border-top:1px solid #d9dee6;padding:18px 0;">',
+    `<h2 style="font-size:18px;margin:0 0 8px;color:#1f2937;">${escapeHtml_(section.section_title || section.section_key || '섹션')}</h2>`,
+    `<p style="font-size:13px;margin:0 0 8px;color:#5f6b7a;">상태: ${escapeHtml_(section.status || '-')}</p>`,
+    `<p style="font-size:15px;line-height:1.65;margin:0;color:#263241;">${escapeHtml_(section.content_summary || '요약이 아직 없습니다.')}</p>`,
+    '</section>',
+  ].join('')).join('');
+  const visualizationHtml = buildEmailVisualizationHtml_(visualizationRows);
+
+  return [
+    '<!doctype html>',
+    '<html>',
+    '<body style="margin:0;background:#f7f8fa;font-family:Arial,sans-serif;color:#1f2937;">',
+    '<div style="max-width:720px;margin:0 auto;padding:28px 18px;">',
+    '<div style="background:#ffffff;border:1px solid #d9dee6;border-radius:8px;padding:24px;">',
+    '<p style="margin:0 0 8px;font-size:12px;color:#5f6b7a;">SSMK Weekly Lab</p>',
+    `<h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;color:#1f2937;">${escapeHtml_(report.issue_date || today_())} 투자 관찰노트</h1>`,
+    `<p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#5f6b7a;">${escapeHtml_(SSMK.disclaimer)}</p>`,
+    '<div style="background:#edf4fb;border:1px solid #c8daee;border-radius:8px;padding:14px;margin-bottom:18px;">',
+    `<p style="margin:0 0 6px;font-size:14px;"><strong>리포트 상태:</strong> ${escapeHtml_(report.generation_status || '-')}</p>`,
+    `<p style="margin:0 0 6px;font-size:14px;"><strong>QA 상태:</strong> ${escapeHtml_(latestQa.overall_status || '아직 없음')}</p>`,
+    `<p style="margin:0;font-size:14px;"><strong>다음 확인:</strong> ${escapeHtml_(latestQa.recommended_next_action || 'Google Docs 초안을 검토하세요.')}</p>`,
+    '</div>',
+    reportUrl ? `<p style="margin:0 0 18px;"><a href="${escapeHtml_(reportUrl)}" style="color:#1e446b;font-weight:700;">Google Docs 초안 열기</a></p>` : '',
+    visualizationHtml,
+    sectionHtml,
+    '<p style="margin:18px 0 0;font-size:12px;color:#5f6b7a;">이 메일은 투자 권유가 아니라 학습용 관찰 기록입니다. 최종 판단은 별도 확인이 필요합니다.</p>',
+    '</div>',
+    '</div>',
+    '</body>',
+    '</html>',
+  ].join('');
+}
+
+function buildEmailVisualizationHtml_(visualizationRows) {
+  if (!visualizationRows || visualizationRows.length === 0) return '';
+
+  const itemHtml = visualizationRows.map((row) => [
+    '<div style="border:1px solid #d9dee6;border-radius:8px;padding:12px;background:#ffffff;">',
+    `<p style="margin:0 0 4px;font-size:12px;color:#5f6b7a;">${escapeHtml_(row.chart_type || 'visual')}</p>`,
+    `<h3 style="margin:0 0 8px;font-size:15px;color:#1f2937;">${escapeHtml_(row.title || row.section_key || '시각화')}</h3>`,
+    `<p style="margin:0;font-size:13px;line-height:1.55;color:#263241;">${escapeHtml_(row.description || '요약 준비 중')}</p>`,
+    '</div>',
+  ].join('')).join('');
+
+  return [
+    '<section style="border-top:1px solid #d9dee6;padding:18px 0;">',
+    '<h2 style="font-size:18px;margin:0 0 10px;color:#1f2937;">자동 시각화</h2>',
+    '<div style="display:grid;grid-template-columns:1fr;gap:10px;">',
+    itemHtml,
+    '</div>',
+    '</section>',
+  ].join('');
+}
+
+function getQaRowsForReport_(reportId) {
+  const runIds = new Set(readObjects_(SSMK.sheets.automationRunLog)
+    .filter((row) => String(row.report_id) === String(reportId))
+    .map((row) => String(row.run_id || '').trim())
+    .filter(Boolean));
+
+  return readObjects_(SSMK.sheets.qaReviewLog)
+    .filter((row) => runIds.size === 0 || runIds.has(String(row.run_id || '').trim()));
+}
+
+function collectActiveRecipientEmails_() {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(SSMK.sheets.recipients);
+  if (!sheet || sheet.getLastRow() < 2 || sheet.getLastColumn() < 1) return [];
+
+  const values = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getDisplayValues();
+  const headers = values[0].map((header) => String(header || '').trim().toLowerCase());
+  const emailIndex = firstExistingIndex_(headers, ['email', 'email_address', 'recipient_email', '이메일']);
+  const activeIndex = firstExistingIndex_(headers, ['active', 'enabled', '수신여부']);
+  if (emailIndex < 0) return [];
+
+  return values.slice(1)
+    .map((row) => ({
+      email: String(row[emailIndex] || '').trim(),
+      active: activeIndex < 0 ? 'TRUE' : String(row[activeIndex] || '').trim().toUpperCase(),
+    }))
+    .filter((row) => row.email && ['TRUE', 'ON', 'YES', 'Y', '활성'].indexOf(row.active || 'TRUE') !== -1)
+    .map((row) => row.email);
+}
+
+function firstExistingIndex_(items, candidates) {
+  for (let index = 0; index < candidates.length; index += 1) {
+    const found = items.indexOf(candidates[index]);
+    if (found !== -1) return found;
+  }
+  return -1;
+}
+
+function nextReportVersionLabel_(reportId) {
+  const numbers = readObjects_(SSMK.sheets.reportVersions)
+    .filter((row) => String(row.report_id) === String(reportId))
+    .map((row) => /^v(\d+)/i.exec(String(row.version_label || '').trim()))
+    .filter(Boolean)
+    .map((match) => Number(match[1]))
+    .filter((value) => !Number.isNaN(value));
+  const next = numbers.length === 0 ? 1 : Math.max.apply(null, numbers) + 1;
+  return `v${next}`;
+}
+
+function markReportSent_(reportId, notes) {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(SSMK.sheets.reportRuns);
+  if (!sheet || sheet.getLastRow() < 2) return false;
+
+  const values = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getDisplayValues();
+  const headers = values[0];
+  const reportIdColumn = headers.indexOf('report_id') + 1;
+  const statusColumn = headers.indexOf('generation_status') + 1;
+  const sentAtColumn = headers.indexOf('sent_at') + 1;
+  const notesColumn = headers.indexOf('notes') + 1;
+
+  if (reportIdColumn < 1 || statusColumn < 1 || sentAtColumn < 1) return false;
+
+  for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
+    if (values[rowIndex][reportIdColumn - 1] === reportId) {
+      sheet.getRange(rowIndex + 1, statusColumn).setValue('발송 완료');
+      sheet.getRange(rowIndex + 1, sentAtColumn).setValue(nowText_());
+      if (notesColumn > 0) sheet.getRange(rowIndex + 1, notesColumn).setValue(notes || '');
+      return true;
+    }
+  }
+  return false;
+}
+
+function escapeHtml_(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function applyApprovedChange(changeId) {
@@ -2215,7 +3205,7 @@ function softenLearningLanguage_(text) {
 }
 
 function hasRecommendationLikeLanguage_(text) {
-  return /(매수|매도|추천|확실한?\s*기회|수익\s*(기회|보장|확정|가능)|지금\s*사|사야\s*할|투자\s*기회)/.test(text);
+  return /(매수|매도|투자\s*추천|매수\s*추천|매도\s*추천|추천\s*(종목|대상|타이밍|매수|매도)|확실한?\s*기회|수익\s*(기회|보장|확정|가능)|지금\s*사|사야\s*할|투자\s*기회)/.test(text);
 }
 
 function hasCompleteHypothesis_(row) {
@@ -2358,11 +3348,72 @@ function normalizeWatchlistColumns_(ss) {
 function applyWeeklyScoreFormulas_(ss) {
   const sheet = ss.getSheetByName(SSMK.sheets.weeklyScores);
   if (!sheet) return;
+  if (sheet.getLastRow() < 2) return;
 
-  setFormulaIfDifferent_(sheet.getRange('N2'), '=ARRAYFORMULA(IF(C2:C="","",ROUND(H2:H*0.30 + I2:I*0.20 + J2:J*0.20 + K2:K*0.15 + L2:L*0.10 + M2:M*0.05, 2)))');
-  setFormulaIfDifferent_(sheet.getRange('O2'), '=ARRAYFORMULA(IF(N2:N="","",IF(N2:N>=8,"높음",IF(N2:N>=6,"중간","낮음"))))');
-  setFormulaIfDifferent_(sheet.getRange('Q2'), '=ARRAYFORMULA(IF(C2:C="","",IFERROR(N2:N-P2:P,"")))');
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, SSMK.headers.weeklyScores.length).getDisplayValues();
+  values.forEach((row, index) => {
+    const rowNumber = index + 2;
+    const ticker = String(row[2] || '').trim();
+    if (!ticker) return;
+
+    if (!row[13] || row[13] === '#REF!') {
+      setFormulaIfDifferent_(sheet.getRange(rowNumber, 14), `=ROUND(H${rowNumber}*0.30 + I${rowNumber}*0.20 + J${rowNumber}*0.20 + K${rowNumber}*0.15 + L${rowNumber}*0.10 + M${rowNumber}*0.05, 2)`);
+    }
+    if (!row[14] || row[14] === '#REF!') {
+      setFormulaIfDifferent_(sheet.getRange(rowNumber, 15), `=IF(N${rowNumber}="","",IF(N${rowNumber}>=8,"높음",IF(N${rowNumber}>=6,"중간","낮음")))`);
+    }
+    if (!row[16] || row[16] === '#REF!') {
+      setFormulaIfDifferent_(sheet.getRange(rowNumber, 17), `=IF(C${rowNumber}="","",IFERROR(N${rowNumber}-P${rowNumber},""))`);
+    }
+  });
   SpreadsheetApp.flush();
+}
+
+function repairWeeklyScoresLayout() {
+  const ss = SpreadsheetApp.getActive();
+  ensureWorkbookSchemaSheets_(ss);
+  const sheet = ss.getSheetByName(SSMK.sheets.weeklyScores);
+  if (!sheet || sheet.getLastRow() < 2) {
+    return { ok: true, moved_rows: 0, message: 'weekly_scores에 정리할 데이터가 없습니다.' };
+  }
+
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+  const issueDateColumn = headers.indexOf('issue_date') + 1;
+  const tickerColumn = headers.indexOf('ticker') + 1;
+  if (issueDateColumn < 1 || tickerColumn < 1) {
+    throw new Error('weekly_scores에서 issue_date 또는 ticker 컬럼을 찾지 못했습니다.');
+  }
+
+  const lastColumn = SSMK.headers.weeklyScores.length;
+  const maxRows = sheet.getMaxRows();
+  const values = sheet.getRange(2, 1, maxRows - 1, lastColumn).getValues();
+  const displayValues = sheet.getRange(2, 1, maxRows - 1, lastColumn).getDisplayValues();
+  const rowsToKeep = [];
+  let movedRows = 0;
+
+  displayValues.forEach((displayRow, index) => {
+    const hasIssueDate = String(displayRow[issueDateColumn - 1] || '').trim() !== '';
+    const hasTicker = String(displayRow[tickerColumn - 1] || '').trim() !== '';
+    if (!hasIssueDate && !hasTicker) return;
+    rowsToKeep.push(values[index]);
+    if (index + 2 > rowsToKeep.length + 1) movedRows += 1;
+  });
+
+  if (maxRows > 1) {
+    sheet.getRange(2, 1, maxRows - 1, lastColumn).clearContent();
+  }
+  if (rowsToKeep.length > 0) {
+    sheet.getRange(2, 1, rowsToKeep.length, lastColumn).setValues(rowsToKeep);
+  }
+  applyWeeklyScoreFormulas_(ss);
+  SpreadsheetApp.flush();
+
+  return {
+    ok: true,
+    moved_rows: movedRows,
+    kept_rows: rowsToKeep.length,
+    message: `weekly_scores 정리 완료: 데이터 행 ${rowsToKeep.length}개를 위쪽으로 정렬했습니다.`,
+  };
 }
 
 function applyDropdowns_(ss) {
@@ -2615,6 +3666,275 @@ function normalizeSchedulePayload_(schedules) {
   }
   if (typeof schedules === 'object') return Object.assign({}, schedules);
   return {};
+}
+
+function getPreferenceValue_(key, fallback) {
+  const row = readObjects_(SSMK.sheets.userPreferences).find((item) => String(item.setting_key) === String(key));
+  return row && row.setting_value !== '' ? row.setting_value : fallback;
+}
+
+function getScheduleRow_(key) {
+  return readObjects_(SSMK.sheets.automationSchedules).find((item) => String(item.schedule_key) === String(key));
+}
+
+function getWeeklyLabScheduleConfig_() {
+  const schedule = getScheduleRow_('tuesday_weekly_report') || {};
+  const runDay = String(getPreferenceValue_('weekly_lab_run_day', 'TUESDAY')).trim().toUpperCase();
+  const runHour = Number(getPreferenceValue_('weekly_lab_run_hour', 8));
+
+  return {
+    enabled: normalizeOnOffText_(schedule.enabled || 'ON') || 'ON',
+    runDay: toValidWeekDayText_(runDay),
+    runHour: Math.max(0, Math.min(23, Number.isNaN(runHour) ? 8 : Math.round(runHour))),
+  };
+}
+
+function toValidWeekDayText_(dayText) {
+  const normalized = String(dayText || '').trim().toUpperCase();
+  return [
+    'MONDAY',
+    'TUESDAY',
+    'WEDNESDAY',
+    'THURSDAY',
+    'FRIDAY',
+    'SATURDAY',
+    'SUNDAY',
+  ].indexOf(normalized) === -1 ? 'TUESDAY' : normalized;
+}
+
+function toScriptWeekDay_(dayText) {
+  const normalized = toValidWeekDayText_(dayText);
+  return {
+    MONDAY: ScriptApp.WeekDay.MONDAY,
+    TUESDAY: ScriptApp.WeekDay.TUESDAY,
+    WEDNESDAY: ScriptApp.WeekDay.WEDNESDAY,
+    THURSDAY: ScriptApp.WeekDay.THURSDAY,
+    FRIDAY: ScriptApp.WeekDay.FRIDAY,
+    SATURDAY: ScriptApp.WeekDay.SATURDAY,
+    SUNDAY: ScriptApp.WeekDay.SUNDAY,
+  }[normalized];
+}
+
+function localizeWeekDay_(dayText) {
+  return {
+    MONDAY: '월요일',
+    TUESDAY: '화요일',
+    WEDNESDAY: '수요일',
+    THURSDAY: '목요일',
+    FRIDAY: '금요일',
+    SATURDAY: '토요일',
+    SUNDAY: '일요일',
+  }[toValidWeekDayText_(dayText)];
+}
+
+function countWeeklyLabTriggers_() {
+  return ScriptApp.getProjectTriggers()
+    .filter((trigger) => trigger.getHandlerFunction() === 'scheduledWeeklyLabTrigger')
+    .length;
+}
+
+function deleteWeeklyLabTriggers_() {
+  const triggers = ScriptApp.getProjectTriggers()
+    .filter((trigger) => trigger.getHandlerFunction() === 'scheduledWeeklyLabTrigger');
+  triggers.forEach((trigger) => ScriptApp.deleteTrigger(trigger));
+  return triggers.length;
+}
+
+function updateScheduleMetadata_(scheduleKey, changes) {
+  const ss = SpreadsheetApp.getActive();
+  ensureControlCenterSheets_(ss);
+  const sheet = ss.getSheetByName(SSMK.sheets.automationSchedules);
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+  const rows = readIndexedObjects_(SSMK.sheets.automationSchedules);
+  const existing = rows.find((row) => String(row.schedule_key) === String(scheduleKey));
+  const rowObject = buildScheduleRowObject_(existing, scheduleKey, existing ? existing.enabled : 'ON');
+
+  Object.keys(changes || {}).forEach((key) => {
+    rowObject[key] = changes[key];
+  });
+  upsertRowByKey_(sheet, headers, 'schedule_key', scheduleKey, rowObject);
+}
+
+function hasExistingWeeklyLabRunForIssueDate_(issueDate) {
+  const targetIssueDate = String(issueDate || '').slice(0, 10);
+  if (!targetIssueDate) return false;
+
+  return readObjects_(SSMK.sheets.reportRuns).some((row) => {
+    if (!sameDateText_(row.issue_date, targetIssueDate)) return false;
+    const status = String(row.generation_status || '').trim();
+    return ['초안 생성', '사용자 확인 필요', '승인', '발송 완료'].indexOf(status) !== -1;
+  });
+}
+
+function latestRowByText_(rows, fieldName) {
+  if (!rows || rows.length === 0) return null;
+  return rows
+    .filter((row) => row && row[fieldName])
+    .sort((a, b) => String(a[fieldName]).localeCompare(String(b[fieldName])))
+    .pop() || null;
+}
+
+function normalizeFullCycleOptions_(options) {
+  const mode = String(options && options.mode ? options.mode : 'resume').trim().toLowerCase();
+  return {
+    mode: mode === 'restart' ? 'restart' : 'resume',
+    triggerSource: String(options && options.triggerSource ? options.triggerSource : 'manual_force').trim(),
+  };
+}
+
+function resetIssueDateWorkingRows_(issueDate) {
+  deleteIssueDateRows_(SSMK.sheets.marketData, 'market_date', issueDate);
+  deleteIssueDateRows_(SSMK.sheets.newsEvents, 'date', issueDate);
+  deleteIssueDateRows_(SSMK.sheets.weeklyScores, 'issue_date', issueDate);
+  deleteIssueDateRows_(SSMK.sheets.sectorThemeScores, 'issue_date', issueDate);
+  deleteIssueDateRows_(SSMK.sheets.visualizationQueue, 'issue_date', issueDate);
+  deleteIssueDateRows_(SSMK.sheets.hypothesisReviews, 'issue_date', issueDate);
+}
+
+function deleteIssueDateRows_(sheetName, dateHeader, issueDate) {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  if (!sheet || sheet.getLastRow() < 2) return 0;
+
+  const values = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getDisplayValues();
+  const headers = values[0];
+  const dateColumn = headers.indexOf(dateHeader) + 1;
+  if (dateColumn < 1) return 0;
+
+  let deletedCount = 0;
+  for (let rowIndex = values.length - 1; rowIndex >= 1; rowIndex -= 1) {
+    if (sameDateText_(values[rowIndex][dateColumn - 1], issueDate)) {
+      sheet.deleteRow(rowIndex + 1);
+      deletedCount += 1;
+    }
+  }
+  return deletedCount;
+}
+
+function getActiveWatchlistRows_() {
+  return readObjects_(SSMK.sheets.watchlist)
+    .filter((row) => {
+      const active = String(row.active || 'TRUE').trim().toUpperCase();
+      return active === '' || active === 'TRUE' || active === 'ON' || active === 'YES';
+    })
+    .filter((row) => String(row.ticker || '').trim());
+}
+
+function googleFinanceSymbolFormula_(symbol) {
+  const normalized = String(symbol || '').trim().toUpperCase();
+  if (normalized === 'LVMUY') return 'OTCMKTS:LVMUY';
+  return normalized;
+}
+
+function isHardToAutomateTicker_(symbol) {
+  return ['LVMUY'].indexOf(String(symbol || '').trim().toUpperCase()) !== -1;
+}
+
+function latestPreviousScoreByTicker_(issueDate) {
+  const result = {};
+  readObjects_(SSMK.sheets.weeklyScores)
+    .filter((row) => row.ticker && row.issue_date && String(row.issue_date).slice(0, 10) < String(issueDate).slice(0, 10))
+    .sort((a, b) => String(a.issue_date).localeCompare(String(b.issue_date)))
+    .forEach((row) => {
+      const ticker = String(row.ticker || '').trim().toUpperCase();
+      result[ticker] = row.ssmk_total_score || '';
+    });
+  return result;
+}
+
+function deriveStarterScoresFromWatchlist_(item) {
+  const priority = String(item.tracking_priority || '').trim().toLowerCase();
+  const style = String(item.investment_style || '').toLowerCase();
+  const tags = String(item.theme_tags || '').toLowerCase();
+  const dividendFocus = String(item.dividend_focus || '').trim().toLowerCase();
+  const coreScore = priority === 'high' ? 8.2 : priority === 'low' ? 6.2 : 7.1;
+  const shareholderScore = dividendFocus === 'yes' ? 7.8 : dividendFocus === 'low' ? 4.8 : 5.4;
+  const industryScore = /ai|cloud|클라우드|헬스케어|제약|energy|에너지/.test(tags) ? 7.6 : 7.0;
+  const businessScore = /platform|플랫폼|subscription|구독|cloud|클라우드|ecosystem|생태계/.test(style + tags) ? 8.0 : 7.0;
+  const valuationScore = /성장주|growth|ai|반도체|비만/.test(style + tags) ? 6.0 : 6.8;
+  const insiderScore = 5.8;
+
+  return {
+    core_score: coreScore,
+    shareholder_return_score: shareholderScore,
+    industry_score: industryScore,
+    business_model_score: businessScore,
+    valuation_timing_score: valuationScore,
+    insider_event_score: insiderScore,
+    uncertainty_level: valuationScore < 6.3 ? '높음' : '중간',
+    risk_flag: valuationScore < 6.3 ? 'valuation_risk' : 'data_check_required',
+  };
+}
+
+function estimateScoreFromRow_(row) {
+  const existing = Number(row.ssmk_total_score);
+  if (!Number.isNaN(existing) && existing > 0) return existing;
+  return (
+    Number(row.core_score || 0) * 0.30 +
+    Number(row.shareholder_return_score || 0) * 0.20 +
+    Number(row.industry_score || 0) * 0.20 +
+    Number(row.business_model_score || 0) * 0.15 +
+    Number(row.valuation_timing_score || 0) * 0.10 +
+    Number(row.insider_event_score || 0) * 0.05
+  );
+}
+
+function summarizeTopRows_(rows, count) {
+  return rows.slice(0, count).map((row, index) => `${index + 1}. ${row.ticker} ${row.company}: ${row.hypothesis_summary}`).join(' / ');
+}
+
+function summarizeHypotheses_(rows, count) {
+  return rows.slice(0, count).map((row) => `${row.ticker}: ${row.evidence_metrics} 확인`).join(' / ');
+}
+
+function buildWeeklyLabDraftReportText_(issueDate, runId, rows) {
+  const topRows = rows.slice(0, 5);
+  const lines = [
+    `SSMK Weekly Lab 초안 보고서 - ${issueDate}`,
+    '',
+    `run_id: ${runId}`,
+    `generated_at: ${nowText_()}`,
+    '',
+    SSMK.disclaimer,
+    '',
+    '## 1. 이번 주 3줄 요약',
+    `- 이번 실행은 watchlist ${rows.length}개 종목을 기준으로 1차 자료 수집과 스코어링을 수행했습니다.`,
+    '- 가격/거래량은 GoogleFinance 수식 기반으로 시트에 기록했고, 뉴스/공시/실적 세부값은 다음 자동화 단계에서 보강해야 합니다.',
+    '- 점수는 투자 판단이 아니라 이번 주 공부 우선순위를 정리하기 위한 관찰 지표입니다.',
+    '',
+    '## 2. 관찰 우선순위',
+  ];
+
+  topRows.forEach((row, index) => {
+    lines.push(`${index + 1}. ${row.ticker} ${row.company} - 예상 점수 ${estimateScoreFromRow_(row).toFixed(2)} / 데이터 신뢰도 ${row.data_confidence || '중간'}`);
+  });
+
+  lines.push('', '## 3. 이번 주 AI 가설');
+  topRows.forEach((row, index) => {
+    lines.push('');
+    lines.push(`### 가설 ${index + 1}. ${row.ticker} ${row.company}`);
+    lines.push(`- 가설 요약: ${row.hypothesis_summary}`);
+    lines.push(`- 근거 지표/데이터: ${row.evidence_metrics}`);
+    lines.push(`- 왜 그렇게 해석했나: ${row.reasoning_explanation}`);
+    lines.push(`- 초보자 레슨: ${row.beginner_lesson}`);
+    lines.push(`- 한계와 다음 확인: ${row.limitations} / ${row.next_check}`);
+  });
+
+  lines.push(
+    '',
+    '## 4. 데이터와 자동화 한계',
+    '- 이번 버전은 안정적인 무료 운영을 위해 GoogleFinance 수식 기반 가격/거래량 1차 수집부터 자동화했습니다.',
+    '- 공시, 실적 세부값, 뉴스 요약은 source_policy와 data_sources 기준으로 다음 단계에서 점진적으로 연결해야 합니다.',
+    '- 데이터가 비어 있거나 ADR/OTC처럼 자동화가 어려운 종목은 데이터 신뢰도를 낮게 표시하고, 다음 확인 항목에 남깁니다.',
+    '',
+    '## 5. 발행 전 체크리스트',
+    '- [ ] 추천/매수/매도처럼 읽히는 표현이 없는지 확인',
+    '- [ ] 데이터 신뢰도 낮음 항목의 한계가 적혀 있는지 확인',
+    '- [ ] 이메일 발송 전 HTML 최종본을 별도로 검토',
+    '',
+    '이 문서는 초안입니다. 이메일은 자동 발송하지 않았습니다.'
+  );
+
+  return lines.join('\n');
 }
 
 function normalizeRevisionRequest_(request) {

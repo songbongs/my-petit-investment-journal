@@ -178,6 +178,36 @@
         gap: 8px;
       }
 
+      .metric-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .metric {
+        border-top: 1px solid var(--border);
+        padding-top: 8px;
+      }
+
+      .metric:nth-child(1),
+      .metric:nth-child(2) {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .metric-label {
+        font-size: 10px;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .metric-value {
+        margin-top: 2px;
+        font-size: 13px;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+      }
+
       .schedule-item {
         border-top: 1px solid var(--border);
         padding-top: 10px;
@@ -259,8 +289,18 @@
 
       <div class="actions">
         <button class="primary" type="button" id="saveButton">저장</button>
+        <button class="secondary" type="button" id="syncTriggerButton">Apps Script 예약 적용</button>
+        <button class="secondary" type="button" id="forceRunButton">오늘 전체 사이클 실행</button>
+        <button class="secondary" type="button" id="restartRunButton">처음부터 다시 실행</button>
+        <button class="secondary" type="button" id="recoverRunButton">멈춘 실행 마감</button>
         <button class="secondary" type="button" id="revisionButton">재작업 요청 저장</button>
         <button class="secondary" type="button" id="logButton">최신 로그 위치 보기</button>
+      </div>
+
+      <div class="section">
+        <h2>운영 홈</h2>
+        <p>이번 주 자동화가 어디까지 진행됐는지 먼저 확인하는 화면입니다.</p>
+        <div class="metric-grid" id="operationHome"></div>
       </div>
 
       <div class="section">
@@ -277,8 +317,20 @@
 
       <div class="section">
         <h2>자동화 스케줄</h2>
-        <p>여기서는 시트 안의 운영 정책 ON/OFF만 기록합니다. 실제 Codex 예약 자동화를 새로 만들거나 바꾸는 버튼은 아니며, 화요일 Weekly Lab만 기본값으로 ON입니다.</p>
+        <p>요일과 시간은 리포트 기본 설정에서 바꾸고, 이 영역에서 정책 ON/OFF를 정합니다. 저장 후 Apps Script 예약 적용을 누르면 Google 자체 예약에 반영됩니다.</p>
         <div id="scheduleList" class="field-list"></div>
+      </div>
+
+      <div class="section">
+        <h2>이메일용 최종본</h2>
+        <p>이메일을 바로 보내지 않고, 먼저 HTML 최종본 파일을 만들어 검토합니다.</p>
+        <div class="field">
+          <div class="label">HTML 최종본을 만들 리포트 ID</div>
+          <input class="control" id="emailReportId" type="text" placeholder="예: RPT-20260428-12345">
+        </div>
+        <div class="actions">
+          <button class="secondary" type="button" id="emailDraftButton">이메일용 HTML 최종본 만들기</button>
+        </div>
       </div>
 
       <div class="section">
@@ -338,15 +390,19 @@
         includedSections: [],
         schedules: [],
         log_locations: [],
+        operation_home: {},
+        trigger_state: {},
       };
 
       const statusBox = document.getElementById('status');
+      const operationHome = document.getElementById('operationHome');
       const basicSettings = document.getElementById('basicSettings');
       const includedSections = document.getElementById('includedSections');
       const scheduleList = document.getElementById('scheduleList');
       const logGuide = document.getElementById('logGuide');
       const requestScope = document.getElementById('requestScope');
       const requestSection = document.getElementById('requestSection');
+      const emailReportId = document.getElementById('emailReportId');
 
       function setStatus(message, kind) {
         statusBox.textContent = message;
@@ -450,14 +506,61 @@
           return '한 주에 깊게 추적할 핵심 질문의 개수입니다. 처음에는 5개를 권장합니다.';
         }
         if (pref.setting_key === 'email_auto_send') {
-          return '사람 승인 전에 자동으로 보내지 않도록 기본값은 OFF입니다.';
+          return '자동 발송은 기본 OFF입니다. HTML 최종본을 만든 뒤 사람이 승인해야 보낼 수 있습니다.';
         }
         if (pref.setting_key === 'require_user_approval_for_major_change') {
           return '중요한 자동화 변경은 사람 확인이 필요해서 잠금 상태로 둡니다.';
         }
+        if (pref.setting_key === 'weekly_lab_run_day') {
+          return 'Apps Script 자체 예약이 실행될 요일입니다. 예: TUESDAY는 화요일입니다.';
+        }
+        if (pref.setting_key === 'weekly_lab_run_hour') {
+          return '24시간 기준 숫자입니다. 예: 8은 오전 8시, 21은 밤 9시입니다.';
+        }
+        if (pref.setting_key === 'final_output_type') {
+          return '기본 초안은 Google Docs이고, 발송 전에는 email_html_draft로 HTML 최종본을 만들 수 있습니다.';
+        }
         return pref.allowed_values && pref.allowed_values.length
           ? `선택 가능: ${pref.allowed_values.join(', ')}`
           : pref.description || '';
+      }
+
+      function metric(label, value) {
+        const wrap = document.createElement('div');
+        wrap.className = 'metric';
+        const labelEl = document.createElement('div');
+        labelEl.className = 'metric-label';
+        labelEl.textContent = label;
+        const valueEl = document.createElement('div');
+        valueEl.className = 'metric-value';
+        valueEl.textContent = value || '-';
+        wrap.appendChild(labelEl);
+        wrap.appendChild(valueEl);
+        return wrap;
+      }
+
+      function renderOperationHome(home, trigger) {
+        operationHome.innerHTML = '';
+        operationHome.appendChild(metric('운영 판정', home.operation_verdict));
+        operationHome.appendChild(metric('마지막 리포트', home.latest_report_id));
+        operationHome.appendChild(metric('리포트 상태', home.latest_report_status));
+        operationHome.appendChild(metric('마지막 실행', home.latest_run_status));
+        operationHome.appendChild(metric('진행률', home.latest_progress_label));
+        operationHome.appendChild(metric('현재/마지막 단계', home.latest_current_step));
+        operationHome.appendChild(metric('남은 작업', home.latest_remaining_steps));
+        operationHome.appendChild(metric('경과 시간', home.latest_run_elapsed_min ? `${home.latest_run_elapsed_min}분` : '-'));
+        operationHome.appendChild(metric('단계 상태', `${home.latest_step_count || 0}단계 / 경고 ${home.latest_warning_step_count || 0} / 실패 ${home.latest_failed_step_count || 0}`));
+        operationHome.appendChild(metric('에러 로그', `${home.latest_error_count || 0}건`));
+        operationHome.appendChild(metric('자동 시각화', `${home.latest_visualization_count || 0}건`));
+        operationHome.appendChild(metric('QA 상태', home.latest_qa_status));
+        operationHome.appendChild(metric('다음 액션', home.latest_qa_action));
+        operationHome.appendChild(metric('주 실행 엔진', trigger.primary_engine));
+        operationHome.appendChild(metric('다음 예약', trigger.next_run_hint));
+        operationHome.appendChild(metric('예약 개수', `${trigger.trigger_count || 0}개`));
+        operationHome.appendChild(metric('Codex 역할', trigger.codex_role));
+        if (home.latest_report_id && !emailReportId.value) {
+          emailReportId.value = home.latest_report_id;
+        }
       }
 
       function renderPreferences(items, container) {
@@ -482,7 +585,7 @@
           label.textContent = schedule.description || schedule.schedule_key;
           const desc = document.createElement('div');
           desc.className = 'desc';
-          desc.textContent = `주기: ${schedule.cadence || '-'} | 다음 힌트: ${schedule.next_run_hint || '-'} | 마지막 실행: ${schedule.last_run_at || '-'} | 실제 예약 연결: 아직 없음`;
+          desc.textContent = `주기: ${schedule.cadence || '-'} | 다음 힌트: ${schedule.next_run_hint || '-'} | 마지막 실행: ${schedule.last_run_at || '-'} | 실제 예약은 Apps Script 예약 적용 버튼으로 반영`;
           left.appendChild(label);
           left.appendChild(desc);
 
@@ -574,6 +677,71 @@
         }
       }
 
+      async function syncAppsScriptTrigger() {
+        try {
+          setStatus('Apps Script 자체 예약을 적용하는 중입니다.', '');
+          const result = await runServer('syncWeeklyLabTriggerFromControlCenter');
+          state.operation_home = result.state && result.state.operation_home ? result.state.operation_home : state.operation_home;
+          state.trigger_state = result.state && result.state.trigger_state ? result.state.trigger_state : state.trigger_state;
+          renderOperationHome(state.operation_home, state.trigger_state);
+          setStatus(result.message || 'Apps Script 예약을 적용했습니다.', 'ok');
+        } catch (error) {
+          setStatus(error.message || 'Apps Script 예약 적용에 실패했습니다.', 'error');
+        }
+      }
+
+      async function forceRunToday() {
+        try {
+          setStatus('오늘 기준 전체 사이클을 이어서 실행하는 중입니다.', '');
+          const result = await runServer('forceRunWeeklyLabFullCycleForToday');
+          await refreshState();
+          setStatus(`전체 사이클 실행 완료: report_id=${result.report_id || '-'} HTML=${result.email_html_url || '-'}`, 'ok');
+        } catch (error) {
+          setStatus(error.message || '오늘 전체 사이클 실행에 실패했습니다.', 'error');
+        }
+      }
+
+      async function restartRunToday() {
+        const ok = confirm('오늘 기준 market_data, news_events, weekly_scores, visualization_queue, hypothesis_reviews 작업 행을 지우고 처음부터 다시 실행합니다. 실행 이력과 기존 문서 링크는 감사 기록으로 남깁니다. 계속할까요?');
+        if (!ok) return;
+        try {
+          setStatus('오늘 기준 전체 사이클을 처음부터 다시 실행하는 중입니다.', '');
+          const result = await runServer('forceRestartWeeklyLabFullCycleForToday');
+          await refreshState();
+          setStatus(`처음부터 다시 실행 완료: report_id=${result.report_id || '-'} HTML=${result.email_html_url || '-'}`, 'ok');
+        } catch (error) {
+          setStatus(error.message || '처음부터 다시 실행에 실패했습니다.', 'error');
+        }
+      }
+
+      async function recoverRunStatus() {
+        try {
+          setStatus('멈춘 running 실행을 산출물 기준으로 마감하는 중입니다.', '');
+          const result = await runServer('recoverLatestWeeklyLabRunStatus');
+          state.operation_home = result.state && result.state.operation_home ? result.state.operation_home : state.operation_home;
+          state.trigger_state = result.state && result.state.trigger_state ? result.state.trigger_state : state.trigger_state;
+          renderOperationHome(state.operation_home, state.trigger_state);
+          setStatus(result.message || '상태 복구를 확인했습니다.', result.ok === false ? 'warning' : 'ok');
+        } catch (error) {
+          setStatus(error.message || '상태 복구에 실패했습니다.', 'error');
+        }
+      }
+
+      async function createEmailDraftFromSidebar() {
+        try {
+          const reportId = emailReportId.value.trim();
+          if (!reportId) {
+            setStatus('HTML 최종본을 만들 report_id를 입력하세요.', 'warning');
+            return;
+          }
+          setStatus('이메일용 HTML 최종본을 만드는 중입니다.', '');
+          const result = await runServer('createEmailFinalReportDraft', reportId);
+          setStatus(`${result.message} ${result.html_url || ''}`, 'ok');
+        } catch (error) {
+          setStatus(error.message || '이메일용 HTML 최종본 생성에 실패했습니다.', 'error');
+        }
+      }
+
       function syncRequestScope() {
         const fullReport = requestScope.value === 'full_report';
         requestSection.disabled = fullReport;
@@ -604,6 +772,9 @@
         state.includedSections = result.included_sections || [];
         state.schedules = result.schedules || [];
         state.log_locations = result.log_locations || [];
+        state.operation_home = result.operation_home || {};
+        state.trigger_state = result.trigger_state || {};
+        renderOperationHome(state.operation_home, state.trigger_state);
         renderPreferences(state.basicPreferences, basicSettings);
         renderPreferences(state.includedSections, includedSections);
         renderSchedules(state.schedules);
@@ -612,7 +783,12 @@
       }
 
       document.getElementById('saveButton').addEventListener('click', saveAllSettings);
-      document.getElementById('revisionButton').addEventListener('click', saveRevisionRequestFromSidebar);
+        document.getElementById('syncTriggerButton').addEventListener('click', syncAppsScriptTrigger);
+        document.getElementById('forceRunButton').addEventListener('click', forceRunToday);
+        document.getElementById('restartRunButton').addEventListener('click', restartRunToday);
+        document.getElementById('recoverRunButton').addEventListener('click', recoverRunStatus);
+        document.getElementById('revisionButton').addEventListener('click', saveRevisionRequestFromSidebar);
+      document.getElementById('emailDraftButton').addEventListener('click', createEmailDraftFromSidebar);
       document.getElementById('logButton').addEventListener('click', showLogLocations);
       requestScope.addEventListener('change', syncRequestScope);
       syncRequestScope();

@@ -152,9 +152,13 @@ createWeeklyLabPromptDoc_()로 입력용 Google Docs 초안을 만드는 쪽이 
 중요:
 
 ```text
-현재 Code.gs의 sendApprovedReport()는 의도적으로 비활성화되어 있습니다.
-장기적으로는 report_runs.generation_status가 승인이고 approved_at이 기록된 경우에만 실행 후보가 됩니다.
+2026-04-30 기준 Code.gs에는 발송 전 검토와 실제 발송을 분리해 두었습니다.
 ```
+
+- `createEmailFinalReportDraft(reportId)`: 이메일 발송 전 검토용 HTML 파일만 만든다.
+- `sendApprovedReport(reportId)`: `report_runs.generation_status`가 `승인`일 때만 HTML 이메일을 보낸다.
+
+`email_auto_send`는 여전히 기본 `OFF`다. 즉, HTML 최종본 생성은 자동 발송이 아니다.
 
 ### 3-6. `scheduleHypothesisReviews()`
 
@@ -305,16 +309,20 @@ createWeeklyLabPromptDoc_()로 입력용 Google Docs 초안을 만드는 쪽이 
 
 | 요일 | 함수 | 목적 |
 |---|---|---|
-| 화요일 | `runWeeklyLabWorkflow()` | 현재 기본 Weekly Lab 초안 준비, 리뷰 보드, QA 기록 |
+| 화요일 | `scheduledWeeklyLabTrigger()` → `runWeeklyLabFullCycle()` | Apps Script 자체 예약으로 가격/거래량 자료, 뉴스 후보, 시트 기록, 스코어링, 보고서 초안, HTML 최종본, QA 기록 |
 | 필요 시 | `runWeeklyDraftPrepWorkflow()` | 이전 흐름 비교/비상용 |
 | 필요 시 | `showSettingsSidebar()` | Control Center에서 설정/재작업/로그 안내 확인 |
+| 필요 시 | `syncWeeklyLabTriggerFromControlCenter()` | Control Center의 요일/시간 설정을 Apps Script 자체 예약에 반영 |
+| 필요 시 | `forceRunWeeklyLabFullCycleForToday()` | 오늘 기준 전체 사이클을 이어서 강제 실행 |
+| 필요 시 | `forceRestartWeeklyLabFullCycleForToday()` | 오늘 기준 전체 사이클을 처음부터 다시 실행 |
+| 필요 시 | `createEmailFinalReportDraft(reportId)` | 이메일 발송 전 검토용 HTML 최종본 생성 |
 
 장기 설계 후보 표:
 
 | 요일 | 함수 | 목적 |
 |---|---|---|
-| 월요일 | `collectWeeklyInputs()` | 데이터 재료 정리 |
-| 화요일 | `generateWeeklyReportDraft()` | AI 주간 리포트 초안 생성 |
+| 월요일 | 뉴스/공시/실적 세부 수집 보강 함수 | GoogleFinance 외의 백데이터 보강 |
+| 화요일 | `generateWeeklyReportDraft()` | 더 고도화된 AI 주간 리포트 초안 생성 |
 | 수요일 | `markReportApproved()`, `sendApprovedReport()` | 승인 후 발송 |
 | 월말 | `generateHypothesisReviewDraft()` | 월간 복기 초안 생성 |
 | 월말 | `evaluateAutomationReadiness()` | 다음 자동화 단계 후보 판단 |
@@ -337,7 +345,8 @@ AI 가설 3개가 모두 6단 구조를 갖춤
 
 ```text
 이 조건은 장기 발송 단계 설계 메모다.
-2026-04-23 기준 sendApprovedReport()는 여전히 비활성화 상태다.
+2026-04-30 기준 sendApprovedReport(reportId)는 승인 상태일 때만 수동 발송할 수 있다.
+자동 발송 설정은 여전히 켜지지 않는다.
 ```
 
 발송 차단 조건:

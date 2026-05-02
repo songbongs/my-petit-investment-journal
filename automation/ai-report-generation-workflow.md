@@ -173,8 +173,10 @@ SSMK Control Center에서 리포트 ID를 입력한다
 주의:
 
 ```text
-2026-04-23 기준 위 작업은 장기 목표이며 현재 기본 흐름에 연결되어 있지 않다.
-sendApprovedReport()도 아직 비활성화 상태다.
+2026-04-30 기준 위 작업은 승인형 단계로만 일부 연결되어 있다.
+createEmailFinalReportDraft(reportId)는 이메일 검토용 HTML 파일만 만든다.
+sendApprovedReport(reportId)는 report_runs.generation_status가 승인일 때만 HTML 이메일을 보낸다.
+email_auto_send는 계속 OFF이며, HTML 최종본 생성은 실제 발송이 아니다.
 ```
 
 ---
@@ -353,7 +355,7 @@ automation_stage_reviews.approval_status = approved
 change_approval_log.approval_status = approved
 ```
 
-단, 2026-04-23 기준 현재 기본 흐름은 발송이 아니라 초안 준비 단계다. 이 규칙은 장기 발송 단계 설계 메모로 유지한다.
+단, 2026-04-30 기준 기본 자동 흐름은 여전히 발송이 아니라 초안 준비 단계다. HTML 최종본 생성과 승인 후 수동 발송은 별도 단계로 유지한다.
 
 ---
 

@@ -146,7 +146,7 @@ automation/Code.gs
 | `runAgentReviewBoard()` | 루미/벡터/세이지/파일럿/노바 검토 로그 생성 |
 | `evaluateAutomationReadiness()` | 자동화 발전 가능성을 점검하고 기록 |
 | `createAutomationStageProposal()` | 자동화 발전 제안서를 승인 대기 상태로 기록 |
-| `sendApprovedReport()` | 승인 전 발송 차단. 아직 실제 발송은 비활성화 |
+| `sendApprovedReport()` | 승인 전 발송 차단. 2026-04-30 이후 승인 상태에서만 HTML 이메일 수동 발송 가능 |
 | `applyApprovedChange()` | 승인 전 중요 변경 적용 차단. 아직 실제 적용은 비활성화 |
 
 문법 확인:
