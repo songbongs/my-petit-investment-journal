@@ -34,7 +34,7 @@ setupSsmkWorkbook()은 빠른 구조 점검용이며, 수식과 드롭다운은 
 
 ```text
 SSMK 투자 관찰노트 - 점수표
-https://docs.google.com/spreadsheets/d/121yVeU20KkZ2szGFGPNq7H8KdLSgDgLy5y0naGzRFsA/edit
+[private Google Sheets link removed]
 ```
 
 ### 2-1. 기존 탭 업데이트

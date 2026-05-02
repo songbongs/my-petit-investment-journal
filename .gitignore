@@ -5,3 +5,6 @@
 node_modules/
 .DS_Store
 Thumbs.db
+
+# Local-only operational links and personal workspace paths
+docs/private/

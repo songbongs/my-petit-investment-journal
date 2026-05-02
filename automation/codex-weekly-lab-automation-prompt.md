@@ -1,7 +1,7 @@
 # Codex Weekly Lab 자동화 프롬프트
 
 작성일: 2026-04-23
-최근 운영 변경: 2026-04-30에 사용자 승인 후 Codex 예약 자동화 `ssmk-weekly-lab-draft-automation`이 생성됨
+최근 운영 변경: 2026-04-30에 사용자 승인 후 Codex 예약 자동화 `[private automation id removed]`이 생성됨
 
 ## 목적
 

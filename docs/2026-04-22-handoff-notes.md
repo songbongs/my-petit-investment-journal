@@ -106,13 +106,13 @@ SSMK-investment-journal/
 사용자가 만든 Drive 폴더:
 
 ```text
-G:\내 드라이브\[AI Project]\SSMK-investment-journal
+[private Google Drive path removed]
 ```
 
 Google Drive URL:
 
 ```text
-https://drive.google.com/drive/folders/1ST6ZO7HswMPBt9n6aiQ3qP4gA_KF7eaB
+[private Google Drive link removed]
 ```
 
 주의:
@@ -130,7 +130,7 @@ SSMK 투자 관찰노트 - 점수표
 URL:
 
 ```text
-https://docs.google.com/spreadsheets/d/121yVeU20KkZ2szGFGPNq7H8KdLSgDgLy5y0naGzRFsA/edit
+[private Google Sheets link removed]
 ```
 
 주의:
@@ -170,7 +170,7 @@ SSMK-investment-journal
 URL:
 
 ```text
-https://www.notion.so/34163ad6fcc6808fbc5ac2e8b5721979
+[private Notion link removed]
 ```
 
 현재 Notion 페이지에는 프로젝트 개요, 핵심 원칙, Google Sheets 링크, 로컬 폴더 경로, Drive 폴더 경로, 초기 워치리스트, 다음 작업, 주의 문구가 들어가 있다.

@@ -58,13 +58,13 @@ Google Sheets:
 
 ```text
 SSMK 투자 관찰노트 - 점수표
-https://docs.google.com/spreadsheets/d/121yVeU20KkZ2szGFGPNq7H8KdLSgDgLy5y0naGzRFsA/edit
+[private Google Sheets link removed]
 ```
 
 최근 라이브 실행에서 생성된 Google Docs 입력 초안:
 
 ```text
-https://docs.google.com/open?id=12vDrbqCuHIuCLG19lP500QSV-wjxJydEEjSQIlqFqPg
+[private Google Docs link removed]
 ```
 
 최근 라이브 실행 식별자:
@@ -167,7 +167,7 @@ report_id: RPT-20260422-30086
 
 예시:
 
-- 실제 예약 자동화 생성/수정: 2026-04-30에 `SSMK Weekly Lab draft automation` 1차 생성 완료
+- 실제 예약 자동화 생성/수정: 2026-04-30에 `[private automation name removed]` 1차 생성 완료
 - 이메일 발송 연결
 - 더 큰 운영 변경
 
@@ -220,8 +220,8 @@ applySsmkWorkbookDropdowns()
 
 현재 실제 예약 자동화 상태:
 
-- 예약 이름: `SSMK Weekly Lab draft automation`
-- 예약 ID: `ssmk-weekly-lab-draft-automation`
+- 예약 이름: `[private automation name removed]`
+- 예약 ID: `[private automation id removed]`
 - 실행 시점: 매주 화요일 오전 8시, Asia/Seoul 기준
 - 범위: 이메일 발송 없이 Weekly Lab 초안/로그/QA 기록까지 수행
 

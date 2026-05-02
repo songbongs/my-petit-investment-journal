@@ -5,8 +5,8 @@
 2026-04-30에 사용자 승인 후 Codex 예약 자동화를 생성했다.
 
 ```text
-예약 이름: SSMK Weekly Lab draft automation
-예약 ID: ssmk-weekly-lab-draft-automation
+예약 이름: [private automation name removed]
+예약 ID: [private automation id removed]
 실행 시점: 매주 화요일 오전 8시, Asia/Seoul 기준
 작업 폴더: C:\Users\kblife\Documents\AI-Playground\SSMK-investment-journal
 ```
