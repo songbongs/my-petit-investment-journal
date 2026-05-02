@@ -994,8 +994,8 @@ Live verification:
 - Passed: `applyWeeklyScoreFormulas()` on the real bound Apps Script project
 - Passed: `runWeeklyLabWorkflow()` on the real bound Apps Script project
 - Confirmed from live logs:
-  - `run_id: RUN-20260424-084822-588`
-  - `report_id: RPT-20260422-30086`
+  - `run_id: [private run id removed]`
+  - `report_id: [private report id removed]`
   - prompt doc created successfully
   - `automation_run_log` and `report_runs` updated
   - `error_log` remained empty during the successful run

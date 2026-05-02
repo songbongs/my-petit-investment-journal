@@ -70,8 +70,8 @@ SSMK 투자 관찰노트 - 점수표
 최근 라이브 실행 식별자:
 
 ```text
-run_id: RUN-20260424-084822-588
-report_id: RPT-20260422-30086
+run_id: [private run id removed]
+report_id: [private report id removed]
 ```
 
 ## 4. 프로젝트가 현재 어디까지 왔는가
