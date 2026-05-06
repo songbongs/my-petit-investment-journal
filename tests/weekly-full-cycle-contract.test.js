@@ -49,6 +49,19 @@ assert(
   'scheduledWeeklyLabTrigger should call the full cycle, not only the old report workflow'
 );
 
+contains(code, 'function createWeeklyLabDraftReportDoc_', 'Code.gs');
+contains(code, 'function collectWeeklyLabReportContext_', 'Code.gs');
+contains(code, 'function buildWeeklyLabReportSectionModels_', 'Code.gs');
+contains(code, 'function runWeeklyLabReportQualityGate_', 'Code.gs');
+contains(code, 'function renderWeeklyLabDocsDraft_', 'Code.gs');
+contains(code, 'function renderWeeklyLabEmailHtml_', 'Code.gs');
+contains(code, "SSMK.sheets.reportBlueprint", 'report blueprint sheet contract');
+
+assert(
+  !code.includes("startAutomationRun_('weekly_lab_full_cycle', 'tuesday_weekly_report'"),
+  'full cycle should use a neutral schedule key helper, not hardcoded tuesday_weekly_report'
+);
+
 contains(sidebar, '오늘 전체 사이클 실행', 'Control Center force run button');
 contains(sidebar, '처음부터 다시 실행', 'Control Center restart button');
 contains(sidebar, "runServer('forceRunWeeklyLabFullCycleForToday'", 'Control Center force run handler');
