@@ -839,7 +839,7 @@ const CONTROL_CENTER_DEFAULT_SCHEDULES = [
     schedule_key: WEEKLY_LAB_LEGACY_SCHEDULE_KEY,
     description: '기존 Weekly Lab 자동 생성 호환 키',
     enabled: 'ON',
-    cadence: 'weekly_tuesday_morning',
+    cadence: 'legacy_weekly_configured',
     last_run_at: '',
     next_run_hint: '기존 설정값 기준',
   },

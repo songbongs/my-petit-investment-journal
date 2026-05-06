@@ -55,7 +55,52 @@ showSsmkSetupBuild()
 
 `applySsmkWorkbookDropdowns()`는 핵심 실행 흐름에는 필수는 아니며, 입력 편의를 위한 선택 helper다.
 
-## 5. SSMK Control Center 여는 법
+## 5. 리포트 목차와 기준을 바꾸는 곳
+
+Weekly Lab 리포트의 실행용 목차는 Google Sheets의 `report_blueprint` 탭에서 관리한다.
+
+초보자용으로 말하면:
+
+```text
+templates/weekly-report-template.md = 사람이 읽는 설계도
+report_blueprint = Apps Script가 실제 실행 때 읽는 목차표
+```
+
+`report_blueprint`에서 바꿀 수 있는 것:
+
+- 섹션 제목
+- 섹션 순서
+- Docs 초안 포함 여부
+- 이메일 HTML 포함 여부
+- 필수 섹션 여부
+- 섹션별 품질 기준 메모
+
+단, `section_key`는 코드와 QA가 식별하는 고정 이름이므로 함부로 바꾸지 않는다.
+
+기본으로 반드시 유지해야 하는 축:
+
+- Executive Dashboard
+- Market Map
+- Industry & Theme Board
+- SSMK Stock Dashboard
+- SSMK Lens Deep Dive
+- Hypothesis Lab
+- Forecast vs Actual
+- Dividend & ETF Corner
+- Hypothesis Evolution Log
+- Learning Notes
+- Sources & Limitations
+- Agent Review Board
+
+## 6. 정기 실행 일정이 정해지는 곳
+
+실행 요일과 시간은 코드에 고정된 값이 아니라 `user_preferences`와 `automation_schedules` 설정을 따른다.
+
+예를 들어 현재 값이 화요일 08:00이라면 "매주 화요일 08:00"으로 표시되지만, 나중에 수요일 09:00으로 바꿀 수 있다.
+
+Apps Script 안에서는 새 기본 키인 `weekly_lab_primary_schedule`을 먼저 읽고, 기존 실행 호환을 위해 `tuesday_weekly_report` 키는 예비 경로로 남긴다.
+
+## 7. SSMK Control Center 여는 법
 
 Google Sheets 상단 메뉴에서 아래 항목을 연다.
 
@@ -73,7 +118,7 @@ Control Center에서 할 수 있는 일:
 - 강제 실행/재시작 실행
 - 이메일용 HTML 검토본 생성
 
-## 6. Weekly Lab 초안 준비 실행
+## 8. Weekly Lab 초안 준비 실행
 
 기본 실행 메뉴:
 
@@ -98,7 +143,7 @@ SSMK 자동화
 - 예약 자동화 생성/수정/삭제
 - 중요한 운영 규칙 변경
 
-## 7. 전체 사이클 실행과 재시작
+## 9. 전체 사이클 실행과 재시작
 
 Control Center에는 전체 사이클 실행과 재시작 흐름이 있다.
 
@@ -135,7 +180,7 @@ Control Center에는 전체 사이클 실행과 재시작 흐름이 있다.
 - `visualization_queue`
 - `hypothesis_reviews`
 
-## 8. 이메일용 HTML 검토본과 실제 발송
+## 10. 이메일용 HTML 검토본과 실제 발송
 
 현재 Weekly Lab 전체 사이클은 발송용 최종 이메일을 바로 보내지 않고, Google Docs 보고서 초안과 이메일 검토용 HTML을 만든다.
 
@@ -153,7 +198,7 @@ HTML 검토본 생성 ≠ 실제 이메일 발송
 4. Forecast vs Actual 또는 복기 흐름이 누락되지 않았는가?
 5. 운영 로그나 QA 문구가 독자용 HTML에 들어가지 않았는가?
 
-## 9. 문제가 생기면 확인할 탭
+## 11. 문제가 생기면 확인할 탭
 
 문제가 생기면 아래 순서로 확인한다.
 
@@ -177,7 +222,7 @@ automation_run_log
 최종 검사표는 qa_review_log
 ```
 
-## 10. 현재 남은 운영 과제
+## 12. 현재 남은 운영 과제
 
 대표 후속 과제:
 
@@ -187,7 +232,7 @@ automation_run_log
 4. 승인 상태일 때만 이메일 발송되도록 테스트하기
 5. 4주 동안 AI 자동 초안 리포트를 운영하며 가설과 실제 결과 비교하기
 
-## 11. 관련 문서
+## 13. 관련 문서
 
 - `docs/SSMK-WEEKLY-LAB-SOUL.md`
 - `docs/2026-04-24-next-ai-handoff.md`

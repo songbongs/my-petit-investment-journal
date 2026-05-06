@@ -18,6 +18,22 @@ setupSsmkWorkbook()은 빠른 구조 점검용으로 가볍게 유지하고,
 applyWeeklyScoreFormulas() / applySsmkWorkbookDropdowns()는 필요할 때 따로 실행한다.
 ```
 
+2026-05-06 개선 기준:
+
+```text
+전체 사이클은 5개 섹션 하드코딩 초안을 만들지 않고,
+report_blueprint
+→ collectWeeklyLabReportContext_()
+→ buildWeeklyLabReportSectionModels_()
+→ runWeeklyLabReportQualityGate_()
+→ renderWeeklyLabDocsDraft_()
+→ renderWeeklyLabEmailHtml_()
+순서로 동작해야 한다.
+
+요일/시간은 "화요일 오전" 같은 문구에 고정하지 않고
+user_preferences와 automation_schedules 설정을 읽는다.
+```
+
 초기 목표:
 
 ```text
@@ -309,7 +325,7 @@ createWeeklyLabPromptDoc_()로 입력용 Google Docs 초안을 만드는 쪽이 
 
 | 요일 | 함수 | 목적 |
 |---|---|---|
-| 화요일 | `scheduledWeeklyLabTrigger()` → `runWeeklyLabFullCycle()` | Apps Script 자체 예약으로 가격/거래량 자료, 뉴스 후보, 시트 기록, 스코어링, 보고서 초안, HTML 최종본, QA 기록 |
+| 설정 요일/시간 | `scheduledWeeklyLabTrigger()` → `runWeeklyLabFullCycle()` | Apps Script 자체 예약으로 가격/거래량 자료, 뉴스 후보, 시트 기록, 스코어링, 보고서 초안, HTML 최종본, QA 기록 |
 | 필요 시 | `runWeeklyDraftPrepWorkflow()` | 이전 흐름 비교/비상용 |
 | 필요 시 | `showSettingsSidebar()` | Control Center에서 설정/재작업/로그 안내 확인 |
 | 필요 시 | `syncWeeklyLabTriggerFromControlCenter()` | Control Center의 요일/시간 설정을 Apps Script 자체 예약에 반영 |
@@ -322,7 +338,7 @@ createWeeklyLabPromptDoc_()로 입력용 Google Docs 초안을 만드는 쪽이 
 | 요일 | 함수 | 목적 |
 |---|---|---|
 | 월요일 | 뉴스/공시/실적 세부 수집 보강 함수 | GoogleFinance 외의 백데이터 보강 |
-| 화요일 | `generateWeeklyReportDraft()` | 더 고도화된 AI 주간 리포트 초안 생성 |
+| 설정 요일/시간 | `generateWeeklyReportDraft()` | 더 고도화된 AI 주간 리포트 초안 생성 |
 | 수요일 | `markReportApproved()`, `sendApprovedReport()` | 승인 후 발송 |
 | 월말 | `generateHypothesisReviewDraft()` | 월간 복기 초안 생성 |
 | 월말 | `evaluateAutomationReadiness()` | 다음 자동화 단계 후보 판단 |

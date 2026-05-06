@@ -75,6 +75,25 @@ hypothesis_reviews에 복기 예약
 "초안을 안전하게 준비하고 검토 상태를 남기는 자동화"에 가깝다.
 ```
 
+2026-05-06 이후 최신 Weekly Lab 생성 흐름:
+
+```text
+collectWeeklyLabReportContext_()
+→ buildWeeklyLabReportSectionModels_()
+→ runWeeklyLabReportQualityGate_()
+→ renderWeeklyLabDocsDraft_()
+→ renderWeeklyLabEmailHtml_()
+```
+
+초보자용으로 풀어 말하면:
+
+```text
+시트에서 재료를 한 번 모은다
+→ report_blueprint 목차에 맞춰 섹션별 카드로 바꾼다
+→ 빠진 섹션/금지 문구/이메일 운영 문구를 한 번 검사한다
+→ Google Docs 편집자용 초안과 독자용 이메일 HTML을 따로 만든다
+```
+
 ---
 
 ## 3. 주간 운영 흐름
@@ -94,10 +113,10 @@ AI 또는 자동화가 준비할 자료:
 월요일의 목표:
 
 ```text
-리포트를 쓰는 것이 아니라, 화요일에 AI가 해석할 재료를 모으는 날입니다.
+리포트를 쓰는 것이 아니라, 설정된 정기 실행일에 AI가 해석할 재료를 모으는 날입니다.
 ```
 
-### 화요일: AI 가설과 리포트 초안 생성
+### 설정된 정기 실행일: AI 가설과 리포트 초안 생성
 
 AI가 할 일:
 
@@ -108,10 +127,11 @@ AI가 할 일:
 5. 노바가 자동화 발전 제안이 필요한지 판단한다.
 6. 차단 항목이 없으면 `초안 생성`, 남으면 `사용자 확인 필요`로 정리한다.
 
-화요일의 현재 핵심 산출물:
+정기 실행일의 현재 핵심 산출물:
 
 ```text
-Google Docs용 Weekly Lab 입력 초안 1개
+Google Docs용 Weekly Lab 편집자 초안 1개
+이메일 발송 전 HTML 검토본 1개
 report_sections / report_versions 기록 1세트
 automation_run_log / automation_step_log / qa_review_log 기록
 ```
@@ -309,7 +329,7 @@ AI는 제안할 수 있지만 승인 없이 적용하지 않는다.
 
 ## 7. 리포트 생성 규칙
 
-주간 리포트는 `templates/weekly-report-template.md`를 기준으로 만든다.
+주간 리포트의 사람용 기준은 `templates/weekly-report-template.md`이고, Apps Script가 실제 실행 때 읽는 목차 계약은 Google Sheets의 `report_blueprint` 탭이다.
 
 필수 포함 섹션:
 
@@ -332,6 +352,7 @@ AI는 제안할 수 있지만 승인 없이 적용하지 않는다.
 - Hypothesis Lab은 5개 카드 구조를 유지한다.
 - 주요 시각 섹션에는 ![chart: ...] placeholder, 차트 설명, 읽는 포인트를 남긴다.
 - 최종 문서는 투자 추천이 아니라 학습용 관찰 기록 문체를 유지한다.
+- Docs 초안에는 편집자용 QA 메모를 남길 수 있지만, 이메일 HTML에는 QA 상태, error_log, bottleneck_log, 발행 전 체크리스트를 넣지 않는다.
 ```
 
 ---
