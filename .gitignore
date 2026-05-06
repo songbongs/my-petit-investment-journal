@@ -1,6 +1,7 @@
 .superpowers/
 .worktrees/
 .tmp/
+.clasp.json
 .playwright-cli/
 node_modules/
 .DS_Store

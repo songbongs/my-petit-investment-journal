@@ -531,7 +531,7 @@ const WORKBOOK_SETUP_LIMITS = {
   maxDropdownRows: 300,
 };
 
-const SSMK_SETUP_BUILD = '2026-04-24-watchlist-classification-v1';
+const SSMK_SETUP_BUILD = '2026-05-06-report-builder-blueprint-v2';
 
 const WATCHLIST_CLASSIFICATION_GUIDE = [
   {
@@ -2447,6 +2447,7 @@ function bulletLines_(lines) {
 }
 
 function sectionModel_(blueprint, docsMarkdown, emailSummary, missingData, notes) {
+  const hasUsableContent = String(docsMarkdown || emailSummary || '').trim().length > 0;
   return {
     section_key: blueprint.section_key,
     section_order: blueprint.section_order,
@@ -2454,7 +2455,7 @@ function sectionModel_(blueprint, docsMarkdown, emailSummary, missingData, notes
     required: blueprint.required,
     docs_output: blueprint.docs_output,
     email_output: blueprint.email_output,
-    status: missingData ? 'needs_revision' : 'draft',
+    status: hasUsableContent ? 'draft' : 'needs_revision',
     docs_markdown: docsMarkdown,
     email_html_summary: emailSummary,
     missing_data: missingData || '',
@@ -2830,7 +2831,7 @@ function runWeeklyLabReportQualityGate_(context, sectionModels, outputDrafts) {
       warnings.push(`필수 섹션 본문이 짧음: ${model.section_key}`);
     }
     if (model.missing_data) {
-      warnings.push(`데이터 보강 필요: ${model.section_key} - ${model.missing_data}`);
+      warnings.push(`데이터 한계 표시됨: ${model.section_key} - ${model.missing_data}`);
     }
   });
 
@@ -2854,7 +2855,7 @@ function recordWeeklyLabQualityGateReview_(context, reportId, qualityResult) {
     status: qualityResult.status === 'blocked' ? 'block' : (qualityResult.status === 'warning' ? 'warning' : 'pass'),
     finding_summary: qualityResult.summary || '필수 구조와 출력 분리 검사 통과',
     risk_level: qualityResult.status === 'blocked' ? 'high' : (qualityResult.status === 'warning' ? 'medium' : 'low'),
-    required_action: qualityResult.status === 'blocked' ? '차단 항목 수정 후 재생성' : '사용자 검토',
+    required_action: qualityResult.status === 'blocked' ? '차단 항목 수정 후 재생성' : '부족한 데이터가 본문에 한계로 표시됐는지 확인',
     blocking: qualityResult.status === 'blocked' ? 'TRUE' : 'FALSE',
     resolved: 'FALSE',
     resolved_at: '',
@@ -5352,11 +5353,10 @@ function scoreFromWorkflowStatus_(status) {
 function scoreFromSectionRows_(sectionRows) {
   if (!sectionRows || sectionRows.length === 0) return 70;
 
-  let score = 80;
+  let score = 85;
   sectionRows.forEach((row) => {
     const status = String(row.status || '').trim().toLowerCase();
     if (status === 'approved') score += 4;
-    if (status === 'draft') score -= 3;
     if (status === 'needs_revision') score -= 12;
     if (status === 'archived') score -= 2;
   });

@@ -58,6 +58,11 @@ contains(code, 'function renderWeeklyLabEmailHtml_', 'Code.gs');
 contains(code, 'function getWeeklyLabScheduleKey_', 'Code.gs');
 contains(code, 'WEEKLY_LAB_PRIMARY_SCHEDULE_KEY', 'Code.gs');
 contains(code, 'WEEKLY_LAB_LEGACY_SCHEDULE_KEY', 'Code.gs');
+contains(code, "SSMK_SETUP_BUILD = '2026-05-06-report-builder-blueprint-v2'", 'setup build marker');
+contains(code, "status: hasUsableContent ? 'draft' : 'needs_revision'", 'missing data should not force revision status');
+notContains(code, "status: missingData ? 'needs_revision' : 'draft'", 'section status should separate data gaps from revision needs');
+contains(code, '데이터 한계 표시됨', 'quality gate warning language');
+notContains(code, "if (status === 'draft') score -= 3", 'operator QA should not punish expected draft status');
 
 requiredSectionKeys.forEach((sectionKey) => {
   contains(code, sectionKey, `required section key ${sectionKey}`);

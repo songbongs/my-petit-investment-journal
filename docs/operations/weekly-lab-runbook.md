@@ -24,14 +24,18 @@ README는 프로젝트 소개와 철학을 설명한다. 이 문서는 실제 �
 
 ## 3. Apps Script에 반영해야 하는 파일
 
-Google Apps Script 편집기에 직접 반영하는 파일은 아래 2개다.
+Google Apps Script 편집기에 반영하는 파일은 아래 3개다.
 
 ```text
 automation/Code.gs
 automation/SettingsSidebar.html
+automation/appsscript.json
 ```
 
 Markdown 문서들은 설명서와 기준 문서이므로 Apps Script 편집기에 붙여 넣는 대상이 아니다.
+
+`automation/appsscript.json`은 Apps Script 실행 시간대, V8 런타임, 원격 실행 API, 필요한 Google 권한 범위를 보관한다.
+코드만 바꾸고 이 파일을 빼먹으면 `clasp run` 같은 운영 점검이 막힐 수 있다.
 
 ## 4. 처음 한 번 실행할 함수
 
@@ -91,6 +95,10 @@ report_blueprint = Apps Script가 실제 실행 때 읽는 목차표
 - Learning Notes
 - Sources & Limitations
 - Agent Review Board
+
+데이터가 부족한 섹션은 바로 `needs_revision`으로 보지 않는다.
+본문에 `부족한 데이터` 또는 `데이터 한계 표시됨`으로 정확히 적혀 있으면 정상 초안(`draft`)으로 둔다.
+`needs_revision`은 본문이 비었거나 필수 섹션이 제대로 만들어지지 않은 경우처럼, 실제 재작성이 필요한 때에만 사용한다.
 
 ## 6. 정기 실행 일정이 정해지는 곳
 
@@ -221,6 +229,9 @@ automation_run_log
 에러 문장은 error_log
 최종 검사표는 qa_review_log
 ```
+
+`qa_review_log.overall_status`가 `warning`이어도 항상 실패는 아니다.
+예를 들어 데이터 신뢰도 낮음 항목 1개, 일부 보강 필요 데이터처럼 한계가 본문에 표시된 경우에는 발행 전 사람이 확인할 경고로 남기고, 자동화 구조 자체는 정상으로 볼 수 있다.
 
 ## 12. 현재 남은 운영 과제
 
