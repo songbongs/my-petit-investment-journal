@@ -36,6 +36,7 @@ const SSMK = {
     hypothesisEvolutionLog: 'hypothesis_evolution_log',
     visualizationQueue: 'visualization_queue',
     reportBlueprint: 'report_blueprint',
+    reportFactCards: 'report_fact_cards',
     reportRuns: 'report_runs',
     reportSections: 'report_sections',
     reportVersions: 'report_versions',
@@ -289,6 +290,29 @@ const SSMK = {
       'quality_rule',
       'beginner_purpose',
       'notes',
+      'visible_title_ko',
+    ],
+    reportFactCards: [
+      'fact_id',
+      'issue_date',
+      'report_id',
+      'section_key',
+      'ticker',
+      'asset_type',
+      'fact_type',
+      'metric_name',
+      'period',
+      'value',
+      'unit',
+      'comparison_value',
+      'comparison_label',
+      'source_key',
+      'source_url',
+      'source_date',
+      'data_confidence',
+      'data_status',
+      'missing_reason',
+      'notes',
     ],
     reportRuns: [
       'report_id',
@@ -451,6 +475,13 @@ const SSMK = {
       'main_issues',
       'recommended_next_action',
       'automation_change_needed',
+      'report_id',
+      'html_version_id',
+      'source_snapshot_id',
+      'checked_by',
+      'blocked_count',
+      'warning_count',
+      'qc_score_breakdown',
     ],
     glossary: [
       'term',
@@ -507,6 +538,7 @@ const WORKBOOK_SCHEMA_SHEET_GROUPS = [
     'hypothesisEvolutionLog',
     'visualizationQueue',
     'reportBlueprint',
+    'reportFactCards',
     'reportRuns',
     'reportSections',
     'reportVersions',
@@ -531,7 +563,7 @@ const WORKBOOK_SETUP_LIMITS = {
   maxDropdownRows: 300,
 };
 
-const SSMK_SETUP_BUILD = '2026-05-06-report-builder-blueprint-v2';
+const SSMK_SETUP_BUILD = '2026-05-07-quality-architecture-v3';
 
 const WATCHLIST_CLASSIFICATION_GUIDE = [
   {
@@ -861,6 +893,29 @@ const CONTROL_CENTER_DEFAULT_SCHEDULES = [
   },
 ];
 
+const WEEKLY_LAB_READER_TITLES = {
+  executive_dashboard: '이번 주 시장 한눈에: 어디에 힘이 실렸나',
+  market_map: '시장 지도: QQQ와 SCHD가 말해주는 위험 선호',
+  industry_theme_board: '산업과 테마: 본업과 시장 이야기를 나눠 보기',
+  stock_dashboard: '종목 관찰: 점수보다 질문을 먼저 보기',
+  lens_deep_dive: 'SSMK 렌즈: 대표 종목을 천천히 해부하기',
+  hypothesis_lab: '이번 주 관찰 가설 5개',
+  forecast_vs_actual: '지난 가설 복기: 맞혔는가보다 무엇을 배웠는가',
+  dividend_etf_corner: '배당과 ETF: 높은 배당률은 항상 좋은 신호일까',
+  hypothesis_evolution_log: '가설 진화 기록: 질문이 어떻게 좋아졌나',
+  learning_notes: '이번 주 레슨: 다음에도 써먹을 질문',
+  sources_limitations: '출처와 한계: 무엇을 알고 무엇을 아직 모르는가',
+  agent_review_board: '운영 검토: 발행 전 확인할 일',
+};
+
+const WEEKLY_LAB_MARKET_ETFS = [
+  { ticker: 'SPY', company: 'SPDR S&P 500 ETF Trust', asset_type: 'etf' },
+  { ticker: 'QQQ', company: 'Invesco QQQ Trust', asset_type: 'etf' },
+  { ticker: 'SCHD', company: 'Schwab U.S. Dividend Equity ETF', asset_type: 'etf' },
+  { ticker: 'XLK', company: 'Technology Select Sector SPDR Fund', asset_type: 'etf' },
+  { ticker: 'XLE', company: 'Energy Select Sector SPDR Fund', asset_type: 'etf' },
+];
+
 const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
   {
     section_key: 'executive_dashboard',
@@ -874,6 +929,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_have_actual_change_and_learning_question',
     beginner_purpose: '이번 주 전체 그림과 핵심 질문을 먼저 잡습니다.',
     notes: '점수는 투자 판단이 아니라 관찰 우선순위입니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.executive_dashboard,
   },
   {
     section_key: 'market_map',
@@ -887,6 +943,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_explain_market_direction_without_recommendation',
     beginner_purpose: '개별 종목 전에 시장 바람의 방향을 봅니다.',
     notes: 'SPY, QQQ, SCHD, XLK, XLE가 있으면 우선 사용합니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.market_map,
   },
   {
     section_key: 'industry_theme_board',
@@ -900,6 +957,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_separate_industry_theme_style',
     beginner_purpose: '산업, 테마, 투자 성격을 섞지 않고 구분합니다.',
     notes: '산업은 돈 버는 본업, 테마는 시장의 관심 이야기입니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.industry_theme_board,
   },
   {
     section_key: 'stock_dashboard',
@@ -913,6 +971,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_show_score_as_question_selector',
     beginner_purpose: '총점보다 왜 이번 주에 볼 만한지 확인합니다.',
     notes: 'Top N은 설정값을 사용합니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.stock_dashboard,
   },
   {
     section_key: 'lens_deep_dive',
@@ -926,6 +985,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_include_missing_data_when_facts_absent',
     beginner_purpose: '종목 하나를 SSMK 렌즈로 천천히 해부합니다.',
     notes: '데이터가 부족하면 부족하다고 씁니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.lens_deep_dive,
   },
   {
     section_key: 'hypothesis_lab',
@@ -939,6 +999,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_have_hypothesis_evidence_lesson_limit',
     beginner_purpose: '이번 주 핵심 가설을 다음 확인 질문으로 바꿉니다.',
     notes: '가설은 정답이 아니라 복기할 질문입니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.hypothesis_lab,
   },
   {
     section_key: 'forecast_vs_actual',
@@ -952,6 +1013,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_show_review_status_or_missing_review',
     beginner_purpose: '지난 가설이 실제 흐름과 어떻게 달랐는지 봅니다.',
     notes: '복기할 데이터가 없으면 아직 복기 전이라고 씁니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.forecast_vs_actual,
   },
   {
     section_key: 'dividend_etf_corner',
@@ -965,6 +1027,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_explain_dividend_etf_as_learning_not_recommendation',
     beginner_purpose: '배당과 ETF를 수익률 숫자만으로 보지 않는 연습을 합니다.',
     notes: '데이터가 부족하면 배당/ETF 보강 필요를 남깁니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.dividend_etf_corner,
   },
   {
     section_key: 'hypothesis_evolution_log',
@@ -978,6 +1041,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_track_change_or_state_missing',
     beginner_purpose: '가설이 시간이 지나며 어떻게 바뀌었는지 기록합니다.',
     notes: '편집자용 흐름이라 이메일에서는 기본 제외합니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.hypothesis_evolution_log,
   },
   {
     section_key: 'learning_notes',
@@ -991,6 +1055,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_end_with_beginner_lesson',
     beginner_purpose: '이번 주에 배운 개념을 쉬운 말로 정리합니다.',
     notes: '일반론만 쓰지 않고 이번 주 데이터와 연결합니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.learning_notes,
   },
   {
     section_key: 'sources_limitations',
@@ -1004,6 +1069,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_name_missing_data',
     beginner_purpose: '무엇을 알고 무엇을 아직 모르는지 구분합니다.',
     notes: '부족한 데이터는 실패가 아니라 다음 확인 질문입니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.sources_limitations,
   },
   {
     section_key: 'agent_review_board',
@@ -1017,6 +1083,7 @@ const DEFAULT_WEEKLY_LAB_REPORT_BLUEPRINT = [
     quality_rule: 'must_keep_operations_out_of_email',
     beginner_purpose: '운영자가 초안 품질과 차단 이슈를 확인합니다.',
     notes: '운영용 섹션이라 이메일에서는 기본 제외합니다.',
+    visible_title_ko: WEEKLY_LAB_READER_TITLES.agent_review_board,
   },
 ];
 
@@ -1819,6 +1886,129 @@ function forceRestartWeeklyLabFullCycleForToday() {
   return runWeeklyLabFullCycle(today_(), { triggerSource: 'manual_force', mode: 'restart' });
 }
 
+function continueWeeklyLabFullCycleForToday() {
+  return continueWeeklyLabFullCycle(today_(), { triggerSource: 'manual_continue' });
+}
+
+function rebuildAndContinueWeeklyLabFullCycleFor20260512() {
+  const targetIssueDate = '2026-05-12';
+  const runId = startAutomationRun_('weekly_lab_manual_rebuild_continue', getWeeklyLabScheduleKey_(), 'manual_apps_script_ui');
+  Logger.log(`[SSMK 2026-05-12 rebuild] start run_id=${runId}`);
+
+  try {
+    const report = findLatestWeeklyLabReportForIssueDate_(targetIssueDate);
+    if (!report) {
+      throw new Error(`${targetIssueDate} 기준 report_runs 행을 찾지 못했습니다.`);
+    }
+    const rebuilt = rebuildWeeklyLabDraftForExistingReport_(report, runId);
+    logAutomationStep_(runId, 1, 'rebuild_weekly_lab_draft_sections', '세이지', 'success', `report_id: ${rebuilt.report_id}`, rebuilt.doc_url, `quality=${rebuilt.quality_status}`, 0);
+
+    const emailDraftResult = createEmailFinalReportDraft(rebuilt.report_id);
+    logAutomationStep_(runId, 2, 'create_email_html_final_draft', '오퍼레이터', 'success', `report_id: ${rebuilt.report_id}`, emailDraftResult.html_url, '5/12 개선 초안 기반 HTML 생성. 이메일 발송 없음.', 0);
+
+    let finalStatus = rebuilt.quality_status === 'blocked' ? 'warning' : 'success';
+    let qaReview = null;
+    try {
+      qaReview = createOperatorQaReview_(runId, rebuilt.report_id);
+      logAutomationStep_(runId, 3, 'create_operator_qa_review', '오퍼레이터', 'success', `report_id: ${rebuilt.report_id}`, `qa_id: ${qaReview.qa_id}`, '', 0);
+    } catch (qaError) {
+      finalStatus = 'warning';
+      logError_(runId, 'createOperatorQaReview_', 'medium', 'qa_review_error', qaError.message, '5/12 개선 이어가기 중 QA 로그 생성 예외', 'qa_review_log 확인');
+    }
+
+    finishAutomationRun_(runId, finalStatus, rebuilt.report_id, emailDraftResult.html_url, '', `5/12 개선 초안 재생성 및 HTML/Pub QC 생성 완료. 이메일 발송 없음. docs=${rebuilt.doc_url}`);
+    Logger.log(`[SSMK 2026-05-12 rebuild] finished status=${finalStatus} report_id=${rebuilt.report_id}`);
+    return {
+      ok: true,
+      status: finalStatus,
+      run_id: runId,
+      issue_date: targetIssueDate,
+      report_id: rebuilt.report_id,
+      rebuilt_doc_url: rebuilt.doc_url,
+      email_html_url: emailDraftResult.html_url,
+      qa_review_id: qaReview ? qaReview.qa_id : '',
+      message: '5/12 개선 초안과 이메일 HTML 최종본을 만들었습니다. 이메일은 발송하지 않았습니다.',
+    };
+  } catch (error) {
+    Logger.log(`[SSMK 2026-05-12 rebuild] failed run_id=${runId} error=${error.message}`);
+    logError_(runId, 'rebuildAndContinueWeeklyLabFullCycleFor20260512', 'high', 'manual_rebuild_continue_error', error.message, '5/12 개선 초안/HTML 이어가기 중 예외', 'error_log 확인 후 재실행');
+    finishAutomationRun_(runId, 'failed', '', '', error.message, '5/12 개선 이어가기 실패. 이메일 발송 없음.');
+    throw error;
+  }
+}
+
+function continueWeeklyLabFullCycle(issueDate, options) {
+  const targetIssueDate = issueDate || today_();
+  const triggerSource = String(options && options.triggerSource ? options.triggerSource : 'manual_continue').trim();
+  const runId = startAutomationRun_('weekly_lab_full_cycle_continue', getWeeklyLabScheduleKey_(), triggerSource);
+  Logger.log(`[SSMK continue] start issue_date=${targetIssueDate} run_id=${runId}`);
+
+  try {
+    const report = findLatestWeeklyLabReportForIssueDate_(targetIssueDate);
+    if (!report) {
+      throw new Error(`${targetIssueDate} 기준 이어서 만들 report_runs 행을 찾지 못했습니다.`);
+    }
+    Logger.log(`[SSMK continue] report found report_id=${report.report_id} status=${report.generation_status}`);
+    return continueWeeklyLabFullCycleFromReport_(targetIssueDate, runId, report);
+  } catch (error) {
+    Logger.log(`[SSMK continue] failed issue_date=${targetIssueDate} run_id=${runId} error=${error.message}`);
+    logError_(runId, 'continueWeeklyLabFullCycle', 'high', 'continue_error', error.message, '이메일 HTML 최종본 이어가기 중 예외', 'report_runs와 report_sections를 확인 후 재실행');
+    finishAutomationRun_(runId, 'failed', '', '', error.message, '이어가기 실패. 이메일 발송 없음.');
+    throw error;
+  }
+}
+
+function continueWeeklyLabFullCycleFromReport_(targetIssueDate, runId, report) {
+  const reportId = String(report && report.report_id || '').trim();
+  if (!reportId) {
+    throw new Error('이어가기 대상 report_id가 비어 있습니다.');
+  }
+
+  if (reportHasEmailHtmlDraft_(reportId)) {
+    Logger.log(`[SSMK continue] skipped existing email html report_id=${reportId}`);
+    finishAutomationRun_(runId, 'skipped', reportId, report.report_file_path || '', '', '이미 이메일용 HTML 최종본이 있어 중복 생성을 건너뜁니다.');
+    return {
+      ok: true,
+      status: 'skipped',
+      reason: 'email_html_exists',
+      run_id: runId,
+      issue_date: targetIssueDate,
+      report_id: reportId,
+      message: '이미 이메일용 HTML 최종본이 있습니다.',
+    };
+  }
+
+  Logger.log(`[SSMK continue] creating email html report_id=${reportId}`);
+  const emailDraftResult = createEmailFinalReportDraft(reportId);
+  Logger.log(`[SSMK continue] email html ready report_id=${reportId} html_url=${emailDraftResult.html_url}`);
+  logAutomationStep_(runId, 1, 'create_email_html_final_draft', '오퍼레이터', 'success', `report_id: ${reportId}`, emailDraftResult.html_url, 'timeout 이후 이어가기 실행', 0);
+
+  let finalStatus = 'success';
+  let qaReview = null;
+  try {
+    qaReview = createOperatorQaReview_(runId, reportId);
+    Logger.log(`[SSMK continue] qa review ready report_id=${reportId} qa_id=${qaReview.qa_id}`);
+    logAutomationStep_(runId, 2, 'create_operator_qa_review', '오퍼레이터', 'success', `report_id: ${reportId}`, `qa_id: ${qaReview.qa_id}`, '', 0);
+  } catch (qaError) {
+    finalStatus = 'warning';
+    Logger.log(`[SSMK continue] qa review warning report_id=${reportId} error=${qaError.message}`);
+    logError_(runId, 'createOperatorQaReview_', 'medium', 'qa_review_error', qaError.message, '이어가기 중 QA 로그 생성 예외', 'qa_review_log 확인');
+  }
+
+  finishAutomationRun_(runId, finalStatus, reportId, emailDraftResult.html_url, '', '이메일용 HTML 최종본과 Publish QC 이어가기 완료. 이메일 발송 없음.');
+  Logger.log(`[SSMK continue] finished status=${finalStatus} report_id=${reportId} html_url=${emailDraftResult.html_url}`);
+  return {
+    ok: true,
+    status: finalStatus,
+    run_id: runId,
+    issue_date: targetIssueDate,
+    report_id: reportId,
+    email_html_url: emailDraftResult.html_url,
+    qa_review_id: qaReview ? qaReview.qa_id : '',
+    message: '이메일용 HTML 최종본을 이어서 만들었습니다. 이메일은 발송하지 않았습니다.',
+  };
+}
+
 function runWeeklyLabFullCycle(issueDate, options) {
   const targetIssueDate = issueDate || today_();
   const normalizedOptions = normalizeFullCycleOptions_(options);
@@ -1832,9 +2022,15 @@ function runWeeklyLabFullCycle(issueDate, options) {
     if (normalizedOptions.mode === 'restart') {
       resetIssueDateWorkingRows_(targetIssueDate);
       logAutomationStep_(runId, 1, 'reset_issue_date_rows', '오퍼레이터', 'success', `issue_date: ${targetIssueDate}`, '오늘 기준 작업 행을 정리하고 새로 시작', '', 0);
-    } else if (hasExistingWeeklyLabRunForIssueDate_(targetIssueDate)) {
-      finishAutomationRun_(runId, 'skipped', '', '', '', `issue_date ${targetIssueDate} 리포트가 이미 있어 중복 실행을 막았습니다. 처음부터 다시 만들려면 restart 함수를 사용하세요.`);
-      return { ok: true, status: 'skipped', reason: 'completed_report_exists', issue_date: targetIssueDate, run_id: runId };
+    } else {
+      const existingReport = findLatestWeeklyLabReportForIssueDate_(targetIssueDate);
+      if (existingReport) {
+        if (!reportHasEmailHtmlDraft_(existingReport.report_id)) {
+          return continueWeeklyLabFullCycleFromReport_(targetIssueDate, runId, existingReport);
+        }
+        finishAutomationRun_(runId, 'skipped', existingReport.report_id || '', existingReport.report_file_path || '', '', `issue_date ${targetIssueDate} 리포트와 이메일 HTML 최종본이 이미 있어 중복 실행을 막았습니다. 처음부터 다시 만들려면 restart 함수를 사용하세요.`);
+        return { ok: true, status: 'skipped', reason: 'completed_report_exists', issue_date: targetIssueDate, run_id: runId, report_id: existingReport.report_id || '' };
+      }
     }
 
     prepareSsmkWorkbook_({ includeDropdowns: false, includeFormulas: true, logProgress: false });
@@ -1910,6 +2106,7 @@ function collectAndStoreWeeklyBackData_(issueDate, runId, mode) {
   const sheet = ss.getSheetByName(SSMK.sheets.marketData);
   const targetIssueDate = issueDate || today_();
   const watchlistRows = getActiveWatchlistRows_();
+  const targetRows = marketDataCollectionTargets_(watchlistRows);
   const existingKeys = new Set(readObjects_(SSMK.sheets.marketData)
     .filter((row) => sameDateText_(row.market_date, targetIssueDate))
     .map((row) => `${String(row.market_date).slice(0, 10)}|${String(row.symbol || '').trim().toUpperCase()}`));
@@ -1917,7 +2114,7 @@ function collectAndStoreWeeklyBackData_(issueDate, runId, mode) {
   let reusedCount = 0;
   const warnings = [];
 
-  watchlistRows.forEach((item) => {
+  targetRows.forEach((item) => {
     const symbol = String(item.ticker || '').trim().toUpperCase();
     if (!symbol) return;
     const key = `${targetIssueDate}|${symbol}`;
@@ -1932,7 +2129,7 @@ function collectAndStoreWeeklyBackData_(issueDate, runId, mode) {
       targetIssueDate,
       symbol,
       item.company || symbol,
-      'equity',
+      item.asset_type || 'equity',
       `=IFERROR(GOOGLEFINANCE("${symbolFormula}","price"),"")`,
       `=IFERROR((E${nextRow}/INDEX(GOOGLEFINANCE("${symbolFormula}","price",TODAY()-10,TODAY()),2,2)-1)*100,"")`,
       `=IFERROR((E${nextRow}/INDEX(GOOGLEFINANCE("${symbolFormula}","price",TODAY()-35,TODAY()),2,2)-1)*100,"")`,
@@ -1953,11 +2150,32 @@ function collectAndStoreWeeklyBackData_(issueDate, runId, mode) {
 
   return {
     watchlist_count: watchlistRows.length,
+    market_target_count: targetRows.length,
+    core_etf_count: WEEKLY_LAB_MARKET_ETFS.length,
     created_market_rows: createdCount,
     reused_market_rows: reusedCount,
     warning_count: warnings.length,
     warning_summary: warnings.join(' / '),
   };
+}
+
+function marketDataCollectionTargets_(watchlistRows) {
+  const bySymbol = {};
+  (watchlistRows || []).forEach((item) => {
+    const symbol = String(item.ticker || '').trim().toUpperCase();
+    if (!symbol) return;
+    bySymbol[symbol] = Object.assign({ asset_type: 'equity' }, item, { ticker: symbol });
+  });
+  WEEKLY_LAB_MARKET_ETFS.forEach((item) => {
+    const symbol = String(item.ticker || '').trim().toUpperCase();
+    if (!symbol) return;
+    if (bySymbol[symbol]) {
+      bySymbol[symbol] = Object.assign({}, bySymbol[symbol], item, { ticker: symbol });
+      return;
+    }
+    bySymbol[symbol] = Object.assign({}, item, { ticker: symbol });
+  });
+  return Object.keys(bySymbol).sort().map((symbol) => bySymbol[symbol]);
 }
 
 function collectAndStoreNewsEvents_(issueDate, runId, mode) {
@@ -2046,9 +2264,9 @@ function buildStarterHypothesisSummary_(watchlistItem, marketRow) {
   const metricText = watchlistItem.key_metrics_to_watch || '가격 변화, 거래량, 실적 발표, 주요 이벤트';
   const changeText = oneWeekChange || fourWeekChange
     ? `최근 가격 변화는 1주 ${oneWeekChange || '미확인'}, 4주 ${fourWeekChange || '미확인'}입니다.`
-    : '이번 자동 수집에서는 아직 가격 변화 수치가 비어 있어 시트 수식 계산 결과를 확인해야 합니다.';
+    : '이번 자동 수집에서는 아직 가격 변화 수치가 비어 있어 시트 수식 계산 결과를 먼저 대조합니다.';
 
-  return `${company}(${symbol})는 ${changeText} 이번 주에는 ${metricText}가 이 변화와 실제 사업 흐름을 함께 설명하는지 확인하는 학습 질문으로 남깁니다.`;
+  return `${company}(${symbol})는 ${changeText} ${metricText}가 같은 방향으로 좋아지면 가격 변화가 실제 사업 기대를 반영했다는 가설을 세울 수 있습니다. 반대로 핵심 지표가 따라오지 않으면 가격만 먼저 움직인 기대 선반영으로 가설을 낮춥니다.`;
 }
 
 function buildStarterReasoningExplanation_(watchlistItem, marketRow, totalScore, scoreChange) {
@@ -2056,7 +2274,7 @@ function buildStarterReasoningExplanation_(watchlistItem, marketRow, totalScore,
   const oneWeekChange = formatPercentChange_(marketRow && marketRow.change_pct_1w) || '가격 변화 미확인';
   const scoreText = scoreChange === '' ? `초기 점수 ${roundTo2_(totalScore)}` : `점수 변화 ${formatSignedNumber_(scoreChange)}`;
 
-  return `${roleText}. 이번 주 해석은 1주 가격 변화 ${oneWeekChange}와 ${scoreText}를 함께 놓고, 가격 움직임이 기업/산업 질문으로 이어지는지 살피는 방식으로 시작합니다.`;
+  return `${roleText}. 1주 가격 변화 ${oneWeekChange}와 ${scoreText}를 함께 보면, 가격이 먼저 움직였는지 아니면 점수의 기초 조건도 같이 움직였는지 나눠 판단할 수 있습니다.`;
 }
 
 function buildStarterBeginnerLesson_(watchlistItem, marketRow, scores) {
@@ -2066,15 +2284,15 @@ function buildStarterBeginnerLesson_(watchlistItem, marketRow, scores) {
   const priceText = formatPercentChange_(marketRow && marketRow.change_pct_1w);
 
   if (isDividend) {
-    return `${symbol || '이 종목'}은 배당 성격이 있으므로 배당률만 보지 말고 주가 변화${priceText ? `(${priceText})` : ''}, 현금흐름, 배당 지속성을 나눠 보는 연습이 필요합니다.`;
+    return `${symbol || '이 종목'}은 배당 성격이 있으므로 배당률을 결론으로 보지 않습니다. 주가 변화${priceText ? `(${priceText})` : ''}, 현금흐름, 배당 지속성을 나눠야 배당이 기회인지 경고인지 구분할 수 있습니다.`;
   }
   if (isGrowth) {
-    return `${symbol || '이 종목'}은 성장 기대가 큰 쪽이므로 좋은 이야기와 실제 매출/마진 확인을 분리해서 보는 연습이 필요합니다.`;
+    return `${symbol || '이 종목'}은 성장 기대가 큰 쪽입니다. 좋은 이야기만으로는 부족하고, 실제 매출과 마진이 같이 좋아질 때 기대가 사업 숫자로 이어진다고 볼 수 있습니다.`;
   }
   if (Number(scores && scores.valuation_timing_score || 0) < 6.3) {
     return `${symbol || '이 종목'}은 가격/타이밍 점수가 낮게 나왔으므로 좋은 회사와 좋은 가격은 다른 질문이라는 점을 배울 수 있습니다.`;
   }
-  return `${symbol || '이 종목'}은 점수 하나로 판단하지 말고 가격 변화, 사업 지표, 다음 이벤트를 차례로 연결해 보는 연습에 적합합니다.`;
+  return `${symbol || '이 종목'}은 점수 하나로 판단하지 않습니다. 가격 변화, 사업 지표, 다음 이벤트가 같은 방향인지 연결해야 이번 움직임의 이유를 배울 수 있습니다.`;
 }
 
 function buildWeeklyScoresFromBackData_(issueDate, runId, mode) {
@@ -2354,6 +2572,130 @@ function collectWeeklyLabReportContext_(issueDate, reportId, runId) {
   };
 }
 
+function factCard_(issueDate, reportId, sectionKey, fields) {
+  const data = fields || {};
+  const ticker = String(data.ticker || '').trim().toUpperCase();
+  const metric = String(data.metric_name || data.fact_type || 'fact').trim().replace(/\s+/g, '_');
+  return {
+    fact_id: data.fact_id || `FACT-${compactDate_(issueDate)}-${ticker || sectionKey}-${metric}-${data.period || 'NA'}`,
+    issue_date: issueDate,
+    report_id: reportId || '',
+    section_key: sectionKey,
+    ticker: ticker,
+    asset_type: data.asset_type || '',
+    fact_type: data.fact_type || '',
+    metric_name: data.metric_name || '',
+    period: data.period || '',
+    value: data.value || '',
+    unit: data.unit || '',
+    comparison_value: data.comparison_value || '',
+    comparison_label: data.comparison_label || '',
+    source_key: data.source_key || '',
+    source_url: data.source_url || '',
+    source_date: data.source_date || issueDate,
+    data_confidence: data.data_confidence || 'medium',
+    data_status: data.data_status || 'present',
+    missing_reason: data.missing_reason || '',
+    notes: data.notes || '',
+  };
+}
+
+function missingFactCard_(issueDate, reportId, sectionKey, metricName, reason) {
+  return factCard_(issueDate, reportId, sectionKey, {
+    fact_type: 'missing_data',
+    metric_name: metricName,
+    data_confidence: 'low',
+    data_status: 'missing',
+    missing_reason: reason || '이번 자동 수집에서 확인되지 않았습니다.',
+  });
+}
+
+function buildMarketFactCards_(context) {
+  const sourceContext = context || {};
+  return (sourceContext.market_data || []).map((row) => factCard_(sourceContext.issue_date, sourceContext.report_id, 'market_map', {
+    ticker: row.symbol,
+    asset_type: row.asset_type || 'ticker',
+    fact_type: 'price_change',
+    metric_name: '1주 가격 변화',
+    period: '1w',
+    value: formatPercentChange_(row.change_pct_1w) || '',
+    unit: '%',
+    comparison_value: formatPercentChange_(row.change_pct_4w) || '',
+    comparison_label: row.change_pct_4w ? '4w_change' : '',
+    source_key: row.source || row.source_key || row.source_name || 'market_data',
+    source_url: row.source_url || '',
+    source_date: row.market_date || sourceContext.issue_date,
+    data_confidence: row.data_confidence || 'medium',
+    notes: '가격 변화는 학습 질문의 출발점이며 투자 판단이 아닙니다.',
+  }));
+}
+
+function buildScoreFactCards_(context) {
+  const sourceContext = context || {};
+  return (sourceContext.weekly_scores || []).map((row) => factCard_(sourceContext.issue_date, sourceContext.report_id, 'stock_dashboard', {
+    ticker: row.ticker,
+    asset_type: 'ticker',
+    fact_type: 'weekly_score',
+    metric_name: 'SSMK 관찰 점수',
+    period: 'weekly',
+    value: roundTo2_(estimateScoreFromRow_(row)),
+    unit: 'score',
+    comparison_value: row.score_change || '',
+    comparison_label: 'score_change',
+    source_key: 'weekly_scores',
+    data_confidence: row.data_confidence || 'medium',
+    notes: '점수는 투자 판단이 아니라 질문 선택 도구입니다.',
+  }));
+}
+
+function buildReportFactCards_(context) {
+  const sourceContext = context || {};
+  const marketRows = sourceContext.market_data || [];
+  const scoreRows = sourceContext.weekly_scores || [];
+  const cards = []
+    .concat(buildMarketFactCards_(sourceContext))
+    .concat(buildScoreFactCards_(sourceContext));
+  if (marketRows.length === 0) {
+    cards.push(missingFactCard_(sourceContext.issue_date, sourceContext.report_id, 'market_map', 'market_data', 'market_data 행이 아직 없습니다.'));
+  }
+  if (scoreRows.length === 0) {
+    cards.push(missingFactCard_(sourceContext.issue_date, sourceContext.report_id, 'stock_dashboard', 'weekly_scores', 'weekly_scores 행이 아직 없습니다.'));
+  }
+  return cards;
+}
+
+function deleteRowsByColumnValue_(sheetName, keyHeader, keyValue) {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  if (!sheet || sheet.getLastRow() < 2) return 0;
+
+  const values = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getDisplayValues();
+  const headers = values[0];
+  const keyColumn = headers.indexOf(keyHeader) + 1;
+  if (keyColumn < 1) return 0;
+
+  let deletedCount = 0;
+  for (let rowIndex = values.length - 1; rowIndex >= 1; rowIndex -= 1) {
+    if (String(values[rowIndex][keyColumn - 1] || '').trim() === String(keyValue || '').trim()) {
+      sheet.deleteRow(rowIndex + 1);
+      deletedCount += 1;
+    }
+  }
+  return deletedCount;
+}
+
+function replaceReportFactCardsForReport_(reportId, factCards) {
+  const normalizedReportId = String(reportId || '').trim();
+  if (!normalizedReportId) return { deleted_count: 0, inserted_count: 0 };
+
+  const deletedCount = deleteRowsByColumnValue_(SSMK.sheets.reportFactCards, 'report_id', normalizedReportId);
+  const cards = (factCards || []).filter((card) => String(card.report_id || '').trim() === normalizedReportId);
+  cards.forEach((card) => appendObject_(SSMK.sheets.reportFactCards, SSMK.headers.reportFactCards, card));
+  return {
+    deleted_count: deletedCount,
+    inserted_count: cards.length,
+  };
+}
+
 function topScoreRows_(context, count) {
   return (context.weekly_scores || [])
     .slice()
@@ -2368,9 +2710,134 @@ function marketChangeTextForTicker_(context, ticker) {
   return `1주 ${formatPercentChange_(row.change_pct_1w) || '미확인'}, 4주 ${formatPercentChange_(row.change_pct_4w) || '미확인'}`;
 }
 
+function marketRowForTicker_(context, ticker) {
+  const symbol = String(ticker || '').trim().toUpperCase();
+  return context && context.market_by_symbol ? context.market_by_symbol[symbol] : null;
+}
+
+function describeScoreChange_(row) {
+  const scoreChange = toNumberOrBlank_(row && row.score_change);
+  if (scoreChange === '') return '점수 변화는 아직 계산되지 않았습니다';
+  if (scoreChange > 0.2) return `점수도 ${formatSignedNumber_(scoreChange)} 올라 가격 변화와 같은 방향입니다`;
+  if (scoreChange < -0.2) return `점수는 ${formatSignedNumber_(scoreChange)} 내려 가격 변화와 엇갈립니다`;
+  return `점수 변화는 ${formatSignedNumber_(scoreChange)}로 거의 없었습니다`;
+}
+
+function hypothesisDirection_(marketRow, row) {
+  const oneWeek = toNumberOrBlank_(marketRow && marketRow.change_pct_1w);
+  const fourWeek = toNumberOrBlank_(marketRow && marketRow.change_pct_4w);
+  const scoreChange = toNumberOrBlank_(row && row.score_change);
+  const scoreText = describeScoreChange_(row);
+  if (oneWeek === '' && fourWeek === '') {
+    return `가격 변화가 비어 있어 방향성 판단은 보류하지만, ${scoreText}. 먼저 데이터 공백부터 채워야 합니다.`;
+  }
+  if (oneWeek >= 8 && (scoreChange === '' || scoreChange >= -0.2)) {
+    return `1주 가격이 ${formatPercentChange_(oneWeek)} 상승했고 ${scoreText}. 이는 시장이 해당 종목의 성장 기대를 다시 가격에 반영한 흐름으로 판단할 수 있습니다.`;
+  }
+  if (oneWeek >= 8 && scoreChange < -0.2) {
+    return `1주 가격은 ${formatPercentChange_(oneWeek)} 올랐지만 ${scoreText}. 이는 주가 기대가 먼저 움직였고 SSMK 점수의 기초 조건은 아직 따라오지 못한 상태로 판단할 수 있습니다.`;
+  }
+  if (oneWeek <= -8) {
+    return `1주 가격이 ${formatPercentChange_(oneWeek)} 하락했습니다. 이는 단기 기대가 약해졌거나 가격 부담이 조정되는 흐름으로 판단할 수 있습니다.`;
+  }
+  return `1주 가격 변화는 ${formatPercentChange_(oneWeek)}로 크지 않습니다. 따라서 이번 주 가설은 급등락보다 점수와 핵심 지표가 어느 방향으로 움직였는지를 중심으로 판단해야 합니다.`;
+}
+
+function abnormalMoveLine_(marketRow) {
+  const oneWeek = toNumberOrBlank_(marketRow && marketRow.change_pct_1w);
+  const fourWeek = toNumberOrBlank_(marketRow && marketRow.change_pct_4w);
+  const hasExtremeMove = (oneWeek !== '' && Math.abs(oneWeek) >= 20) || (fourWeek !== '' && Math.abs(fourWeek) >= 40);
+  if (!hasExtremeMove) return '';
+  return `데이터 신뢰도 확인: 1주 ${formatPercentChange_(oneWeek) || '미확인'}, 4주 ${formatPercentChange_(fourWeek) || '미확인'}처럼 변화폭이 매우 큽니다. 먼저 실적 서프라이즈, 인수합병, 주식분할, ADR/OTC 가격 공백, GoogleFinance 계산 오류 가능성을 대조한 뒤 해석합니다.`;
+}
+
+function clearMetricList_(row) {
+  return String(row && row.evidence_metrics || '').trim() || '가격 변화, SSMK 점수, 관련 뉴스, 다음 실적 지표';
+}
+
+function teachingHypothesisExpectation_(context, row) {
+  const symbol = String(row.ticker || row.symbol || '').trim().toUpperCase();
+  const marketRow = marketRowForTicker_(context, symbol);
+  const metrics = clearMetricList_(row);
+  const abnormalLine = abnormalMoveLine_(marketRow);
+  if (abnormalLine) {
+    return `${symbol}의 급격한 가격 변화가 실제 이벤트로 확인된다면, 시장은 ${metrics} 개선을 선반영했다고 예상할 수 있습니다. 반대로 데이터 오류나 일회성 이벤트라면 이번 상승을 지속 추세로 해석하면 안 됩니다.`;
+  }
+  return `${symbol}의 가격 변화와 점수 흐름이 같은 방향으로 유지된다면, 시장은 ${metrics} 개선 가능성을 가격에 반영하는 추세로 예상할 수 있습니다.`;
+}
+
+function teachingBeginnerLessonForRow_(context, row) {
+  const symbol = String(row.ticker || row.symbol || '이 종목').trim().toUpperCase();
+  return `${symbol} 사례에서 초보자는 "많이 올랐다" 또는 "많이 내렸다"를 결론으로 받아들이지 말고, 가격 변화가 어떤 사업 지표 개선을 예상한 것인지 분리해서 읽어야 합니다.`;
+}
+
+function buildTeachingHypothesisCard_(context, row, index) {
+  const parts = teachingHypothesisParts_(context, row, index);
+  return [
+    `### ${parts.detail_title}`,
+    `- 관찰된 사실: ${parts.actual_change}`,
+    parts.data_reliability_note ? `- ${parts.data_reliability_note}` : '',
+    `- 해석: ${parts.interpretation}`,
+    `- 한 줄 가설: ${parts.one_line_hypothesis}`,
+    `- 근거 지표: ${parts.evidence_metrics}`,
+    `- 초보자 레슨: ${parts.beginner_lesson}`,
+    `- ${parts.counter_scenario}`,
+    `- ${parts.revision_rule}`,
+    `- 다음 검증 데이터: ${parts.next_validation_data}`,
+  ].filter(Boolean).join('\n');
+}
+
+function teachingHypothesisParts_(context, row, index) {
+  const symbol = String(row.ticker || row.symbol || '').trim().toUpperCase();
+  const marketRow = marketRowForTicker_(context, symbol);
+  const score = roundTo2_(estimateScoreFromRow_(row));
+  const metrics = clearMetricList_(row);
+  const marketText = marketChangeTextForTicker_(context, symbol);
+  const direction = hypothesisDirection_(marketRow, row);
+  const abnormalLine = abnormalMoveLine_(marketRow);
+  const expectation = teachingHypothesisExpectation_(context, row);
+  const counterScenario = `반대 시나리오: 다음 실적이나 산업 데이터에서 ${metrics}가 개선되지 않거나, 가격만 먼저 오른 것으로 확인되면 이번 가설은 약해집니다.`;
+  const revisionRule = `가설 수정 기준: 1주 뒤 가격과 점수가 반대로 움직이거나, 4주 뒤에도 ${metrics} 개선 근거가 나오지 않으면 "성장 기대가 실적으로 이어진다"는 가설을 "기대가 가격에 먼저 반영됐지만 근거 확인이 부족하다"는 가설로 낮춰야 합니다.`;
+  const beginnerLesson = teachingBeginnerLessonForRow_(context, row);
+  const nextCheck = row.next_check || `${metrics}, 다음 실적 발표, 관련 뉴스, 1주/4주 가격 변화`;
+
+  return {
+    detail_title: `가설 ${index + 1}. ${compactRowName_(row)}`,
+    actual_change: `${marketText}, SSMK 점수 ${score}. ${describeScoreChange_(row)}.`,
+    data_reliability_note: abnormalLine,
+    interpretation: direction,
+    one_line_hypothesis: expectation,
+    evidence_metrics: metrics,
+    beginner_lesson: beginnerLesson,
+    counter_scenario: counterScenario,
+    revision_rule: revisionRule,
+    next_validation_data: nextCheck,
+  };
+}
+
+function teachingHypothesisContentBlock_(section, context, row, index) {
+  const parts = teachingHypothesisParts_(context, row, index);
+  return contentBlock_(section, {
+    detail_title: parts.detail_title,
+    reader_question: '이 가격 변화는 어떤 사업 기대를 미리 반영한 것일까?',
+    actual_change: parts.actual_change,
+    data_reliability_note: parts.data_reliability_note,
+    interpretation: parts.interpretation,
+    one_line_hypothesis: parts.one_line_hypothesis,
+    evidence_metrics: parts.evidence_metrics,
+    beginner_lesson: parts.beginner_lesson,
+    counter_scenario: parts.counter_scenario,
+    revision_rule: parts.revision_rule,
+    next_validation_data: parts.next_validation_data,
+    next_check: parts.next_validation_data,
+    missing_data_note: row.limitations || '',
+    data_confidence: row.data_confidence || 'medium',
+  });
+}
+
 function summarizeMarketChangesForLearning_(context) {
   if (!context.market_data || context.market_data.length === 0) {
-    return 'market_data가 아직 없어 시장 방향을 가격 변화로 확인하지 못했습니다.';
+    return '가격 변화 데이터가 아직 없어 시장 방향을 가격 변화로 확인하지 못했습니다.';
   }
 
   const rows = context.market_data
@@ -2378,7 +2845,7 @@ function summarizeMarketChangesForLearning_(context) {
     .filter((row) => toNumberOrBlank_(row.change_pct_1w) !== '')
     .sort((a, b) => Math.abs(toNumberOrBlank_(b.change_pct_1w)) - Math.abs(toNumberOrBlank_(a.change_pct_1w)))
     .slice(0, 5);
-  if (rows.length === 0) return 'market_data는 있지만 1주 가격 변화 수식이 아직 계산되지 않았습니다.';
+  if (rows.length === 0) return '가격 변화 데이터는 있지만 1주 가격 변화 수식이 아직 계산되지 않았습니다.';
   return rows.map((row) => `${row.symbol || row.name}: ${formatPercentChange_(row.change_pct_1w)}`).join(', ');
 }
 
@@ -2388,10 +2855,10 @@ function compareEtfChange_(context, firstTicker, secondTicker) {
   const firstChange = first ? toNumberOrBlank_(first.change_pct_1w) : '';
   const secondChange = second ? toNumberOrBlank_(second.change_pct_1w) : '';
   if (firstChange === '' || secondChange === '') return '';
-  if (firstChange === secondChange) return `${firstTicker}와 ${secondTicker}의 1주 변화가 비슷해 성장/배당 선호를 더 확인해야 합니다.`;
+  if (firstChange === secondChange) return `${firstTicker}와 ${secondTicker}의 1주 변화가 비슷해 이번 주에는 성장주와 배당주의 선호 차이가 크지 않았다고 봅니다.`;
   return firstChange > secondChange
-    ? `${firstTicker}가 ${secondTicker}보다 강해 시장이 성장 또는 기술 쪽 질문을 더 크게 던졌을 수 있습니다.`
-    : `${secondTicker}가 ${firstTicker}보다 강해 시장이 배당 또는 방어 성격을 더 의식했는지 볼 필요가 있습니다.`;
+    ? `${firstTicker}가 ${secondTicker}보다 강해 시장이 배당 안정성보다 성장 기대를 더 크게 반영한 주간으로 해석할 수 있습니다. 이 흐름이 XLK 강세와 같이 나오면 기술주 중심 위험 선호 가설을 유지합니다.`
+    : `${secondTicker}가 ${firstTicker}보다 강해 시장이 성장 기대보다 배당 또는 방어 성격을 더 의식한 주간으로 해석할 수 있습니다. 이 흐름이 다음 주에도 이어지면 방어적 시장 전환 가설을 높입니다.`;
 }
 
 function groupSummary_(rows, fieldName, fallback) {
@@ -2409,7 +2876,9 @@ function groupSummary_(rows, fieldName, fallback) {
 }
 
 function compactRowName_(row) {
-  return `${row.ticker || row.symbol || '-'} ${row.company || row.name || ''}`.trim();
+  const symbol = String(row && (row.ticker || row.symbol) || '-').trim().toUpperCase();
+  const company = String(row && (row.company || row.name) || '').trim();
+  return `${symbol}${company && company.toUpperCase() !== symbol ? `(${company})` : ''}`;
 }
 
 function weeklyScoreLine_(context, row, index) {
@@ -2446,18 +2915,298 @@ function bulletLines_(lines) {
   return normalized.map((line) => `- ${line}`).join('\n');
 }
 
+function sectionDisplayTitle_(section) {
+  const key = String(section && section.section_key || '').trim();
+  return String(section && section.visible_title_ko || '').trim()
+    || WEEKLY_LAB_READER_TITLES[key]
+    || String(section && section.section_title || key || '이번 주 학습 섹션').trim();
+}
+
+function compactLearnerLength_(text) {
+  return String(text || '').replace(/\s+/g, '').length;
+}
+
+function learnerSourceLabel_(key) {
+  const labels = {
+    weekly_scores: '관찰 점수 데이터',
+    market_data: '가격 변화 데이터',
+    news_events: '뉴스 이벤트',
+    source_policy: '출처 확인 기록',
+    data_sources: '출처 목록',
+    sector_theme_scores: '산업/테마 점수',
+    company_fundamentals: '기업 기초지표',
+    revenue_breakdown: '매출 구성',
+    shareholder_returns: '주주환원 데이터',
+    insider_activity: '내부자 거래',
+    etf_watch: 'ETF 관찰 데이터',
+    hypothesis_lab: '가설 기록',
+    hypothesis_reviews: '지난 가설 복기',
+    qa_review_log: '품질 점검 기록',
+  };
+  return labels[key] || key;
+}
+
+function replaceInternalSourceNames_(text) {
+  let output = String(text || '');
+  [
+    'weekly_scores',
+    'market_data',
+    'news_events',
+    'source_policy',
+    'data_sources',
+    'sector_theme_scores',
+    'company_fundamentals',
+    'revenue_breakdown',
+    'shareholder_returns',
+    'insider_activity',
+    'etf_watch',
+    'hypothesis_lab',
+    'hypothesis_reviews',
+    'qa_review_log',
+  ].forEach((key) => {
+    output = output.replace(new RegExp(key, 'g'), learnerSourceLabel_(key));
+  });
+  return output;
+}
+
+function cleanLearnerFacingText_(text) {
+  return replaceInternalSourceNames_(String(text || ''))
+    .replace(/사용 데이터\s*:/g, '이번 리포트에 사용한 자료:')
+    .replace(/출처 정책 행\s*:/g, '출처 확인 기록:')
+    .replace(/주요 ETF 가격 변화:\s*미수집/g, '주요 ETF 가격 변화는 아직 자동 수집되지 않았습니다')
+    .replace(/주주환원 데이터\s+ETF 관찰 데이터\s+주요 ETF 가격 변화 데이터/g, '주주환원 데이터, ETF 관찰 데이터, 주요 ETF 가격 변화 데이터')
+    .replace(/기업 기초지표\s+주주환원 데이터\s+ETF 관찰 데이터/g, '기업 기초지표, 주주환원 데이터, ETF 관찰 데이터')
+    .replace(
+      /이전 가설의 실제 진행 방향을 아직 기록하지 못했으므로 이번 리포트에서는 해당 가설을 평가하면 안 됩니다\./g,
+      '이전 가설의 실제 진행 방향이 아직 비어 있어 이번 주에는 결론을 내리지 않습니다. 대신 다음 복기에서 가격, 점수, 핵심 지표가 어느 방향으로 움직였는지 채운 뒤 가설을 유지할지 낮출지 정합니다.'
+    )
+    .replace(
+      /이번 리포트에서는 해당 가설을 평가하면 안 됩니다\./g,
+      '이번 주에는 결론을 내리지 않습니다. 실제 결과가 채워진 뒤에 가설을 유지할지 낮출지 정합니다.'
+    );
+}
+
+function learnerExpansionByLabel_(sectionKey, label) {
+  const section = String(sectionKey || '');
+  const sectionSpecific = {
+    executive_dashboard: {
+      interpretation: '전체 대시보드는 이번 주 공부할 순서를 정하는 첫 장입니다. 점수가 높은 종목과 크게 움직인 종목을 함께 보면, 시장이 어디에 기대를 두었고 어디에서 의심이 생겼는지 큰 그림을 잡을 수 있습니다.',
+      beginner_lesson: '처음에는 상위 종목을 정답처럼 받아들이기 쉽지만, 이 표는 정답지가 아니라 질문 목록입니다. 왜 점수가 높았는지, 왜 가격이 움직였는지, 어떤 데이터가 비어 있는지를 나누면 한 주의 공부 방향이 선명해집니다.',
+    },
+    market_map: {
+      actual_change: 'ETF 변화는 개별 종목보다 먼저 보는 시장 온도계입니다. SPY는 전체 시장, QQQ는 성장주, SCHD는 배당주, XLK는 기술주, XLE는 에너지 흐름을 대략 보여주므로 서로 비교해야 의미가 생깁니다.',
+      interpretation: '시장 지도가 비어 있거나 일부만 있으면 성장주와 배당주 선호를 강하게 말할 수 없습니다. 이런 경우에는 개별 종목 해석도 한 단계 낮춰서, 시장 바람이 뒷받침되는지 아직 확인 전이라고 읽는 편이 안전합니다.',
+      beginner_lesson: '개별 종목이 좋아 보여도 시장 전체가 반대 방향이면 해석의 강도를 낮춰야 합니다. 그래서 ETF 비교는 종목을 사거나 팔기 위한 신호가 아니라, 내가 세운 가설이 시장의 큰 흐름과 같은 방향인지 보는 연습입니다.',
+      next_check: '다음에는 SPY, QQQ, SCHD, XLK, XLE의 1주와 4주 변화를 먼저 채운 뒤, 이번 주 강했던 종목이 어느 ETF 흐름과 닮았는지 비교합니다. 이 비교가 있어야 성장 기대인지 방어 선호인지 더 분명해집니다.',
+    },
+    industry_theme_board: {
+      interpretation: '산업은 회사가 실제로 돈을 버는 자리이고, 테마는 시장이 붙이는 이야기입니다. 같은 AI라는 단어가 붙어도 클라우드, 반도체, 광고, 헬스케어는 매출 구조와 위험 요인이 다르기 때문에 한 묶음으로 결론내리면 안 됩니다.',
+      beginner_lesson: '초보자는 유행어보다 본업을 먼저 봐야 합니다. 테마가 강할수록 그 회사의 실제 매출이 어디서 나오고, 그 매출이 이번 가격 변화와 연결되는지 확인해야 이야기와 숫자를 분리할 수 있습니다.',
+    },
+    stock_dashboard: {
+      interpretation: '종목 대시보드는 순위를 매기는 화면이 아니라 관찰 질문을 고르는 화면입니다. 가격은 올랐는데 점수가 그대로라면 기대가 먼저 움직였을 수 있고, 점수는 좋아졌는데 가격이 약하면 시장이 아직 확신하지 못한 상태일 수 있습니다.',
+      beginner_lesson: '한 종목을 볼 때 회사의 질, 산업의 방향, 현재 가격 부담을 나누면 점수 하나에 끌려가지 않습니다. 이렇게 보면 어떤 근거가 강하고 어떤 근거가 약한지 차분하게 볼 수 있습니다.',
+    },
+    lens_deep_dive: {
+      interpretation: '깊게 보기에서는 좋은 뉴스보다 사업 숫자가 더 중요합니다. 가격 변화가 이어지려면 매출 성장, 마진, 현금흐름, 투자비 부담 중 적어도 몇 가지가 같은 방향으로 설명되어야 합니다.',
+      beginner_lesson: '한 종목을 깊게 볼 때는 좋아 보이는 이야기에서 멈추지 않습니다. 돈을 어디서 벌고, 그 시장이 커지고, 이익으로 남고, 현재 가격이 그 기대를 얼마나 반영했는지 순서대로 분해합니다.',
+    },
+    hypothesis_lab: {
+      actual_change: '가설의 출발점은 실제로 관찰된 가격과 점수 변화입니다. 변화폭이 크면 먼저 데이터가 정상인지 확인하고, 변화폭이 작으면 가격보다 점수와 근거 지표가 어떤 방향인지 더 자세히 봅니다.',
+      interpretation: '가설은 질문이 아니라 임시 판단입니다. 어떤 지표가 좋아지면 유지하고, 어떤 지표가 따라오지 않으면 낮출지까지 정해야 다음 주 복기에서 배울 수 있습니다.',
+      beginner_lesson: '좋은 가설은 멋진 문장이 아니라 나중에 틀렸는지 확인할 수 있는 문장입니다. 관찰된 사실, 근거 지표, 반대 시나리오, 수정 기준을 함께 적어야 다음 리포트에서 같은 기준으로 복기할 수 있습니다.',
+      next_check: '다음 복기에서는 가격만 보지 않고 점수 변화와 근거 지표를 함께 봅니다. 가격이 먼저 움직였는지, 실제 사업 숫자가 뒤따랐는지, 반대 시나리오가 살아났는지를 순서대로 확인합니다.',
+    },
+    forecast_vs_actual: {
+      interpretation: '지난 가설 복기는 맞혔는지 자랑하는 코너가 아닙니다. 예상과 실제가 달랐던 지점을 찾고, 그 차이가 데이터 누락인지 시장 기대 변화인지 구분하는 학습 장치입니다.',
+      beginner_lesson: '예측이 틀렸을 때 바로 실패라고 끝내면 배울 것이 사라집니다. 어떤 전제가 약했는지, 어떤 지표를 빠뜨렸는지, 다음에는 가설을 얼마나 낮춰야 하는지 기록해야 실력이 쌓입니다.',
+      next_check: '다음 복기에서는 지난 가설, 예상 결과, 실제 결과, 달라진 이유, 수정된 가설을 한 줄씩 채웁니다. 이 다섯 칸이 채워져야 맞고 틀림보다 더 중요한 학습 기록이 됩니다.',
+      missing_data_note: '복기 데이터가 비어 있으면 이번 주에는 결론을 내리지 않습니다. 대신 어떤 실제 결과가 필요했는지 남기고, 다음 실행에서 가격 변화, 점수 변화, 핵심 지표를 채워 가설을 다시 판단합니다.',
+    },
+    dividend_etf_corner: {
+      actual_change: '배당주와 ETF는 수익률 숫자만 보면 오해하기 쉽습니다. 배당률이 높아진 이유가 배당금 증가인지 주가 하락인지, ETF가 분산되어 보여도 상위 종목에 쏠려 있는지 나눠 봐야 합니다.',
+      interpretation: '배당과 ETF 해석은 안정성과 위험을 동시에 봅니다. 배당 지속성은 현금흐름과 배당성향으로 확인하고, ETF 흐름은 QQQ와 SCHD처럼 서로 다른 스타일을 비교해야 의미가 생깁니다.',
+      beginner_lesson: '높은 배당률은 항상 좋은 신호가 아닙니다. 주가가 많이 내려 배당률이 높아졌을 수도 있으므로, 초보자는 배당률 숫자 옆에 현금흐름, 배당성향, 주가 흐름을 함께 놓아야 합니다.',
+    },
+    learning_notes: {
+      interpretation: '이번 주 레슨은 일반 조언이 아니라 실제 사례에서 꺼낸 규칙이어야 합니다. 대표 종목의 가격 변화가 어떤 사업 지표를 미리 반영했는지 연결해야 다음 주에도 써먹을 수 있습니다.',
+      beginner_lesson: '한 주의 공부가 남으려면 문장을 내 언어로 바꿔야 합니다. 많이 올랐다, 많이 내렸다는 표현을 넘어서 어떤 기대가 생겼고 어떤 숫자로 확인해야 하는지 적어야 합니다.',
+    },
+    sources_limitations: {
+      interpretation: '출처와 한계는 리포트의 안전장치입니다. 아는 것과 모르는 것을 나누면 데이터가 비어 있는데도 확신하는 실수를 줄일 수 있고, 다음 자동화에서 무엇을 먼저 보강할지도 분명해집니다.',
+      beginner_lesson: '모르는 것을 모른다고 쓰는 습관은 약점이 아니라 공부의 방어막입니다. 데이터가 부족한 구간에서는 결론을 낮추고, 어떤 자료가 채워져야 판단이 좋아지는지 적어 두는 편이 더 좋은 리포트입니다.',
+    },
+  };
+  if (sectionSpecific[section] && sectionSpecific[section][label]) {
+    return sectionSpecific[section][label];
+  }
+  const common = {
+    actual_change: '이 숫자는 결론이 아니라 해석의 출발점입니다. 1주 변화와 4주 변화를 나눠 보면 단기 반응인지 누적 흐름인지 구분할 수 있고, 점수 변화와 함께 읽으면 기대가 실제 데이터로 이어지는지 볼 수 있습니다.',
+    interpretation: '이 해석은 매수나 매도 판단이 아니라 다음에 검증할 전제를 고르는 과정입니다. 가격, 점수, 사업 지표가 같은 방향이면 가설 신뢰도가 올라가고, 서로 엇갈리면 기대만 먼저 움직였을 가능성을 남깁니다.',
+    beginner_lesson: '숫자는 외우는 대상이 아니라 질문을 만드는 재료입니다. 가격, 점수, 뉴스, 실적 중 무엇이 같은 방향이고 무엇이 비어 있는지 나누면 다음 주에도 같은 방식으로 복기할 수 있습니다.',
+    next_check: '다음에는 이 질문을 실제 데이터로 다시 열어 봅니다. 가격 변화, 점수 변화, 실적 코멘트, 뉴스, ETF 흐름 중 어느 축이 같은 방향인지 대조하면 가설을 유지할지 낮출지 더 차분하게 정할 수 있습니다.',
+    missing_data_note: '이 빈칸은 실패가 아니라 해석의 신뢰도 표시입니다. 데이터가 비어 있으면 강한 결론을 내리지 않고, 어떤 숫자가 채워져야 판단이 좋아지는지 먼저 적어 두는 편이 안전한 학습 방식입니다.',
+    data_reliability_note: '변화폭이 크거나 데이터 출처가 제한적일수록 먼저 숫자가 정상인지 대조합니다. 실적 이벤트, 분할, 인수합병, 가격 공백, 계산 오류 가능성을 분리하면 큰 상승률이나 하락률을 성급한 결론으로 읽지 않을 수 있습니다.',
+    one_line_hypothesis: '이 가설은 정답 선언이 아니라 다음 복기에서 시험할 문장입니다. 핵심 지표가 같은 방향으로 움직이면 유지하고, 가격만 먼저 움직였거나 근거 지표가 따라오지 않으면 더 낮은 신뢰도의 가설로 바꿉니다.',
+    evidence_metrics: '이 지표들은 가설을 실제 숫자로 검증하기 위한 체크포인트입니다. 가격 변화가 먼저 보였더라도, 결국 매출, 마진, 현금흐름, 수요, ETF 흐름 같은 근거가 따라오는지 확인해야 해석의 힘이 생깁니다.',
+    counter_scenario: '반대 시나리오는 가설을 공격하기 위한 장치입니다. 처음 생각과 다른 데이터가 나오면 틀렸다고 끝내지 않고, 어떤 전제가 약했는지 찾아 다음 가설을 더 작고 검증 가능하게 바꿉니다.',
+    revision_rule: '수정 기준은 감으로 판단하지 않기 위한 약속입니다. 정해 둔 기간 뒤 가격, 점수, 핵심 지표가 함께 좋아지지 않으면 가설을 유지하지 않고 기대 선반영 또는 근거 부족 가설로 낮춥니다.',
+    next_validation_data: '다음 검증 데이터는 복기할 때 다시 열어 볼 목록입니다. 이 목록이 구체적일수록 다음 리포트에서 맞혔는지보다 어떤 전제가 살아남았는지를 더 잘 배울 수 있습니다.',
+  };
+  const sectionHints = {
+    market_map: ' 이 섹션에서는 개별 종목보다 먼저 SPY, QQQ, SCHD, XLK, XLE의 방향을 비교해 시장의 큰 바람을 읽습니다.',
+    dividend_etf_corner: ' 배당과 ETF는 수익률 숫자보다 그 숫자를 만든 원인, 구성 종목 쏠림, 현금흐름의 지속성을 함께 읽습니다.',
+    forecast_vs_actual: ' 지난 가설 복기는 맞히기 점수가 아니라 지난 전제가 실제 데이터 앞에서 어떻게 바뀌는지 기록하는 학습 장치입니다.',
+    hypothesis_lab: ' 가설 실험실에서는 관찰된 사실, 예상, 반대 시나리오, 수정 기준을 한 카드에 묶어 다음 복기에서 바로 사용할 수 있게 남깁니다.',
+    lens_deep_dive: ' SSMK 렌즈에서는 한 종목을 좋은 뉴스로 끝내지 않고 사업, 산업, 현금흐름, 가격 부담으로 나눠 읽습니다.',
+    stock_dashboard: ' 종목 대시보드는 순위표가 아니라 이번 주 어떤 질문을 먼저 공부할지 고르는 지도입니다.',
+    industry_theme_board: ' 산업과 테마는 서로 다릅니다. 본업에서 돈을 버는 구조와 시장이 좋아하는 이야기를 나눠 읽어야 합니다.',
+    sources_limitations: ' 출처와 한계는 리포트의 방어막입니다. 아는 것과 모르는 것을 나누면 과장된 결론을 줄일 수 있습니다.',
+  };
+  return (common[label] || common.interpretation) + (sectionHints[section] || '');
+}
+
+function expandLearnerText_(sectionKey, label, text) {
+  const cleaned = cleanLearnerFacingText_(text);
+  const minimumLength = label === 'evidence_metrics' ? 55 : 70;
+  if (compactLearnerLength_(cleaned) >= minimumLength) return cleaned;
+  const addition = learnerExpansionByLabel_(sectionKey, label);
+  if (!cleaned) return addition;
+  return `${cleaned} ${addition}`;
+}
+
+function enrichContentBlockForLearning_(block) {
+  const source = block || {};
+  const sectionKey = source.section_key || '';
+  return Object.assign({}, source, {
+    actual_change: expandLearnerText_(sectionKey, 'actual_change', source.actual_change),
+    data_reliability_note: source.data_reliability_note ? expandLearnerText_(sectionKey, 'data_reliability_note', source.data_reliability_note) : '',
+    interpretation: expandLearnerText_(sectionKey, 'interpretation', source.interpretation),
+    one_line_hypothesis: source.one_line_hypothesis ? expandLearnerText_(sectionKey, 'one_line_hypothesis', source.one_line_hypothesis) : '',
+    evidence_metrics: source.evidence_metrics ? expandLearnerText_(sectionKey, 'evidence_metrics', source.evidence_metrics) : '',
+    beginner_lesson: expandLearnerText_(sectionKey, 'beginner_lesson', source.beginner_lesson),
+    counter_question: source.counter_question ? expandLearnerText_(sectionKey, 'counter_scenario', source.counter_question) : '',
+    counter_scenario: source.counter_scenario ? expandLearnerText_(sectionKey, 'counter_scenario', source.counter_scenario) : '',
+    revision_rule: source.revision_rule ? expandLearnerText_(sectionKey, 'revision_rule', source.revision_rule) : '',
+    next_check: expandLearnerText_(sectionKey, 'next_check', source.next_check),
+    next_validation_data: source.next_validation_data ? expandLearnerText_(sectionKey, 'next_validation_data', source.next_validation_data) : '',
+    missing_data_note: source.missing_data_note ? expandLearnerText_(sectionKey, 'missing_data_note', source.missing_data_note) : '',
+  });
+}
+
+function contentBlock_(section, options) {
+  const data = options || {};
+  return enrichContentBlockForLearning_({
+    section_key: section.section_key,
+    visible_title_ko: data.visible_title_ko || sectionDisplayTitle_(section),
+    detail_title: data.detail_title || '',
+    reader_question: data.reader_question || section.beginner_purpose || '이번 섹션에서 무엇을 배울 수 있는가?',
+    source_fact_ids: data.source_fact_ids || [],
+    actual_change: data.actual_change || '',
+    data_reliability_note: data.data_reliability_note || '',
+    interpretation: data.interpretation || '',
+    one_line_hypothesis: data.one_line_hypothesis || '',
+    evidence_metrics: data.evidence_metrics || '',
+    beginner_lesson: data.beginner_lesson || '',
+    counter_question: data.counter_question || '',
+    counter_scenario: data.counter_scenario || '',
+    revision_rule: data.revision_rule || '',
+    next_check: data.next_check || '',
+    next_validation_data: data.next_validation_data || '',
+    missing_data_note: data.missing_data_note || '',
+    data_confidence: data.data_confidence || 'medium',
+  });
+}
+
+function contentBlocksFromSectionModel_(model) {
+  if (model && Array.isArray(model.content_blocks) && model.content_blocks.length > 0) {
+    return model.content_blocks;
+  }
+  return [];
+}
+
+function markdownLearningPart_(markdown, label) {
+  const source = String(markdown || '');
+  const pattern = new RegExp(`###\\s*${label}\\s*\\n([\\s\\S]*?)(?=\\n###\\s|$)`);
+  const match = source.match(pattern);
+  if (!match) return '';
+  return match[1]
+    .split(/\r?\n/)
+    .map((line) => String(line || '').trim().replace(/^[-*]\s*/, ''))
+    .filter((line) => line && !/^#+\s/.test(line))
+    .join(' ');
+}
+
+function markdownBulletValue_(sectionText, label) {
+  const source = String(sectionText || '');
+  const pattern = new RegExp(`(?:^|\\n)\\s*[-*]\\s*${label}\\s*:\\s*([^\\n]+)`);
+  const match = source.match(pattern);
+  return match ? String(match[1] || '').trim() : '';
+}
+
+function hypothesisContentBlocksFromDocsMarkdown_(section, docsMarkdown) {
+  const source = String(docsMarkdown || '');
+  if (String(section && section.section_key || '') !== 'hypothesis_lab') return [];
+  const matches = source.match(/(?:^|\n)###\s+가설\s+\d+\.[\s\S]*?(?=\n###\s+가설\s+\d+\.|\n##\s|$)/g) || [];
+  return matches.map((cardText) => {
+    const titleMatch = String(cardText || '').match(/###\s*(가설\s+\d+\.[^\n]+)/);
+    const title = titleMatch ? titleMatch[1].trim() : '';
+    const nextValidationData = markdownBulletValue_(cardText, '다음 검증 데이터');
+    return contentBlock_(section, {
+      detail_title: title,
+      reader_question: '이 가격 변화는 어떤 사업 기대를 미리 반영한 것일까?',
+      actual_change: markdownBulletValue_(cardText, '관찰된 사실'),
+      data_reliability_note: markdownBulletValue_(cardText, '데이터 신뢰도 확인'),
+      interpretation: markdownBulletValue_(cardText, '해석'),
+      one_line_hypothesis: markdownBulletValue_(cardText, '한 줄 가설'),
+      evidence_metrics: markdownBulletValue_(cardText, '근거 지표'),
+      beginner_lesson: markdownBulletValue_(cardText, '초보자 레슨'),
+      counter_scenario: markdownBulletValue_(cardText, '반대 시나리오'),
+      revision_rule: markdownBulletValue_(cardText, '가설 수정 기준'),
+      next_validation_data: nextValidationData,
+      next_check: nextValidationData,
+      data_confidence: markdownBulletValue_(cardText, '데이터 신뢰도 확인') ? 'medium' : 'high',
+    });
+  }).filter((block) => block.actual_change || block.one_line_hypothesis || block.revision_rule);
+}
+
+function contentBlocksFromDocsMarkdown_(section, docsMarkdown, missingData) {
+  const hypothesisBlocks = hypothesisContentBlocksFromDocsMarkdown_(section, docsMarkdown);
+  if (hypothesisBlocks.length > 0) return hypothesisBlocks;
+
+  const actualChange = markdownLearningPart_(docsMarkdown, '실제 변화');
+  const interpretation = markdownLearningPart_(docsMarkdown, '해석');
+  const beginnerLesson = markdownLearningPart_(docsMarkdown, '초보자 레슨');
+  const nextCheck = markdownLearningPart_(docsMarkdown, '다음 확인 질문');
+  if (!actualChange && !interpretation && !beginnerLesson && !nextCheck) {
+    return [];
+  }
+  const missingDataNote = markdownLearningPart_(docsMarkdown, '부족한 데이터') || String(missingData || '').trim();
+  return [contentBlock_(section, {
+    actual_change: actualChange,
+    interpretation: interpretation,
+    beginner_lesson: beginnerLesson,
+    next_check: nextCheck,
+    missing_data_note: missingDataNote,
+    data_confidence: missingDataNote ? 'medium' : 'high',
+  })];
+}
+
 function sectionModel_(blueprint, docsMarkdown, emailSummary, missingData, notes) {
   const hasUsableContent = String(docsMarkdown || emailSummary || '').trim().length > 0;
+  const explicitBlocks = Array.isArray(blueprint.content_blocks) ? blueprint.content_blocks : [];
   return {
     section_key: blueprint.section_key,
     section_order: blueprint.section_order,
     section_title: blueprint.section_title,
+    visible_title_ko: blueprint.visible_title_ko || sectionDisplayTitle_(blueprint),
     required: blueprint.required,
     docs_output: blueprint.docs_output,
     email_output: blueprint.email_output,
     status: hasUsableContent ? 'draft' : 'needs_revision',
     docs_markdown: docsMarkdown,
     email_html_summary: emailSummary,
+    content_blocks: explicitBlocks.length > 0 ? explicitBlocks : contentBlocksFromDocsMarkdown_(blueprint, docsMarkdown, missingData),
     missing_data: missingData || '',
     data_sources: blueprint.data_sources || '',
     quality_rule: blueprint.quality_rule || '',
@@ -2471,8 +3220,8 @@ function buildExecutiveDashboardSection_(section, context, topRows) {
   if ((context.weekly_scores || []).length === 0) missing.push('weekly_scores');
   if ((context.market_data || []).length === 0) missing.push('market_data');
   const actual = [
-    `weekly_scores ${context.weekly_scores.length}개, market_data ${context.market_data.length}개를 기준으로 이번 주 관찰 질문을 만들었습니다.`,
-    topRows.length > 0 ? `관찰 점수 상위: ${topRows.slice(0, context.top_n).map((row) => `${row.ticker} ${roundTo2_(estimateScoreFromRow_(row))}`).join(', ')}` : '관찰 점수 상위 종목이 아직 없습니다.',
+    `관찰 점수 데이터 ${context.weekly_scores.length}개와 가격 변화 데이터 ${context.market_data.length}개를 기준으로 이번 주 관찰 질문을 만들었습니다.`,
+    topRows.length > 0 ? `관찰 점수 상위: ${topRows.slice(0, context.top_n).map((row) => `${compactRowName_(row)} 관찰점수 ${roundTo2_(estimateScoreFromRow_(row))}`).join(', ')}` : '관찰 점수 상위 종목이 아직 없습니다.',
     `가격 변화가 큰 항목: ${summarizeMarketChangesForLearning_(context)}`,
   ];
   const docs = learningFlowMarkdown_(section, actual, [
@@ -2484,12 +3233,17 @@ function buildExecutiveDashboardSection_(section, context, topRows) {
     '가장 많이 움직인 종목의 변화가 뉴스, 실적, 산업 흐름 중 무엇과 연결되는가?',
     '점수가 높은 종목이 투자 판단처럼 읽히지 않도록 어떤 추가 데이터를 확인해야 하는가?',
   ], missing);
-  return sectionModel_(section, docs, `이번 주는 ${context.weekly_scores.length}개 관찰 행과 ${context.market_data.length}개 가격 행으로 Top ${context.top_n} 학습 질문을 정리했습니다.`, missing.join(', '), '');
+  return sectionModel_(section, docs, `이번 주는 관찰 점수 ${context.weekly_scores.length}개와 가격 변화 ${context.market_data.length}개로 Top ${context.top_n} 학습 질문을 정리했습니다.`, missing.join(', '), '');
 }
 
 function buildMarketMapSection_(section, context) {
   const etfTickers = ['SPY', 'QQQ', 'SCHD', 'XLK', 'XLE'];
-  const lines = etfTickers.map((ticker) => `${ticker}: ${marketChangeTextForTicker_(context, ticker)}`);
+  const lines = etfTickers.map((ticker) => {
+    const text = marketChangeTextForTicker_(context, ticker);
+    return /미수집|미확인/.test(text)
+      ? `${ticker}: 가격 변화 데이터 미수집`
+      : `${ticker}: ${text}`;
+  });
   const comparison = compareEtfChange_(context, 'QQQ', 'SCHD') || 'QQQ와 SCHD 비교 데이터가 부족해 성장주/배당주 선호는 보수적으로만 해석합니다.';
   const missing = lines.filter((line) => /미수집|미확인/.test(line)).length > 0 ? ['주요 ETF 가격 변화 일부'] : [];
   const docs = learningFlowMarkdown_(section, lines, [
@@ -2505,17 +3259,20 @@ function buildMarketMapSection_(section, context) {
 
 function buildIndustryThemeBoardSection_(section, context, topRows) {
   const sourceRows = topRows.length > 0 ? topRows : context.weekly_scores;
+  const themeExamples = sourceRows.slice(0, 5)
+    .map((row) => `${compactRowName_(row)}: ${row.theme_tags || '테마 미입력'}`)
+    .join(' / ') || '테마 데이터 없음';
   const actual = [
     `산업 분포: ${groupSummary_(sourceRows, 'core_industry', '산업 미입력')}`,
     `투자 성격 분포: ${groupSummary_(sourceRows, 'investment_style', '성격 미입력')}`,
-    `테마 키워드 예시: ${sourceRows.slice(0, 5).map((row) => `${row.ticker}: ${row.theme_tags || '테마 미입력'}`).join(' / ') || '테마 데이터 없음'}`,
+    `테마 키워드 예시: ${themeExamples}`,
   ];
   const missing = (context.sector_theme_scores || []).length === 0 ? ['sector_theme_scores'] : [];
   const docs = learningFlowMarkdown_(section, actual, [
     '산업은 회사가 실제로 돈을 버는 본업이고, 테마는 시장이 관심을 갖는 이야기입니다.',
     '같은 AI 테마라도 광고, 클라우드, 반도체, 헬스케어는 사업 구조가 다릅니다.',
   ], [
-    '초보자는 테마 이름만 보고 묶지 말고 실제 매출이 어디서 나오는지 먼저 확인해야 합니다.',
+    '초보자는 테마 이름만 보고 묶지 않습니다. 실제 매출이 어디서 나오는지 알아야 같은 AI 이야기라도 광고, 클라우드, 반도체를 다르게 읽을 수 있습니다.',
   ], [
     '이번 주 강한 테마가 실제 산업 지표나 실적 데이터로도 확인되는가?',
   ], missing);
@@ -2525,7 +3282,7 @@ function buildIndustryThemeBoardSection_(section, context, topRows) {
 function buildStockDashboardSection_(section, context, topRows) {
   const actual = topRows.length > 0
     ? topRows.map((row, index) => weeklyScoreLine_(context, row, index))
-    : ['weekly_scores 기준 Top 종목이 아직 없습니다.'];
+    : ['관찰 점수 데이터 기준 Top 종목이 아직 없습니다.'];
   const missing = topRows.length === 0 ? ['weekly_scores'] : [];
   const docs = learningFlowMarkdown_(section, actual, [
     '총점이 높은 순서가 투자 순서는 아닙니다. 각 행은 이번 주 먼저 질문을 던질 관찰 후보입니다.',
@@ -2536,7 +3293,7 @@ function buildStockDashboardSection_(section, context, topRows) {
     'Top 종목의 점수를 올린 항목과 깎은 항목은 무엇인가?',
     '데이터 신뢰도가 낮은 종목은 어떤 사실 확인을 먼저 해야 하는가?',
   ], missing);
-  return sectionModel_(section, docs, `관찰 점수 Top ${context.top_n}: ${topRows.map((row) => `${row.ticker} ${roundTo2_(estimateScoreFromRow_(row))}`).join(', ') || '데이터 없음'}. 점수는 질문 선택 도구입니다.`, missing.join(', '), '');
+  return sectionModel_(section, docs, `관찰 점수 Top ${context.top_n}: ${topRows.map((row) => `${compactRowName_(row)} ${roundTo2_(estimateScoreFromRow_(row))}`).join(', ') || '데이터 없음'}. 점수는 질문 선택 도구입니다.`, missing.join(', '), '');
 }
 
 function buildLensDeepDiveSection_(section, context, topRows) {
@@ -2551,13 +3308,13 @@ function buildLensDeepDiveSection_(section, context, topRows) {
   const actual = symbol ? [
     `대상: ${compactRowName_(row)}, ${marketChangeTextForTicker_(context, symbol)}, 점수 ${roundTo2_(estimateScoreFromRow_(row))}`,
     `사업/산업: ${row.core_industry || '산업 미입력'} / ${row.theme_tags || '테마 미입력'}`,
-    `현재 가설: ${row.hypothesis_summary || '가설 요약 미입력'}`,
+    `현재 가설: ${teachingHypothesisExpectation_(context, row)}`,
   ] : ['깊게 볼 Top 종목이 아직 없습니다.'];
   const docs = learningFlowMarkdown_(section, actual, [
     'SSMK 렌즈는 돈을 어디서 버는지, 그 시장이 커지는지, 이익과 현금으로 남는지, 가격이 기대를 얼마나 반영했는지를 나눠 봅니다.',
     '현재 자동화는 가격/점수 중심이므로 실적 세부 데이터가 없을 때는 한계를 분명히 적어야 합니다.',
   ], [
-    '초보자는 한 종목을 깊게 볼 때 좋은 뉴스보다 매출, 마진, 현금흐름, 가격 부담을 차례로 확인해야 합니다.',
+    '초보자는 한 종목을 깊게 볼 때 좋은 뉴스에서 멈추지 않습니다. 매출, 마진, 현금흐름, 가격 부담을 차례로 놓아야 뉴스가 실제 숫자로 이어지는지 알 수 있습니다.',
   ], [
     `${symbol || 'Top 종목'}의 다음 실적에서 확인해야 할 핵심 숫자는 무엇인가?`,
     '현재 가격 변화가 실적 개선인지 기대 반영인지 어떻게 구분할 수 있는가?',
@@ -2568,31 +3325,24 @@ function buildLensDeepDiveSection_(section, context, topRows) {
 function buildHypothesisLabSection_(section, context, topRows) {
   const rows = topRows.slice(0, context.hypothesis_count);
   const actual = rows.length > 0
-    ? rows.map((row, index) => `가설 ${index + 1} ${row.ticker}: ${row.hypothesis_summary || '가설 요약 미입력'} / 근거 ${row.evidence_metrics || marketChangeTextForTicker_(context, row.ticker)}`)
+    ? rows.map((row, index) => `가설 ${index + 1} ${row.ticker}: ${marketChangeTextForTicker_(context, row.ticker)}, 점수 ${roundTo2_(estimateScoreFromRow_(row))}, 근거 지표 ${clearMetricList_(row)}`)
     : ['핵심 가설 후보가 아직 없습니다.'];
-  const hypothesisDetails = rows.map((row, index) => [
-    `### 가설 ${index + 1}. ${compactRowName_(row)}`,
-    `- 관찰된 사실: ${marketChangeTextForTicker_(context, row.ticker)}, 점수 ${roundTo2_(estimateScoreFromRow_(row))}`,
-    `- 한 줄 가설: ${row.hypothesis_summary || '가설 요약 보강 필요'}`,
-    `- 근거 지표: ${row.evidence_metrics || '가격 변화와 weekly_scores 기초 지표'}`,
-    `- 왜 그렇게 해석했나: ${row.reasoning_explanation || '해석 보강 필요'}`,
-    `- 초보자 레슨: ${row.beginner_lesson || '레슨 보강 필요'}`,
-    `- 반대 질문: ${row.limitations || '부족한 데이터 확인 필요'}`,
-    `- 다음 확인: ${row.next_check || '1주/4주 뒤 가격과 뉴스 재확인'}`,
-  ].join('\n')).join('\n\n');
+  const hypothesisDetails = rows.map((row, index) => buildTeachingHypothesisCard_(context, row, index)).join('\n\n');
   const missing = rows.length < context.hypothesis_count ? [`핵심 가설 ${context.hypothesis_count}개 중 ${rows.length}개만 작성 가능`] : [];
   const docs = [
     learningFlowMarkdown_(section, actual, [
-      '가설은 정답이 아니라 나중에 맞고 틀린 이유를 복기하기 위한 질문입니다.',
+      '가설은 단순 질문이 아니라 데이터에서 출발한 임시 판단입니다. 핵심은 어떤 전제가 맞으면 추세가 이어지고, 어떤 전제가 깨지면 가설을 수정해야 하는지까지 쓰는 것입니다.',
     ], [
-      '초보자는 가설을 세울 때 관찰된 사실, 근거 지표, 반대 질문, 다음 확인을 한 묶음으로 남겨야 합니다.',
+      '초보자는 가설을 세울 때 관찰된 사실, 해석, 예상, 반대 시나리오, 가설 수정 기준을 한 묶음으로 남겨야 합니다.',
     ], [
-      '각 가설은 1주 뒤와 4주 뒤에 어떤 데이터로 복기할 수 있는가?',
+      '각 가설은 1주 뒤와 4주 뒤에 가격, 점수, 핵심 지표가 어느 방향으로 움직였는지로 복기합니다.',
     ], missing),
     '',
     hypothesisDetails || '가설 상세가 아직 없습니다.',
   ].join('\n');
-  return sectionModel_(section, docs, `이번 주 핵심 가설 ${rows.length}개를 관찰된 사실, 근거, 레슨, 다음 확인으로 나눠 기록했습니다.`, missing.join(', '), '');
+  const model = sectionModel_(section, docs, `이번 주 핵심 가설 ${rows.length}개를 관찰된 사실, 근거, 레슨, 다음 확인으로 나눠 기록했습니다.`, missing.join(', '), '');
+  model.content_blocks = rows.map((row, index) => teachingHypothesisContentBlock_(section, context, row, index));
+  return model;
 }
 
 function forecastVsActualText_(context) {
@@ -2604,10 +3354,30 @@ function forecastVsActualText_(context) {
     };
   }
   const rows = context.hypothesis_reviews.slice(0, 5);
+  const missingRows = rows.filter((row) => !row.actual_outcome && !row.outcome_data);
+  const reviewedRows = rows.filter((row) => row.actual_outcome || row.outcome_data);
+  const actualLines = reviewedRows.map((row) => {
+    const symbol = row.ticker || '-';
+    const windowText = row.review_window || '복기';
+    const previous = row.previous_hypothesis || row.hypothesis_summary || '이전 가설';
+    const expected = row.expected_outcome || '예상 결과 미입력';
+    const actual = row.actual_outcome || row.outcome_data;
+    const reason = row.change_reason || row.review_notes || '원인 지표를 추가로 분해해야 합니다';
+    const result = row.result_label || '복기';
+    return `${symbol} ${windowText}: 지난 가설은 "${previous}"였고 예상은 "${expected}"였습니다. 실제로는 ${actual}로 관측되어 결과는 ${result}입니다. 이는 ${reason}에 따른 결과로 볼 수 있으므로, 가설 수정은 "${previous}"에서 "${reason}가 확인될 때만 같은 방향의 추세를 인정한다"로 낮춰야 합니다.`;
+  });
+  if (missingRows.length > 0) {
+    const missingNames = missingRows
+      .map((row) => `${row.ticker || '-'} ${row.review_window || '복기'}`)
+      .join(', ');
+    actualLines.push(`${missingNames}: 복기 데이터 미입력. 이전 가설의 실제 진행 방향이 아직 비어 있어 이번 주에는 결론을 내리지 않습니다. 대신 다음 복기에서 가격, 점수, 핵심 지표가 어느 방향으로 움직였는지 채운 뒤 가설을 유지할지 낮출지 정합니다.`);
+  }
   return {
-    actual: rows.map((row) => `${row.ticker || '-'} ${row.review_window || ''}: ${row.result_label || '아직 모름'} / 실제 결과 ${row.actual_outcome || row.outcome_data || '미입력'}`),
-    missing: rows.some((row) => !row.actual_outcome && !row.outcome_data) ? ['일부 actual_outcome/outcome_data'] : [],
-    summary: `지난 가설 ${rows.length}개를 실제 결과와 비교할 준비가 되어 있습니다.`,
+    actual: actualLines,
+    missing: missingRows.length > 0 ? [`복기 데이터 미입력 ${missingRows.length}건`] : [],
+    summary: missingRows.length > 0
+      ? `지난 가설 ${rows.length}개 중 ${missingRows.length}개는 실제 결과가 비어 있어 복기 품질 보강이 필요합니다.`
+      : `지난 가설 ${rows.length}개를 실제 결과와 비교해 가설 수정 방향까지 기록했습니다.`,
   };
 }
 
@@ -2631,7 +3401,7 @@ function dividendEtfCornerText_(context) {
   const missing = [];
   if ((context.shareholder_returns || []).length === 0) missing.push('shareholder_returns');
   if ((context.etf_watch || []).length === 0) missing.push('etf_watch');
-  if (etfRows.length === 0) missing.push('주요 ETF market_data');
+  if (etfRows.length === 0) missing.push('주요 ETF 가격 변화 데이터');
 
   return {
     actual: [
@@ -2649,7 +3419,7 @@ function buildDividendEtfCornerSection_(section, context) {
     '배당률 상승은 배당금 증가 때문일 수도 있지만 주가 하락 때문일 수도 있습니다.',
     'ETF는 분산된 상품처럼 보이지만 상위 보유 종목 쏠림과 스타일 차이를 함께 봐야 합니다.',
   ], [
-    '초보자는 배당과 ETF를 수익률 숫자 하나로 판단하지 말고, 숫자를 만든 원인을 먼저 확인해야 합니다.',
+    '초보자는 배당과 ETF를 수익률 숫자 하나로 판단하지 않습니다. 숫자를 만든 원인을 알아야 배당이 안정성인지, 주가 하락의 그림자인지 구분할 수 있습니다.',
   ], [
     '배당주는 FCF와 배당성향으로 배당 지속성을 확인할 수 있는가?',
     'QQQ와 SCHD 흐름 차이가 이번 주 종목 관찰과 같은 방향인가?',
@@ -2675,18 +3445,21 @@ function buildHypothesisEvolutionLogSection_(section, context) {
 
 function buildLearningNotesSection_(section, context, topRows) {
   const row = topRows[0] || {};
+  const lesson = row.ticker
+    ? teachingBeginnerLessonForRow_(context, row)
+    : '이번 주에는 가격 변화와 점수 변화가 어떤 사업 지표를 예상하는지 분리해서 읽는 연습이 핵심입니다.';
   const actual = row.ticker
-    ? [`대표 사례: ${compactRowName_(row)} / ${marketChangeTextForTicker_(context, row.ticker)} / 레슨 ${row.beginner_lesson || '보강 필요'}`]
+    ? [`대표 사례: ${compactRowName_(row)} / ${marketChangeTextForTicker_(context, row.ticker)} / 레슨 ${lesson}`]
     : ['대표 학습 사례가 아직 없습니다.'];
   const missing = row.ticker ? [] : ['weekly_scores'];
   const docs = learningFlowMarkdown_(section, actual, [
     '이번 주 레슨은 추상적인 조언이 아니라 실제 가격 변화와 점수 변화에서 출발해야 합니다.',
   ], [
-    row.beginner_lesson || '초보자는 숫자를 결론으로 받아들이기보다 숫자가 던지는 다음 질문을 적어야 합니다.',
+    lesson,
   ], [
-    '이번 주 사례에서 다음 주에도 반복해서 써먹을 수 있는 질문은 무엇인가?',
+    '다음 주에는 가격 변화가 예상한 사업 지표 개선과 같은 방향으로 확인되는가?',
   ], missing);
-  return sectionModel_(section, docs, row.beginner_lesson || '이번 주 레슨은 가격 변화와 점수 변화를 다음 질문으로 바꾸는 연습입니다.', missing.join(', '), '');
+  return sectionModel_(section, docs, lesson, missing.join(', '), '');
 }
 
 function buildSourcesLimitationsSection_(section, context) {
@@ -2696,8 +3469,8 @@ function buildSourcesLimitationsSection_(section, context) {
   if ((context.shareholder_returns || []).length === 0) missing.push('shareholder_returns');
   if ((context.etf_watch || []).length === 0) missing.push('etf_watch');
   const actual = [
-    `사용 데이터: weekly_scores ${context.weekly_scores.length}, market_data ${context.market_data.length}, news_events ${context.news_events.length}`,
-    `출처 정책 행: source_policy ${context.source_policy.length}, data_sources ${context.data_sources.length}`,
+    `이번 리포트에 사용한 자료: 관찰 점수 데이터 ${context.weekly_scores.length}개, 가격 변화 데이터 ${context.market_data.length}개, 뉴스 이벤트 ${context.news_events.length}개`,
+    `출처 확인 기록: 출처 확인 기록 ${context.source_policy.length}개, 출처 목록 ${context.data_sources.length}개`,
   ];
   const docs = learningFlowMarkdown_(section, actual, [
     '데이터가 부족하면 판단을 강하게 쓰지 않고 어떤 데이터가 필요한지 밝히는 것이 더 좋은 리포트입니다.',
@@ -2780,11 +3553,26 @@ const WEEKLY_LAB_FORBIDDEN_REPORT_PATTERNS = [
   ['를 통해 관찰 우선순위', '를 확인합니다.'].join(''),
   ['이번 주 데이터가 실제 사업 흐름과 연결되는지', ' 확인합니다.'].join(''),
   ['초보자는 점수 자체보다 지표와 사업 질문의 연결을', ' 보는 연습을 합니다.'].join(''),
+  '확인하는 학습 질문으로 남깁니다',
+  '살피는 방식으로 시작합니다',
+  '가설 요약 보강 필요',
+  '해석 보강 필요',
+  '레슨 보강 필요',
+  '아직 모름 / 실제 결과 미입력',
   '매수 추천',
   '매도 추천',
   '지금 사',
   '사야 할',
   '수익 보장',
+];
+
+const WEEKLY_LAB_VAGUE_INSIGHT_PATTERNS = [
+  ['VAGUE_CONFIRM_SHOULD', /확인해야\s*(합니다|한다|됩니다|된다)/],
+  ['VAGUE_ATTENTION', /주목해야\s*(합니다|한다|됩니다|된다)/],
+  ['VAGUE_LOOK_NEEDED', /살펴볼\s*필요가\s*있습니다/],
+  ['VAGUE_QUESTION_REMAINS', /질문으로\s*남(깁니다|긴다|겨둡니다)/],
+  ['VAGUE_PRACTICE_NEEDED', /보는\s*연습이\s*필요합니다/],
+  ['VAGUE_START_LANGUAGE', /방식으로\s*시작합니다/],
 ];
 
 const WEEKLY_LAB_EMAIL_OPERATION_PATTERNS = [
@@ -2795,6 +3583,42 @@ const WEEKLY_LAB_EMAIL_OPERATION_PATTERNS = [
   '발행 전 체크리스트',
   '로그를 확인',
 ];
+
+const PUBLISH_QC_REQUIRED_HTML_MARKERS = [
+  '실제 변화',
+  '해석',
+  '초보자 레슨',
+  '다음 확인 질문',
+  '이번 주 관찰 가설',
+  '데이터 신뢰도 확인',
+  '한 줄 가설',
+  '근거 지표',
+  '반대 시나리오',
+  '가설 수정 기준',
+  '다음 검증 데이터',
+  '배당과 ETF',
+  '지난 가설 복기',
+];
+
+const PUBLISH_QC_HARD_BLOCK_PATTERNS = [
+  'QA 상태',
+  'blocked',
+  'error_log',
+  'bottleneck_log',
+  '발행 전 체크리스트',
+  'Executive Dashboard',
+  'Market Map',
+  'Hypothesis Lab',
+  'Dividend & ETF Corner',
+  'Forecast vs Actual',
+];
+
+function vagueInsightMatches_(text) {
+  const source = String(text || '');
+  return WEEKLY_LAB_VAGUE_INSIGHT_PATTERNS
+    .filter((item) => item[1].test(source))
+    .map((item) => item[0]);
+}
 
 function runWeeklyLabReportQualityGate_(context, sectionModels, outputDrafts) {
   const models = sectionModels || [];
@@ -2818,6 +3642,10 @@ function runWeeklyLabReportQualityGate_(context, sectionModels, outputDrafts) {
     if (docsText.indexOf(pattern) !== -1) {
       blockingIssues.push(`금지 문장 패턴 포함: ${pattern}`);
     }
+  });
+
+  vagueInsightMatches_(`${docsText}\n${emailText}`).forEach((label) => {
+    blockingIssues.push(`회피형 인사이트 문장 포함: ${label}`);
   });
 
   WEEKLY_LAB_EMAIL_OPERATION_PATTERNS.forEach((pattern) => {
@@ -2845,6 +3673,119 @@ function runWeeklyLabReportQualityGate_(context, sectionModels, outputDrafts) {
   };
 }
 
+function publishRecommendationRisk_(html) {
+  const text = String(html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const safeAntiRecommendationPatterns = [
+    /매수\s*근거가\s*되는\s*것은\s*아닙니다/,
+    /매수\s*근거가\s*아닙니다/,
+    /매수\/매도처럼\s*읽히는\s*표현이\s*없는지\s*확인/,
+    /투자\s*권유가\s*아니라/,
+    /투자\s*판단처럼\s*읽히지\s*않도록/,
+  ];
+  const normalized = safeAntiRecommendationPatterns.reduce((source, pattern) => source.replace(pattern, ''), text);
+  const riskPatterns = [
+    /지금\s*사도\s*좋/,
+    /사야\s*할/,
+    /매수\s*추천/,
+    /매도\s*추천/,
+    /추천\s*(종목|대상|타이밍|매수|매도)/,
+    /확실한?\s*기회/,
+    /수익\s*(기회|보장|확정|가능)/,
+    /투자\s*추천/,
+  ];
+  const matched = riskPatterns.find((pattern) => pattern.test(normalized));
+  return matched ? matched.toString() : '';
+}
+
+function publishForecastReviewMissing_(html) {
+  const text = String(html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  return /복기\s*데이터\s*미입력|아직\s*복기할\s*지난\s*가설|실제\s*결과를\s*기록하지\s*못했습니다/.test(text);
+}
+
+function publishEtfDataMissing_(html) {
+  const text = String(html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  return /주요\s*ETF\s*가격\s*변화:\s*미수집|주요\s*ETF\s*market_data|ETF\s*데이터\s*미수집|ETF\s*흐름을\s*가격\s*변화로\s*확인하지\s*못했습니다/.test(text);
+}
+
+function runPublishQualityGate_(input) {
+  const html = String(input && input.html || '');
+  const blockingIssues = [];
+  const warnings = [];
+  const recommendationRisk = publishRecommendationRisk_(html);
+  if (recommendationRisk) {
+    blockingIssues.push(`BLOCK_RECOMMENDATION_RISK_추천: ${recommendationRisk}`);
+  }
+
+  PUBLISH_QC_HARD_BLOCK_PATTERNS.forEach((pattern) => {
+    if (html.indexOf(pattern) === -1) return;
+    blockingIssues.push(`BLOCK_FORBIDDEN_PATTERN: ${pattern}`);
+  });
+
+  vagueInsightMatches_(html).forEach((label) => {
+    blockingIssues.push(`BLOCK_VAGUE_INSIGHT: ${label}`);
+  });
+
+  PUBLISH_QC_REQUIRED_HTML_MARKERS.forEach((marker) => {
+    if (html.indexOf(marker) === -1) {
+      blockingIssues.push(`BLOCK_REQUIRED_MARKER_MISSING: ${marker}`);
+    }
+  });
+
+  const missingForecastReview = publishForecastReviewMissing_(html);
+  if (missingForecastReview) {
+    warnings.push('WARN_FORECAST_REVIEW_MISSING: Forecast vs Actual 복기 데이터가 비어 있어 실제 학습 복기가 약합니다.');
+  }
+  const missingEtfData = publishEtfDataMissing_(html);
+  if (missingEtfData) {
+    warnings.push('WARN_ETF_DATA_MISSING: Dividend & ETF Corner의 주요 ETF 가격 데이터가 비어 있어 성장주/배당주 비교 학습이 약합니다.');
+  }
+
+  const scoreBreakdown = {
+    source_alignment: html.indexOf('MSFT') !== -1 || html.indexOf('QQQ') !== -1 || html.indexOf('SCHD') !== -1 ? 24 : 15,
+    required_structure: blockingIssues.some((issue) => issue.indexOf('REQUIRED_MARKER') !== -1) ? 5 : 15,
+    learning_flow: ['실제 변화', '해석', '초보자 레슨', '다음 확인 질문'].every((marker) => html.indexOf(marker) !== -1) ? 20 : 8,
+    recommendation_safety: blockingIssues.some((issue) => /매수|매도|추천|지금 사|수익 보장/.test(issue)) ? 0 : 20,
+    data_limits: html.indexOf('확인되지 않았습니다') !== -1 || html.indexOf('부족한 데이터') !== -1 ? 10 : 7,
+    forecast_review: missingForecastReview ? 0 : 10,
+    dividend_etf_data: missingEtfData ? 0 : 10,
+    html_separation: blockingIssues.some((issue) => /QA 상태|blocked|error_log|bottleneck_log|체크리스트/.test(issue)) ? 0 : 5,
+  };
+  const finalScore = Object.keys(scoreBreakdown).reduce((sum, key) => sum + scoreBreakdown[key], 0);
+  const status = blockingIssues.length > 0 || finalScore < 70
+    ? 'blocked'
+    : finalScore >= 85
+      ? (warnings.length > 0 ? 'warning' : 'pass')
+      : 'warning';
+
+  return {
+    status: status,
+    final_qc_score: finalScore,
+    score_breakdown: scoreBreakdown,
+    blocking_count: blockingIssues.length,
+    warning_count: warnings.length,
+    blocking_issues: blockingIssues,
+    warnings: warnings,
+    summary: blockingIssues.concat(warnings).join(' / '),
+  };
+}
+
+function canSendReportWithPublishQc_(report, latestQc) {
+  const latestStatus = latestQc ? String(latestQc.status || latestQc.overall_status || '').trim() : '';
+  if (!latestQc) {
+    return { ok: false, reason: '최신 세이지 Publish QC 결과가 없습니다.' };
+  }
+  if (latestStatus === 'blocked') {
+    return { ok: false, reason: '세이지 Publish QC가 blocked입니다.' };
+  }
+  if (['pass', 'warning'].indexOf(latestStatus) === -1) {
+    return { ok: false, reason: '세이지 Publish QC 상태를 확인할 수 없습니다.' };
+  }
+  if (!report || String(report.generation_status || '') !== '승인') {
+    return { ok: false, reason: '리포트가 승인 상태가 아닙니다.' };
+  }
+  return { ok: true, reason: '발송 가능' };
+}
+
 function recordWeeklyLabQualityGateReview_(context, reportId, qualityResult) {
   appendObject_(SSMK.sheets.agentReviewLog, SSMK.headers.agentReviewLog, {
     review_id: `AR-${compactDate_(context.issue_date)}-${String(new Date().getTime()).slice(-6)}-QG`,
@@ -2862,6 +3803,62 @@ function recordWeeklyLabQualityGateReview_(context, reportId, qualityResult) {
     notes: '자동 리포트 빌더 품질 게이트',
     run_id: context.run_id,
     report_id: reportId,
+  });
+}
+
+function recordPublishQualityGateReview_(context, reportId, htmlVersionId, qualityResult) {
+  const safeContext = context || {};
+  const safeResult = qualityResult || {};
+  const scoreBreakdown = safeResult.score_breakdown || {};
+  const qaId = `QA-${compactDate_(today_())}-${compactTime_()}-${String(new Date().getTime()).slice(-3)}-SAGE`;
+
+  appendObject_(SSMK.sheets.qaReviewLog, SSMK.headers.qaReviewLog, {
+    qa_id: qaId,
+    run_id: safeContext.run_id || '',
+    review_date: today_(),
+    overall_status: safeResult.status || 'blocked',
+    content_quality_score: safeResult.final_qc_score || 0,
+    data_quality_score: scoreBreakdown.source_alignment || '',
+    visualization_quality_score: '',
+    process_efficiency_score: '',
+    main_issues: safeResult.summary || '세이지 Publish QC 통과',
+    recommended_next_action: safeResult.status === 'blocked' ? '차단 항목 수정 후 HTML 재생성' : '사용자 검토 후 승인 가능',
+    automation_change_needed: safeResult.status === 'blocked' ? 'TRUE' : 'FALSE',
+    report_id: reportId,
+    html_version_id: htmlVersionId || '',
+    source_snapshot_id: safeContext.source_snapshot_id || safeContext.snapshot_id || '',
+    checked_by: '세이지',
+    blocked_count: safeResult.blocking_count || 0,
+    warning_count: safeResult.warning_count || 0,
+    qc_score_breakdown: JSON.stringify(scoreBreakdown),
+  });
+
+  updateReportRunStatus_(
+    reportId,
+    safeResult.status === 'blocked' ? '사용자 확인 필요' : '초안 생성',
+    `sage_qc_status=${safeResult.status || 'blocked'}; score=${safeResult.final_qc_score || 0}; qa_id=${qaId}; html_version=${htmlVersionId || ''}`
+  );
+  return qaId;
+}
+
+function getLatestPublishQualityGateReview_(reportId) {
+  const normalizedReportId = String(reportId || '').trim();
+  if (!normalizedReportId) return null;
+
+  const rows = readObjects_(SSMK.sheets.qaReviewLog)
+    .filter((row) => String(row.report_id || '').trim() === normalizedReportId)
+    .filter((row) => String(row.checked_by || '').trim() === '세이지')
+    .sort((a, b) => {
+      const left = `${String(a.review_date || '')} ${String(a.qa_id || '')}`;
+      const right = `${String(b.review_date || '')} ${String(b.qa_id || '')}`;
+      return left.localeCompare(right);
+    });
+  const latest = rows.pop() || null;
+  if (!latest) return null;
+
+  return Object.assign({}, latest, {
+    status: latest.status || latest.overall_status || '',
+    final_qc_score: Number(latest.final_qc_score || latest.content_quality_score || 0),
   });
 }
 
@@ -2901,30 +3898,357 @@ function renderWeeklyLabDocsDraft_(context, sectionModels, qualityResult) {
   ].join('\n');
 }
 
+function renderContentBlockHtml_(block) {
+  const learnerBlock = enrichContentBlockForLearning_(block || {});
+  const parts = [
+    `<p style="font-size:12px;line-height:1.35;margin:0 0 14px;color:#4e4d4d;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(learnerBlock.reader_question || '')}</p>`,
+    learnerBlock.detail_title ? `<p style="font-size:15px;line-height:1.35;margin:0 0 14px;font-weight:700;color:#000000;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(learnerBlock.detail_title)}</p>` : '',
+    learningLadderHtml_(learnerBlock),
+    '<div style="display:grid;gap:14px;">',
+    learnerHtmlBlock_('실제 변화', learnerBlock.actual_change),
+    learnerBlock.data_reliability_note ? learnerHtmlBlock_('데이터 신뢰도 확인', learnerBlock.data_reliability_note) : '',
+    learnerHtmlBlock_('해석', learnerBlock.interpretation),
+    learnerBlock.one_line_hypothesis ? learnerHtmlBlock_('한 줄 가설', learnerBlock.one_line_hypothesis) : '',
+    learnerBlock.evidence_metrics ? learnerHtmlBlock_('근거 지표', learnerBlock.evidence_metrics) : '',
+    learnerHtmlBlock_('초보자 레슨', learnerBlock.beginner_lesson),
+    learnerBlock.counter_scenario ? learnerHtmlBlock_('반대 시나리오', learnerBlock.counter_scenario) : '',
+    !learnerBlock.counter_scenario && learnerBlock.counter_question ? learnerHtmlBlock_('반대 시나리오', learnerBlock.counter_question) : '',
+    learnerBlock.revision_rule ? learnerHtmlBlock_('가설 수정 기준', learnerBlock.revision_rule) : '',
+    learnerBlock.next_validation_data ? learnerHtmlBlock_('다음 검증 데이터', learnerBlock.next_validation_data) : '',
+    learnerHtmlBlock_('다음 확인 질문', learnerBlock.next_check),
+    learnerBlock.missing_data_note ? learnerHtmlBlock_('현재 한계', learnerBlock.missing_data_note) : '',
+    '</div>',
+  ];
+  return parts.filter(Boolean).join('');
+}
+
+function shortLearnerText_(text, fallback) {
+  const cleaned = cleanLearnerFacingText_(text || fallback || '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (/SPY:\s*가격 변화 데이터 미수집.*QQQ:\s*가격 변화 데이터 미수집/.test(cleaned)) {
+    return '주요 ETF 가격 데이터가 비어 있어 이번 주 시장 선호는 판단 보류입니다.';
+  }
+  if (/좋은 회사.*좋은 산업.*좋은 가격/.test(cleaned)) {
+    return '좋은 회사인지와 지금 가격이 좋은지는 따로 판단합니다.';
+  }
+  if (/초보자는 숫자 하나를 외우기보다/.test(cleaned)) {
+    return '숫자 하나보다 숫자가 가리키는 원인을 봅니다.';
+  }
+  if (cleaned.length <= 74) return cleaned;
+  return `${cleaned.slice(0, 72).replace(/[,\s]+$/g, '')}...`;
+}
+
+function learningLadderHtml_(block) {
+  const steps = [
+    { label: '숫자', text: shortLearnerText_(block.actual_change, '이번 주 실제로 확인된 변화를 먼저 봅니다.') },
+    { label: '의미', text: shortLearnerText_(block.interpretation || block.one_line_hypothesis, '그 숫자가 어떤 시장 기대를 뜻하는지 바꿔 읽습니다.') },
+    { label: '레슨', text: shortLearnerText_(block.beginner_lesson, '결론보다 관찰 습관을 남깁니다.') },
+    { label: '다음 확인', text: shortLearnerText_(block.next_check || block.next_validation_data, '다음 주에 확인할 데이터를 정합니다.') },
+  ];
+  return [
+    '<div data-ssmk="learning-ladder" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 14px;">',
+    steps.map((step) => [
+      '<div style="border:1px solid #242424;border-radius:18px;background:#ffffff;padding:10px;min-height:76px;">',
+      `<p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#242424;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(step.label)}</p>`,
+      `<p style="margin:0;font-size:12px;line-height:1.45;color:#4e4d4d;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(step.text)}</p>`,
+      '</div>',
+    ].join('')).join(''),
+    '</div>',
+  ].join('');
+}
+
+function uniqueMetricItems_(items, limit) {
+  const seen = {};
+  const output = [];
+  (items || []).forEach((item) => {
+    const cleaned = replaceInternalSourceNames_(String(item || ''))
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/^,\s*/, '')
+      .replace(/\s+:/g, ':');
+    if (!cleaned || cleaned.length > 80 || /개와\s/.test(cleaned) || seen[cleaned]) return;
+    seen[cleaned] = true;
+    output.push(cleaned);
+  });
+  return output.slice(0, limit || 12);
+}
+
+function distributionItemsFromText_(text) {
+  const source = String(text || '');
+  const items = [];
+  [
+    '산업 분포',
+    '투자 성격 분포',
+  ].forEach((label) => {
+    const pattern = new RegExp(`${label}\\s*:\\s*([\\s\\S]*?)(?=\\s+(?:산업 분포|투자 성격 분포|테마 키워드 예시|이번 리포트에 사용한 자료|출처 확인 기록)\\s*:|$)`);
+    const match = source.match(pattern);
+    if (!match) return;
+    String(match[1] || '')
+      .split(',')
+      .map((part) => part.trim())
+      .filter((part) => /\d+개/.test(part))
+      .forEach((part) => items.push(`${label}: ${part}`));
+  });
+  return items;
+}
+
+function etfStatusItemsFromText_(text) {
+  const source = String(text || '');
+  const items = [];
+  const pattern = /\b(SPY|QQQ|SCHD|XLK|XLE):\s*([\s\S]*?)(?=\s+(?:SPY|QQQ|SCHD|XLK|XLE):|$)/g;
+  let match;
+  while ((match = pattern.exec(source)) !== null) {
+    const value = String(match[2] || '').replace(/\s+/g, ' ').trim();
+    if (value) items.push(`${match[1]}: ${value}`);
+  }
+  return items;
+}
+
+function metricItemsFromText_(text) {
+  const source = String(text || '');
+  const items = [];
+  const patterns = [
+    /(?:관찰 점수 데이터|가격 변화 데이터|뉴스 이벤트|출처 확인 기록|출처 목록|산업\/테마 점수|기업 기초지표|주주환원 데이터|ETF 관찰 데이터|가설 기록|지난 가설 복기|품질 점검 기록)\s*\d+개?/g,
+    /\b(?:weekly_scores|market_data|news_events|source_policy|data_sources|sector_theme_scores|company_fundamentals|shareholder_returns|etf_watch|hypothesis_lab|hypothesis_reviews|qa_review_log)\s*\d+개?/g,
+    /\b[A-Z]{1,5}\s*:?\s*[+-]?\d+(?:\.\d+)?%/g,
+    /\b[A-Z]{1,5}(?:\([^)]+\))?\s*관찰점수\s*\d+(?:\.\d+)?\b/g,
+    /\b[A-Z]{1,5}\s+\d+(?:\.\d+)?\b/g,
+    /등급\s*[가-힣A-Za-z0-9+-]+/g,
+  ];
+  patterns.forEach((pattern) => {
+    let match;
+    while ((match = pattern.exec(source)) !== null) {
+      items.push(match[0]);
+    }
+  });
+  distributionItemsFromText_(source).forEach((item) => items.push(item));
+  etfStatusItemsFromText_(source).forEach((item) => items.push(item));
+  return uniqueMetricItems_(items, 14);
+}
+
+function percentRowsFromText_(text) {
+  const source = String(text || '');
+  const rows = [];
+  const pattern = /\b([A-Z]{1,5})[^,\n.;]*?([+-]\d+(?:\.\d+)?)%/g;
+  let match;
+  while ((match = pattern.exec(source)) !== null) {
+    rows.push({
+      label: match[1],
+      value: Number(match[2]),
+      text: `${match[1]} ${match[2]}%`,
+    });
+  }
+  return uniqueMetricItems_(rows.map((row) => `${row.label}|${row.value}|${row.text}`), 8)
+    .map((item) => {
+      const parts = item.split('|');
+      return { label: parts[0], value: Number(parts[1]), text: parts[2] };
+    })
+    .filter((row) => !Number.isNaN(row.value));
+}
+
+function metricChipHtml_(text) {
+  const items = metricItemsFromText_(text);
+  if (items.length === 0) return '';
+  return [
+    '<div data-ssmk="metric-chip-row" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;">',
+    items.map((item) => `<span data-ssmk="metric-chip" style="display:inline-block;border:1px solid #242424;border-radius:2000px;padding:6px 10px;font-size:12px;line-height:1.2;color:#242424;background:#f6f3f1;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(item)}</span>`).join(''),
+    '</div>',
+  ].join('');
+}
+
+function miniBarHtml_(text) {
+  const rows = percentRowsFromText_(text);
+  if (rows.length === 0) return '';
+  const maxAbs = rows.reduce((max, row) => Math.max(max, Math.abs(row.value)), 1);
+  const rowHtml = rows.map((row) => {
+    const width = Math.max(8, Math.round((Math.abs(row.value) / maxAbs) * 100));
+    const color = row.value >= 0 ? '#242424' : '#797776';
+    const direction = row.value >= 0 ? '상승' : '하락';
+    return [
+      '<div style="display:grid;grid-template-columns:64px 1fr 58px;gap:8px;align-items:center;margin:6px 0;">',
+      `<span style="font-size:12px;color:#242424;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(row.label)}</span>`,
+      '<span style="display:block;background:#f6f3f1;border:1px solid #d8d2cd;border-radius:2000px;height:10px;overflow:hidden;">',
+      `<span data-ssmk="mini-bar" title="${escapeHtml_(direction)}" style="display:block;width:${width}%;height:10px;background:${color};border-radius:2000px;"></span>`,
+      '</span>',
+      `<span style="font-size:12px;color:#242424;text-align:right;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(formatPercentChange_(row.value))}</span>`,
+      '</div>',
+    ].join('');
+  }).join('');
+  return [
+    '<div style="background:#cfdaf5;border:1px solid #242424;border-radius:24px;padding:12px;margin:0 0 12px;">',
+    '<p style="margin:0 0 6px;font-size:11px;letter-spacing:0.05px;color:#242424;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">MINI CHART</p>',
+    rowHtml,
+    '</div>',
+  ].join('');
+}
+
+function learnerParagraphText_(label, text, hasVisuals) {
+  const source = cleanLearnerFacingText_(text);
+  const isDataSummary = /관찰 점수 데이터|가격 변화 데이터|뉴스 이벤트|출처 확인 기록|출처 목록|품질 점검 기록|산업 분포|투자 성격 분포|테마 키워드|배당 성격 관찰 종목|주요 ETF 가격 변화|SPY:|QQQ:|SCHD:|XLK:|XLE:/.test(source);
+  if (hasVisuals && isDataSummary && label === '실제 변화') {
+    return `${source} 읽는 법: 위 숫자들은 이번 주 관찰 질문을 만들기 위한 재료입니다. 개수와 변화율을 먼저 나눠 보면, 어떤 데이터는 충분하고 어떤 데이터는 아직 비어 있는지 더 쉽게 확인할 수 있습니다.`;
+  }
+  return source;
+}
+
+function learnerHtmlBlock_(label, text) {
+  const source = String(text || '이번 자동 수집에서는 아직 확인되지 않았습니다.');
+  const visualHtml = [
+    metricChipHtml_(source),
+    miniBarHtml_(source),
+  ].join('');
+  const displayText = learnerParagraphText_(label, source, Boolean(visualHtml));
+  return [
+    '<div style="border:1px solid #242424;border-radius:32px;padding:18px;background:#ffffff;box-shadow:rgba(0,0,0,0.05) 0 0 10px 0;">',
+    `<p style="display:inline-block;margin:0 0 10px;border:1px solid #242424;border-radius:2000px;padding:5px 10px;font-size:12px;font-weight:700;letter-spacing:0.05px;color:#242424;background:#f6f3f1;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(label)}</p>`,
+    visualHtml,
+    `<p style="margin:0;font-size:14px;line-height:1.75;color:#242424;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(displayText)}</p>`,
+    '</div>',
+  ].join('');
+}
+
+function etfRoleLabel_(ticker) {
+  const roles = {
+    SPY: '미국 전체 시장',
+    QQQ: '성장 기대',
+    SCHD: '배당 안정성',
+    XLK: '기술주 온도',
+    XLE: '에너지 온도',
+  };
+  return roles[String(ticker || '').toUpperCase()] || '시장 흐름';
+}
+
+function etfTemperatureRowsFromBlocks_(blocks) {
+  const source = (blocks || []).map((block) => [
+    block.actual_change,
+    block.interpretation,
+    block.next_check,
+  ].join(' ')).join(' ');
+  const rowMap = {};
+  percentRowsFromText_(source).forEach((row) => {
+    if (!/^(SPY|QQQ|SCHD|XLK|XLE)$/.test(row.label)) return;
+    rowMap[row.label] = row;
+  });
+  ['SPY', 'QQQ', 'SCHD', 'XLK', 'XLE'].forEach((ticker) => {
+    if (!rowMap[ticker]) rowMap[ticker] = { label: ticker, value: null, text: '미수집' };
+  });
+  return ['SPY', 'QQQ', 'SCHD', 'XLK', 'XLE'].map((ticker) => rowMap[ticker]);
+}
+
+function marketTemperatureHtml_(blocks) {
+  const rows = etfTemperatureRowsFromBlocks_(blocks);
+  const numericRows = rows.filter((row) => typeof row.value === 'number' && !Number.isNaN(row.value));
+  if (numericRows.length === 0) {
+    return [
+      '<div data-ssmk="market-temperature" style="border:1px solid #242424;border-radius:28px;background:#ffffff;padding:16px;margin:0 0 16px;">',
+      '<p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#242424;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">시장 온도계</p>',
+      '<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#4e4d4d;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">ETF 가격 데이터가 아직 비어 있습니다. 그래서 이번 주에는 QQQ가 강한지, SCHD가 강한지, 기술주와 에너지가 어느 쪽으로 움직였는지 확정하지 않습니다.</p>',
+      '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">',
+      '<div style="border:1px solid #d8d2cd;border-radius:18px;background:#f6f3f1;padding:10px;"><strong style="display:block;margin:0 0 6px;font-size:12px;color:#242424;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">읽는 법</strong><p style="margin:0;font-size:12px;line-height:1.5;color:#4e4d4d;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">빈 차트를 결론처럼 읽지 않습니다. 데이터가 없으면 판단을 낮춥니다.</p></div>',
+      '<div style="border:1px solid #d8d2cd;border-radius:18px;background:#f6f3f1;padding:10px;"><strong style="display:block;margin:0 0 6px;font-size:12px;color:#242424;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">다음 실행</strong><p style="margin:0;font-size:12px;line-height:1.5;color:#4e4d4d;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">SPY, QQQ, SCHD, XLK, XLE 가격 변화가 채워지는지 확인합니다.</p></div>',
+      '<div style="border:1px solid #d8d2cd;border-radius:18px;background:#f6f3f1;padding:10px;"><strong style="display:block;margin:0 0 6px;font-size:12px;color:#242424;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">초보자 레슨</strong><p style="margin:0;font-size:12px;line-height:1.5;color:#4e4d4d;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">좋은 리포트는 모르는 것을 숨기지 않고 무엇이 더 필요한지 알려줍니다.</p></div>',
+      '</div>',
+      '</div>',
+    ].join('');
+  }
+  const maxAbs = numericRows.reduce((max, row) => Math.max(max, Math.abs(row.value)), 1);
+  return [
+    '<div data-ssmk="market-temperature" style="border:1px solid #242424;border-radius:28px;background:#ffffff;padding:16px;margin:0 0 16px;">',
+    '<p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#242424;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">시장 온도계</p>',
+    '<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#4e4d4d;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">개별 종목을 보기 전에 ETF 5개로 시장 바람을 먼저 봅니다. QQQ는 성장 기대, SCHD는 배당 안정성, XLK는 기술주, XLE는 에너지 온도를 보여주는 기준점입니다.</p>',
+    rows.map((row) => {
+      const hasValue = typeof row.value === 'number' && !Number.isNaN(row.value);
+      const width = hasValue ? Math.max(8, Math.round((Math.abs(row.value) / maxAbs) * 100)) : 8;
+      const valueText = hasValue ? formatPercentChange_(row.value) : '미수집';
+      const color = !hasValue ? '#d8d2cd' : (row.value >= 0 ? '#242424' : '#797776');
+      return [
+        '<div style="display:grid;grid-template-columns:58px 88px 1fr 58px;gap:8px;align-items:center;margin:8px 0;">',
+        `<strong style="font-size:13px;color:#000000;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(row.label)}</strong>`,
+        `<span style="font-size:12px;color:#4e4d4d;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(etfRoleLabel_(row.label))}</span>`,
+        '<span style="display:block;background:#f6f3f1;border:1px solid #d8d2cd;border-radius:2000px;height:12px;overflow:hidden;">',
+        `<span style="display:block;width:${width}%;height:12px;background:${color};border-radius:2000px;"></span>`,
+        '</span>',
+        `<span style="font-size:12px;text-align:right;color:#242424;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">${escapeHtml_(valueText)}</span>`,
+        '</div>',
+      ].join('');
+    }).join(''),
+    '</div>',
+  ].join('');
+}
+
+function hypothesisMapHtml_(blocks) {
+  const cards = (blocks || []).slice(0, 5).map((block, index) => [
+    '<div style="border:1px solid #242424;border-radius:22px;background:#ffffff;padding:12px;">',
+    `<p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#000000;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;">가설 ${index + 1}</p>`,
+    `<p style="margin:0 0 6px;font-size:12px;line-height:1.45;color:#242424;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;"><strong>관찰된 숫자</strong> ${escapeHtml_(shortLearnerText_(block.actual_change, '데이터 확인 중'))}</p>`,
+    `<p style="margin:0 0 6px;font-size:12px;line-height:1.45;color:#242424;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;"><strong>틀릴 수 있는 이유</strong> ${escapeHtml_(shortLearnerText_(block.counter_scenario || block.counter_question, '반대 시나리오 확인 중'))}</p>`,
+    `<p style="margin:0;font-size:12px;line-height:1.45;color:#242424;font-family:'IBM Plex Mono','Noto Sans KR',Arial,sans-serif;"><strong>다음에 볼 데이터</strong> ${escapeHtml_(shortLearnerText_(block.next_validation_data || block.next_check, '다음 검증 데이터 확인'))}</p>`,
+    '</div>',
+  ].join('')).join('');
+  if (!cards) return '';
+  return [
+    '<div data-ssmk="hypothesis-map" style="border:1px solid #242424;border-radius:28px;background:#cfdaf5;padding:16px;margin:0 0 16px;">',
+    '<p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#242424;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">가설 복기 지도</p>',
+    '<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#242424;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;">좋은 가설은 맞히는 문장이 아니라 나중에 고칠 수 있는 계약서입니다. 관찰된 숫자, 틀릴 수 있는 이유, 다음에 볼 데이터를 한 줄씩 묶어 둡니다.</p>',
+    `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">${cards}</div>`,
+    '</div>',
+  ].join('');
+}
+
+function sectionVisualGuideHtml_(model, blocks) {
+  const sectionKey = String(model && model.section_key || '');
+  if (sectionKey === 'market_map' || sectionKey === 'dividend_etf_corner') {
+    return marketTemperatureHtml_(blocks);
+  }
+  if (sectionKey === 'hypothesis_lab') {
+    return hypothesisMapHtml_(blocks);
+  }
+  return '';
+}
+
 function renderWeeklyLabEmailHtml_(context, sectionModels) {
   const sectionHtml = sectionModels
     .filter((model) => model.email_output)
     .sort((a, b) => a.section_order - b.section_order)
-    .map((model) => [
-      '<section style="border-top:1px solid #d9dee6;padding:18px 0;">',
-      `<h2 style="font-size:18px;margin:0 0 8px;color:#1f2937;">${escapeHtml_(model.section_title)}</h2>`,
-      `<p style="font-size:15px;line-height:1.65;margin:0;color:#263241;">${escapeHtml_(model.email_html_summary || model.docs_markdown || '이번 주 학습 내용을 정리 중입니다.')}</p>`,
-      '</section>',
-    ].join('')).join('');
+    .map((model) => {
+      const blocks = contentBlocksFromSectionModel_(model);
+      const visualGuideHtml = sectionVisualGuideHtml_(model, blocks);
+      const bodyHtml = blocks.length > 0
+        ? blocks.map(renderContentBlockHtml_).join('')
+        : learnerHtmlBlock_('학습 메모', model.docs_markdown || model.email_html_summary || '이번 주 학습 내용을 정리 중입니다.');
+      return [
+        '<section style="margin:0 0 40px;border:1px solid #242424;border-radius:40px;padding:24px;background:#f6f3f1;">',
+        '<div style="height:8px;width:88px;border-radius:2000px;background:#cfdaf5;border:1px solid #242424;margin:0 0 18px;"></div>',
+        `<h2 style="font-family:Georgia,'Noto Serif KR',serif;font-size:26px;line-height:1.2;letter-spacing:-0.02px;margin:0 0 16px;color:#000000;">${escapeHtml_(model.visible_title_ko || sectionDisplayTitle_(model))}</h2>`,
+        visualGuideHtml,
+        bodyHtml,
+        '</section>',
+      ].join('');
+    }).join('');
   const visualizationHtml = buildEmailVisualizationHtml_(context.visualization_queue || []);
 
   return [
     '<!doctype html>',
     '<html>',
-    '<body style="margin:0;background:#f7f8fa;font-family:Arial,sans-serif;color:#1f2937;">',
-    '<div style="max-width:720px;margin:0 auto;padding:28px 18px;">',
-    '<div style="background:#ffffff;border:1px solid #d9dee6;border-radius:8px;padding:24px;">',
-    '<p style="margin:0 0 8px;font-size:12px;color:#5f6b7a;">SSMK Weekly Lab</p>',
-    `<h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;color:#1f2937;">${escapeHtml_(context.issue_date || today_())} 투자 관찰노트</h1>`,
-    `<p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#5f6b7a;">${escapeHtml_(SSMK.disclaimer)}</p>`,
+    '<head>',
+    '<meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    '<style>',
+    '@page { size: A4 portrait; margin: 14mm; }',
+    '@media print { body { background:#ffffff !important; } section { break-inside: avoid-page; page-break-inside: avoid; } .ssmk-shell { max-width: 100% !important; padding: 0 !important; } .ssmk-page { border-radius: 0 !important; border: 0 !important; padding: 0 !important; } }',
+    '@media (max-width: 640px) { [data-ssmk="learning-ladder"] { grid-template-columns: 1fr !important; } [data-ssmk="market-temperature"] div[style*="grid-template-columns:58px"] { grid-template-columns: 48px 1fr !important; } [data-ssmk="hypothesis-map"] div[style*="repeat(2"] { grid-template-columns: 1fr !important; } }',
+    '</style>',
+    '</head>',
+    '<body style="margin:0;background:#f6f3f1;font-family:\'IBM Plex Mono\',\'Noto Sans KR\',Arial,sans-serif;color:#000000;">',
+    '<div class="ssmk-shell" style="max-width:760px;margin:0 auto;padding:32px 18px;">',
+    '<div class="ssmk-page" style="background:#ffffff;border:1px solid #242424;border-radius:40px;padding:32px;">',
+    '<p style="display:inline-block;margin:0 0 14px;border:1px solid #242424;border-radius:2000px;padding:6px 12px;font-size:12px;letter-spacing:0.05px;color:#242424;background:#cfdaf5;">SSMK Weekly Lab</p>',
+    `<h1 style="font-family:Georgia,'Noto Serif KR',serif;margin:0 0 14px;font-size:32px;line-height:1.2;letter-spacing:-0.02px;color:#000000;">${escapeHtml_(context.issue_date || today_())} 투자 관찰노트</h1>`,
+    `<p style="margin:0 0 28px;font-size:14px;line-height:1.7;color:#4e4d4d;">${escapeHtml_(SSMK.disclaimer)}</p>`,
     visualizationHtml,
     sectionHtml,
-    '<p style="margin:18px 0 0;font-size:12px;color:#5f6b7a;">이 메일은 투자 권유가 아니라 학습용 관찰 기록입니다. 최종 판단은 별도 확인이 필요합니다.</p>',
+    '<p style="margin:20px 0 0;font-size:12px;line-height:1.5;color:#4e4d4d;">이 메일은 투자 권유가 아니라 학습용 관찰 기록입니다. 최종 판단은 별도 확인이 필요합니다.</p>',
     '</div>',
     '</div>',
     '</body>',
@@ -2949,6 +4273,8 @@ function createWeeklyLabDraftReportDoc_(issueDate, runId) {
   const reportStatus = preQualityResult.status === 'blocked' ? '사용자 확인 필요' : '초안 생성';
   const reportId = createReportRunRow_(targetIssueDate, addDaysText_(targetIssueDate, -6), targetIssueDate, reportStatus, doc.getUrl(), `Weekly Lab blueprint draft. QA=${preQualityResult.status}. 이메일 발송 없음.`);
   const context = Object.assign({}, initialContext, { report_id: reportId });
+  const factCards = buildReportFactCards_(context);
+  replaceReportFactCardsForReport_(reportId, factCards);
 
   sectionModels
     .slice()
@@ -2959,7 +4285,7 @@ function createWeeklyLabDraftReportDoc_(issueDate, runId) {
         model.section_key,
         model.section_title,
         model.status,
-        model.email_html_summary || model.docs_markdown
+        model.docs_markdown || model.email_html_summary
       );
     });
 
@@ -2970,6 +4296,60 @@ function createWeeklyLabDraftReportDoc_(issueDate, runId) {
     reportId: reportId,
     url: doc.getUrl(),
     qualityResult: preQualityResult,
+  };
+}
+
+function rebuildWeeklyLabDraftForExistingReport_(report, runId) {
+  const reportId = String(report && report.report_id || '').trim();
+  const targetIssueDate = String(report && report.issue_date || '').slice(0, 10);
+  if (!reportId) throw new Error('재생성할 report_id가 비어 있습니다.');
+  if (!targetIssueDate) throw new Error('재생성할 issue_date가 비어 있습니다.');
+
+  const context = collectWeeklyLabReportContext_(targetIssueDate, reportId, runId);
+  if (context.weekly_scores.length === 0) {
+    throw new Error(`${targetIssueDate} 기준 weekly_scores가 없어 개선 초안을 재생성할 수 없습니다.`);
+  }
+
+  const sectionModels = buildWeeklyLabReportSectionModels_(context);
+  const qualityResult = runWeeklyLabReportQualityGate_(context, sectionModels, {});
+  const reportText = renderWeeklyLabDocsDraft_(context, sectionModels, qualityResult);
+  const doc = DocumentApp.create(`SSMK Weekly Lab 개선 초안 보고서 - ${targetIssueDate}`);
+  doc.getBody().setText(reportText);
+  doc.saveAndClose();
+
+  const factCards = buildReportFactCards_(context);
+  replaceReportFactCardsForReport_(reportId, factCards);
+
+  sectionModels
+    .slice()
+    .sort((a, b) => a.section_order - b.section_order)
+    .forEach((model) => {
+      upsertReportSection_(
+        reportId,
+        model.section_key,
+        model.section_title,
+        model.status,
+        model.docs_markdown || model.email_html_summary
+      );
+    });
+
+  recordWeeklyLabQualityGateReview_(context, reportId, qualityResult);
+  const versionLabel = nextReportVersionLabel_(reportId);
+  createReportVersion_(reportId, versionLabel, '', doc.getUrl(), 'Rebuilt Weekly Lab draft with clearer teaching-insight sections. 이메일 발송 없음.');
+  updateReportRunStatus_(
+    reportId,
+    qualityResult.status === 'blocked' ? '사용자 확인 필요' : '초안 생성',
+    `5/12 개선 초안 재생성: ${doc.getUrl()}; quality=${qualityResult.status}`
+  );
+
+  return {
+    ok: true,
+    report_id: reportId,
+    issue_date: targetIssueDate,
+    doc_url: doc.getUrl(),
+    quality_status: qualityResult.status,
+    warning_count: qualityResult.warning_count,
+    blocking_count: qualityResult.blocking_count,
   };
 }
 
@@ -3087,6 +4467,17 @@ function createEmailFinalReportDraft(reportId) {
 
   createReportVersion_(reportId, versionLabel, '', file.getUrl(), 'Email HTML final draft created. 이메일 발송 전 검토용 HTML 최종본입니다.');
   updateReportRunStatus_(reportId, report.generation_status || '초안 생성', `이메일용 HTML 최종본 생성: ${file.getUrl()}`);
+  const publishQuality = runPublishQualityGate_({
+    report_id: reportId,
+    html: html,
+    source_snapshot: {},
+  });
+  recordPublishQualityGateReview_(
+    collectWeeklyLabReportContext_(report.issue_date || today_(), reportId, ''),
+    reportId,
+    versionLabel,
+    publishQuality
+  );
 
   return {
     ok: true,
@@ -3904,6 +5295,11 @@ function sendApprovedReport(reportId) {
   if (report.generation_status !== '승인') {
     throw new Error('발송 차단: report_runs.generation_status가 승인일 때만 발송할 수 있습니다.');
   }
+  const latestPublishQc = getLatestPublishQualityGateReview_(reportId);
+  const sendGate = canSendReportWithPublishQc_(report, latestPublishQc);
+  if (!sendGate.ok) {
+    throw new Error(`세이지 Publish QC 때문에 발송할 수 없습니다: ${sendGate.reason}`);
+  }
 
   const recipients = collectActiveRecipientEmails_();
   if (recipients.length === 0) {
@@ -4154,19 +5550,19 @@ function buildAgentChecks_(issueDate, hypothesisRows) {
 
 function softenLearningLanguage_(text) {
   return String(text)
-    .replace(/높은 관찰 등급을 유지할 수 있다/g, '관찰 등급이 왜 높게 나왔는지 확인할 필요가 있다')
-    .replace(/높은 관찰 등급을 유지할 수 있습니다/g, '관찰 등급이 왜 높게 나왔는지 확인할 필요가 있습니다')
-    .replace(/성장 기대는 강하지만/g, '성장 기대가 실제 데이터로 확인되는지 봐야 하지만')
-    .replace(/점수 회복 가능성이 있다/g, '점수 변화의 원인을 관찰할 필요가 있다')
-    .replace(/점수 회복 가능성이 있습니다/g, '점수 변화의 원인을 관찰할 필요가 있습니다')
-    .replace(/좋아 보인다/g, '확인해 볼 부분이 있다')
-    .replace(/좋아 보입니다/g, '확인해 볼 부분이 있습니다')
-    .replace(/긍정적입니다/g, '추가로 관찰할 만합니다')
-    .replace(/긍정적이다/g, '추가로 관찰할 만하다')
-    .replace(/기회가 될 수 있다/g, '관찰 질문이 될 수 있다')
-    .replace(/기회가 될 수 있습니다/g, '관찰 질문이 될 수 있습니다')
-    .replace(/매력 증가/g, '관찰 필요성 증가')
-    .replace(/매력적/g, '관찰할 만한');
+    .replace(/높은 관찰 등급을 유지할 수 있다/g, '높은 관찰 등급을 설명하는 지표가 유지되는지 검증해야 한다')
+    .replace(/높은 관찰 등급을 유지할 수 있습니다/g, '높은 관찰 등급을 설명하는 지표가 유지되는지 검증해야 합니다')
+    .replace(/성장 기대는 강하지만/g, '성장 기대는 가격에 강하게 반영된 것으로 판단되지만')
+    .replace(/점수 회복 가능성이 있다/g, '점수 회복을 예상하려면 점수를 낮춘 원인 지표가 함께 개선되어야 한다')
+    .replace(/점수 회복 가능성이 있습니다/g, '점수 회복을 예상하려면 점수를 낮춘 원인 지표가 함께 개선되어야 합니다')
+    .replace(/좋아 보인다/g, '개선 신호로 판단할 수 있다')
+    .replace(/좋아 보입니다/g, '개선 신호로 판단할 수 있습니다')
+    .replace(/긍정적입니다/g, '개선 신호로 판단할 수 있습니다')
+    .replace(/긍정적이다/g, '개선 신호로 판단할 수 있다')
+    .replace(/기회가 될 수 있다/g, '가설 검증 후보로 볼 수 있다')
+    .replace(/기회가 될 수 있습니다/g, '가설 검증 후보로 볼 수 있습니다')
+    .replace(/매력 증가/g, '관찰 가치 증가')
+    .replace(/매력적/g, '관찰 가치가 높은');
 }
 
 function hasRecommendationLikeLanguage_(text) {
@@ -4747,6 +6143,30 @@ function hasExistingWeeklyLabRunForIssueDate_(issueDate) {
     if (!sameDateText_(row.issue_date, targetIssueDate)) return false;
     const status = String(row.generation_status || '').trim();
     return ['초안 생성', '사용자 확인 필요', '승인', '발송 완료'].indexOf(status) !== -1;
+  });
+}
+
+function findLatestWeeklyLabReportForIssueDate_(issueDate) {
+  const targetIssueDate = String(issueDate || '').slice(0, 10);
+  if (!targetIssueDate) return null;
+
+  const rows = readObjects_(SSMK.sheets.reportRuns)
+    .filter((row) => sameDateText_(row.issue_date, targetIssueDate))
+    .filter((row) => {
+      const status = String(row.generation_status || '').trim();
+      return ['초안 생성', '사용자 확인 필요', '승인', '발송 완료'].indexOf(status) !== -1;
+    });
+  return latestRowByText_(rows, 'generated_at') || latestRowByText_(rows, 'report_id');
+}
+
+function reportHasEmailHtmlDraft_(reportId) {
+  const normalizedReportId = String(reportId || '').trim();
+  if (!normalizedReportId) return false;
+
+  return readObjects_(SSMK.sheets.reportVersions).some((row) => {
+    if (String(row.report_id || '').trim() !== normalizedReportId) return false;
+    const summary = String(row.change_summary || row.notes || '').trim();
+    return Boolean(row.output_url) && /Email HTML final draft|이메일용 HTML 최종본/.test(summary);
   });
 }
 

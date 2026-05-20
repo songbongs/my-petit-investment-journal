@@ -55,10 +55,17 @@ contains(code, 'function buildWeeklyLabReportSectionModels_', 'Code.gs');
 contains(code, 'function runWeeklyLabReportQualityGate_', 'Code.gs');
 contains(code, 'function renderWeeklyLabDocsDraft_', 'Code.gs');
 contains(code, 'function renderWeeklyLabEmailHtml_', 'Code.gs');
+contains(code, 'WEEKLY_LAB_VAGUE_INSIGHT_PATTERNS', 'editorial quality gate');
+contains(code, 'function vagueInsightMatches_', 'editorial quality gate');
 contains(code, 'function getWeeklyLabScheduleKey_', 'Code.gs');
 contains(code, 'WEEKLY_LAB_PRIMARY_SCHEDULE_KEY', 'Code.gs');
 contains(code, 'WEEKLY_LAB_LEGACY_SCHEDULE_KEY', 'Code.gs');
-contains(code, "SSMK_SETUP_BUILD = '2026-05-06-report-builder-blueprint-v2'", 'setup build marker');
+contains(code, 'visible_title_ko', 'reader-facing Korean title support');
+contains(code, 'function contentBlock_', 'content block helper');
+contains(code, 'function contentBlocksFromSectionModel_', 'section model content block extraction');
+contains(code, 'function renderContentBlockHtml_', 'content block HTML renderer');
+contains(code, 'function sectionDisplayTitle_', 'reader-facing title helper');
+contains(code, "SSMK_SETUP_BUILD = '2026-05-07-quality-architecture-v3'", 'setup build marker');
 contains(code, "status: hasUsableContent ? 'draft' : 'needs_revision'", 'missing data should not force revision status');
 notContains(code, "status: missingData ? 'needs_revision' : 'draft'", 'section status should separate data gaps from revision needs');
 contains(code, '데이터 한계 표시됨', 'quality gate warning language');
@@ -73,6 +80,8 @@ contains(draftReportBody, 'collectWeeklyLabReportContext_', 'draft report creati
 contains(draftReportBody, 'buildWeeklyLabReportSectionModels_', 'draft report creation');
 contains(draftReportBody, 'runWeeklyLabReportQualityGate_', 'draft report creation');
 contains(draftReportBody, 'renderWeeklyLabDocsDraft_', 'draft report creation');
+contains(draftReportBody, 'model.docs_markdown || model.email_html_summary', 'report_sections should preserve rich docs content for email final draft');
+notContains(draftReportBody, 'model.email_html_summary || model.docs_markdown', 'report_sections should not store one-line summaries before rich content');
 
 const oldBuilderBody = code.includes('function buildWeeklyLabDraftReportText_')
   ? functionBody(code, 'buildWeeklyLabDraftReportText_')

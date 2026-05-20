@@ -3,6 +3,7 @@
 이 프로젝트에서 작업하는 모든 Codex/AI/사람 유지보수자는 먼저 아래 문서를 읽는다.
 
 - `docs/SSMK-WEEKLY-LAB-SOUL.md`
+- `docs/2026-05-15-ssmk-editorial-standard-v1.md`
 - `docs/2026-04-30-external-project-benchmark-notes.md` (외부 프로젝트 벤치마킹이 필요한 개발일 때)
 
 이 문서는 SSMK Weekly Lab의 최우선 방향성 문서다. 보고서, 자동화, Google Sheets, Apps Script, 이메일 HTML, 대시보드, 프롬프트를 수정할 때 이 문서의 원칙을 우선한다.
