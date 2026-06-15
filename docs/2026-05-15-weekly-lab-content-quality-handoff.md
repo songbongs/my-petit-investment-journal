@@ -267,7 +267,7 @@ sent_at: 비어 있음
 ```text
 version_label: v5
 created_at: 2026-05-15 17:17:33
-url: https://docs.google.com/open?id=1fSB0h86UBnqw72Er0x2JqqW84nPIKBURbBtTUc3hkzo
+url: [private Google Docs link removed]
 summary: Rebuilt Weekly Lab draft with clearer teaching-insight sections. 이메일 발송 없음.
 ```
 
@@ -276,7 +276,7 @@ summary: Rebuilt Weekly Lab draft with clearer teaching-insight sections. 이메
 ```text
 version_label: v6
 created_at: 2026-05-15 17:18:03
-url: https://drive.google.com/file/d/1CJRYHGUd4nBqMkHX-k8aQVtDyPzKA0Pu/view?usp=drivesdk
+url: [private Google Drive file link removed]
 summary: Email HTML final draft created. 이메일 발송 전 검토용 HTML 최종본입니다.
 ```
 

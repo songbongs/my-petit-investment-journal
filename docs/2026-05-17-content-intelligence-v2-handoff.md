@@ -123,7 +123,7 @@ tests/weekly-report-html-quality-contract.test.js
 최근 확인한 최신 HTML:
 
 ```text
-https://drive.google.com/file/d/17nkBebiXBbIFLZNXw5PnoZSNaOJDL3NC
+[private Google Drive file link removed]
 ```
 
 이 파일에서 확인된 내용:
